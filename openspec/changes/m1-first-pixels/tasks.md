@@ -70,7 +70,7 @@
 
 - [x] 7.1 Implement `test/core-purity.test.js` (design D-9): blank out comments and strings, forbid the listed browser identifiers, and allow only relative imports that resolve inside `src/core/`
 - [x] 7.2 Test the scanner itself against fixtures in a temporary directory: a `document.title` violation names the file, line 3, and `document`; `../ui/main.js` and `node:fs` imports are named; `window` in a comment or string passes
-- [ ] 7.3 Seen to fail: in an isolated worktree, add `document.title = 'x';` to a real core file and observe `npm test` fail with the file, line, and identifier; record the output
+- [x] 7.3 Seen to fail: in an isolated worktree, add `document.title = 'x';` to a real core file and observe `npm test` fail with the file, line, and identifier; record the output
 
 ## 8. Browser shell
 
@@ -86,7 +86,7 @@
 
 ## 10. Verification, review, and merge
 
-- [ ] 10.1 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
-- [ ] 10.2 `npm run capture -- M1`, then write `docs/progress/M1/README.md`: each M1 "done when" criterion with its evidence, the gate summary, the core-purity seen-to-fail record, the render time, and the manual Safari smoke check (performed by the owner)
+- [x] 10.1 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
+- [x] 10.2 `npm run capture -- M1`, then write `docs/progress/M1/README.md`: each M1 "done when" criterion with its evidence, the gate summary, the core-purity seen-to-fail record, the render time, and the manual Safari smoke check (performed by the owner)
 - [ ] 10.3 A separate Critic review (`project-critic`) of `main..m1-first-pixels`. Fix findings and re-review until `[APPROVED]`
 - [ ] 10.4 Merge into `main`, mark M1 complete in ROADMAP, and archive the change with `/opsx:archive` (syncing the specs)
