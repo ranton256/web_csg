@@ -1,0 +1,5 @@
+#!/bin/sh
+# Runs the unit and golden suite before every commit (CONSTRAINTS §4).
+# The full gate, `npm run check`, runs before every merge, archive, and milestone.
+# Enable with: npm run hooks:install
+npm test

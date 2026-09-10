@@ -1,0 +1,22 @@
+{
+  "name": "web-csg",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A small constructive solid geometry modeler, ray traced in pure JavaScript in the browser.",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node tools/serve.mjs",
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:e2e": "playwright test",
+    "check": "npm test && npm run test:e2e",
+    "capture": "node tools/capture.mjs",
+    "golden:update": "node tools/golden-update.mjs",
+    "hooks:install": "git config core.hooksPath tools/hooks"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
