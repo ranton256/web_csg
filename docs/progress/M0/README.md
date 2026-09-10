@@ -15,19 +15,19 @@ device scale factor 1): the placeholder page with the "Web CSG" heading.
 
 | Criterion | Evidence | Result |
 | --- | --- | --- |
-| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975` and `2b134cd` after the Critic round 1 and round 2 fixes | Pass at all three: exit 0. At `2b134cd`: `node --test` 38/38; Playwright 3/3 (Chromium, Firefox, WebKit) |
+| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975`, `2b134cd`, and `2072b70` (the last with `npm ci`) after each Critic round's fixes | Pass at all four: exit 0. At `2072b70`: `node --test` 38/38; Playwright 3/3 (Chromium, Firefox, WebKit) |
 | Each gate has been seen to fail once | [Seen to fail](#seen-to-fail) below, run in an isolated `git worktree` | Pass: every gate failed as intended and was restored |
 | `openspec/config.yaml` names DESIGN, CONSTRAINTS, and ROADMAP and carries the standing constraints | `openspec/config.yaml` (commit `dcb3864`) | Pass |
 | `CLAUDE.md` describes the toolchain as verified and matches the actual commands and layout | `CLAUDE.md` (commit `dcb3864`) | Pass |
 | The default branch is `main` | `git branch -m master main` before the change branch was cut | Pass |
 | Evidence: a first capture of the page is committed | `app.png` above | Pass |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 is recorded in the merge | Round 3 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 at `7cec485`: `[REJECTED]` ([details](#critic-round-3)). Round 4 is recorded in the merge | Round 4 pending at time of writing |
 
 ## Full gate summary
 
 ```text
-$ npm run check < /dev/null          # in the fresh clone at 2b134cd
+$ npm run check < /dev/null          # in the fresh clone at 2072b70
 # tests 38
 # pass 38
 # fail 0
@@ -88,6 +88,23 @@ Informational items from round 2:
 - The CLAUDE.md layout said `test/*.test.js`; it is now `test/**/*.test.js`.
 - The server serves dotfiles such as `/.git/config`. This is within the spec and loopback-only; it is now a ROADMAP backlog line.
 - The buffer-size guards overlap (defense in depth), and the HEAD test cannot fail by itself. Both were accepted as they are.
+
+## Critic round 3
+
+A fresh review at `7cec485` confirmed the round 2 fix under mutation:
+- The two port tests go red without it.
+- The hook blocks on those failures.
+- An injected `console.error` fails e2e in each of the three engines.
+
+It returned **`[REJECTED]`** for one low-severity finding, fixed in `2072b70`:
+
+| # | Finding | Fix | New test seen red against `7cec485` |
+| --- | --- | --- | --- |
+| 1 | The PPM reader parsed header numbers with `Number()`, so `0x2`, `0xFF`, `2e0`, and `+2` passed, contradicting the "Malformed file" scenario | Header numbers must be plain decimal digits; the scenario now lists these examples | `malformed files are rejected with the file name` (`Missing expected exception: hexwidth.ppm`): `not ok` |
+| 2 (informational) | `parsePort` rejected `000080` because of a 5-digit cap, although the spec allows any decimal digits within 0–65535 | Cap removed; the range check still rejects `65536` | `only plain decimal digits are ports` (`Invalid port "000080"`): `not ok` |
+
+The "Failure in one engine" scenario was also demonstrated with only WebKit
+broken (Critic round 1): exit 1, `✘ [webkit]`, Chromium and Firefox `✓`.
 
 ## Manual Safari smoke check
 

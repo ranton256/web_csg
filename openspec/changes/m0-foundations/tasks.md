@@ -88,6 +88,12 @@
 - [x] 10.2 Fix the CLAUDE.md layout (`test/**/*.test.js`); add a ROADMAP backlog line for dotfile serving (informational)
 - [x] 10.3 Watch the new tests fail against `2c4ce39`; `npm run check` green; update the evidence README; commit
 
+## 11. Critic round 3 fixes ([REJECTED] at `7cec485`)
+
+- [x] 11.1 The PPM reader accepts only plain decimal header numbers (it accepted `0xFF`, `2e0`, `+2`); spec scenario made explicit; tests
+- [x] 11.2 `parsePort` accepts any number of decimal digits within 0–65535 (`000080` was rejected by the 5-digit cap; informational)
+- [x] 11.3 Watch the new tests fail against `7cec485`; `npm run check` green (fresh clone); update the evidence README; commit
+
 ## 8. Evidence, review, and merge
 
 - [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
