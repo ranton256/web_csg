@@ -1,0 +1,4 @@
+interface:
+  display_name: "Interview Me"
+  short_description: "Turn a project vision into agreed, buildable plans"
+  default_prompt: "Use $interview-me to read vision.md and existing project files, then interview me to complete DESIGN.md, ROADMAP.md, and CONSTRAINTS.md."
