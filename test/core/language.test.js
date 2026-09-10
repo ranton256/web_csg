@@ -65,6 +65,20 @@ test('long operator chains evaluate without nesting limits or crashes', () => {
   assert.equal(numberOf(`1${' + 1'.repeat(100000)}`), 100001);
 });
 
+test('arguments of an unsupported transform are still checked', () => {
+  assert.deepEqual(diagnosticsOf('translate([q, 0, 0]) { sphere(1); }\n' + CAMERA), [
+    [1, 1, '`translate` is not supported yet'],
+    [1, 12, '`q` is undeclared'],
+  ]);
+});
+
+test('a nested transform or Boolean block counts as a solid in a body', () => {
+  for (const source of ['union { union { sphere(1); } }', 'union { translate([1, 0, 0]) { sphere(1); } }']) {
+    const diagnostics = diagnosticsOf(source + '\n' + CAMERA);
+    assert.ok(!diagnostics.some(([, , m]) => /no solids/.test(m)), `${source}: ${JSON.stringify(diagnostics)}`);
+  }
+});
+
 test('empty bodies are errors at the block keyword', () => {
   assert.ok(diagnosticsOf('union { }\n' + CAMERA).some(([l, c, m]) => l === 1 && c === 1 && m === 'the `union` block contains no solids'));
   const letOnly = diagnosticsOf('translate([1, 0, 0]) { let a = 1; }\n' + CAMERA);

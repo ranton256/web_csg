@@ -30,7 +30,7 @@
   - the empty-body rule
   - `camera` in a body is an error but is still validated
   - top-level spheres behave as in M1
-- [x] 3.3 Add tests (`test/core/evaluate.test.js`, `test/core/camera.test.js`) covering:
+- [x] 3.3 Add tests (`test/core/language.test.js`, `test/core/camera.test.js`) covering:
   - the Expressions scenarios: precedence and associativity values, vector arithmetic, invalid kinds at the operator, division by zero for numbers and vectors
   - Empty bodies
   - let scoped to its block, and shadowing inside a block

@@ -28,14 +28,20 @@ time slice, D18).
 
 A valid model SHALL be rendered in horizontal row bands, top to bottom, on
 the main thread.
-- **Slices:** rendering yields to the browser after at most 12 ms of work per
-  slice, and each finished band appears on the canvas as it completes.
+- **Slices:** a slice renders whole rows and starts no new row once 12 ms have
+  elapsed since it began, then yields to the browser. A slice therefore always
+  renders at least one row, and runs at most one row past 12 ms. Each finished
+  band appears on the canvas as it completes.
 - **Status:** "Rendering…" SHALL be visible while a render is in progress, and
   hidden when it finishes.
 - **Cancellation:** a newer valid model, or a resize, SHALL cancel the render
   in progress, which restarts from the first band.
 - **Result:** the finished image SHALL be byte-identical to a single full
   render of the same model at the same size.
+
+#### Scenario: Slices stop starting rows after 12 ms
+- **WHEN** each row takes 5 ms to render
+- **THEN** every slice except possibly the last renders 3 rows (ending at 15 ms). With 25 ms rows each slice renders 1 row, and with 1 ms rows it renders 12
 
 #### Scenario: A newer model cancels an in-progress render
 - **WHEN** a render is in progress and a newer valid model is produced

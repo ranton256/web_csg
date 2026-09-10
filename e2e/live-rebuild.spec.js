@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
-import { counter, dragDivider, editAndSettle, imageStats, openApp, waitForCounter, waitForIdle } from './support.js';
+import { counter, dragDivider, dragDividerTo, editAndSettle, imageStats, openApp, waitForCounter, waitForIdle, widthOf } from './support.js';
 
 const CAMERA = 'camera {\n  position: [120, -160, 100];\n  lookAt: [0, 0, 0];\n}\n';
 const INVALID = DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);');
@@ -151,6 +151,31 @@ test.describe('on real time', () => {
     expect(fixed.foreground).toBeGreaterThan(0);
     expect(fixed.foreground).toBeLessThan(before.foreground);
     expect(page.errors).toEqual([]);
+  });
+
+  test('an invalid edit does not cancel the render in progress', async ({ page }) => {
+    const started = await counter(page, 'rendersStarted');
+    const done = await counter(page, 'rendersDone');
+    const cancelled = await counter(page, 'rendersCancelled');
+    const rebuilds = await counter(page, 'rebuilds');
+    await page.locator('#source').fill(heavy(40));
+    await waitForCounter(page, 'rendersStarted', started + 1);
+    await page.locator('#source').fill(heavy(40).replace('sphere(40 - 0 * 0.25);', 'sphere(0);'));
+    await waitForCounter(page, 'rebuilds', rebuilds + 2);
+    await expect(page.locator('#stale')).toBeVisible();
+    expect(await page.locator('#status').isVisible()).toBe(true);
+    await waitForIdle(page);
+    expect(await counter(page, 'rendersCancelled')).toBe(cancelled);
+    expect(await counter(page, 'rendersDone')).toBe(done + 1);
+  });
+
+  test('when the window shrinks, the preview keeps its 240 px minimum', async ({ page }) => {
+    const viewportWidth = page.viewportSize().width;
+    await dragDividerTo(page, viewportWidth - 5);
+    expect(Math.round(await widthOf(page, '#preview-panel'))).toBe(240);
+    await page.setViewportSize({ width: 900, height: 700 });
+    await expect.poll(async () => Math.round(await widthOf(page, '#preview-panel'))).toBe(240);
+    expect(Math.round(await widthOf(page, '#editor-pane'))).toBe(900 - 240 - 6);
   });
 
   test('resizing while stale re-renders the last valid model and stays stale', async ({ page }) => {
