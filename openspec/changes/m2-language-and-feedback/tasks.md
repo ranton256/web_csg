@@ -95,3 +95,10 @@
 - [x] 8.3 `npm run capture -- M2` (valid and stale shots), then write `docs/progress/M2/README.md`: each M2 "done when" criterion with its evidence, scenario coverage, render times for a large preview, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
 - [ ] 8.4 A separate Critic review (`project-critic`) of `main..m2-language-and-feedback`. Fix findings and re-review until `[APPROVED]`
 - [ ] 8.5 Merge into `main`, mark M2 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+
+## 9. Critic round 1 fixes ([REJECTED] at `ede222a`)
+
+- [x] 9.1 Slice rule: the owner chose to reword it to match the loop ("a slice starts no new row once 12 ms have elapsed; at most one row past"), in DESIGN §5 and §12 (D18 amendment) and the live-rebuild spec. `startRenderJob` gains an injectable `renderRow`; tests use per-row fake costs (fixed and varying)
+- [x] 9.2 Tests: arguments of unsupported transforms are still checked; nested transform and Boolean blocks count as solids
+- [x] 9.3 e2e tests: an invalid edit does not cancel the render in progress; the preview keeps 240 px when the window shrinks
+- [x] 9.4 Watch each new test fail against the Critic's mutants; full gate and a fresh clone green (`a806056`); correct tasks 3.3, the README's slice claim, and the render-time note; record Critic round 1 in the evidence README
