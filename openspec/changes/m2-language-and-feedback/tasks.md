@@ -67,7 +67,7 @@
   - gutter numbers and scroll sync
   - diagnostic click at line 4, column 7, and after an emoji
   - divider drag, clamping, and keyboard
-- [ ] 5.4 Add `e2e/live-rebuild.spec.js` covering:
+- [x] 5.4 Add `e2e/live-rebuild.spec.js` covering:
   - the debounce and its restart on `page.clock`
   - cancellation by a newer model
   - the status during a large render
@@ -76,11 +76,11 @@
   - window and divider resizes re-render after 150 ms at the new size
   - resizing preserves the vertical field of view (same sphere rows and columns)
   - stale: shows on error with the image unchanged, clears on fix, and stays visible across a resize
-- [ ] 5.5 Confirm that `e2e/app.spec.js` still passes, or update it with a recorded reason. Extend `tools/capture.mjs` with a `stale` shot
+- [x] 5.5 Confirm that `e2e/app.spec.js` still passes, or update it with a recorded reason. Extend `tools/capture.mjs` with a `stale` shot
 
 ## 6. Core-purity scanner (backlog item)
 
-- [ ] 6.1 Allow optional whitespace in the import and re-export patterns (design D-9). Add fixtures for `import{readFileSync}from'node:fs';` and `export*from'node:fs';`, and watch the fixture test fail against the old patterns
+- [x] 6.1 Allow optional whitespace in the import and re-export patterns (design D-9). Add fixtures for `import{readFileSync}from'node:fs';` and `export*from'node:fs';`, and watch the fixture test fail against the old patterns
 
 ## 7. Documentation
 
@@ -90,8 +90,8 @@
 
 ## 8. Verification, review, and merge
 
-- [ ] 8.1 Seen to fail: in an isolated worktree, run the new e2e tests against a version where the debounce is 0 ms and where a cancelled job keeps drawing, and watch the relevant tests fail. Record the output
-- [ ] 8.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
-- [ ] 8.3 `npm run capture -- M2` (valid and stale shots), then write `docs/progress/M2/README.md`: each M2 "done when" criterion with its evidence, scenario coverage, render times for a large preview, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
+- [x] 8.1 Seen to fail: in an isolated worktree, run the new e2e tests against a version where the debounce is 0 ms and where a cancelled job keeps drawing, and watch the relevant tests fail. Record the output
+- [x] 8.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
+- [x] 8.3 `npm run capture -- M2` (valid and stale shots), then write `docs/progress/M2/README.md`: each M2 "done when" criterion with its evidence, scenario coverage, render times for a large preview, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
 - [ ] 8.4 A separate Critic review (`project-critic`) of `main..m2-language-and-feedback`. Fix findings and re-review until `[APPROVED]`
 - [ ] 8.5 Merge into `main`, mark M2 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
