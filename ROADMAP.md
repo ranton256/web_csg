@@ -27,7 +27,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 |---|---|---|---|
 | **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Complete (2026-09-10; `m1-first-pixels`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M1/`) |
-| **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | In progress (`m2-language-and-feedback`) |
+| **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Complete (2026-09-10; `m2-language-and-feedback`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M2/`) |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
 | **M4** | CSG | Boolean operations; the bored cube renders | Planned |
 | **M5** | Lighting & material | Lights and model color come from the source | Planned |
@@ -226,8 +226,11 @@ strike it through with a reason.
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
 | ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
 | ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
-| ☐ | Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`) | `m1-first-pixels` Critic round 2 (low); scheduled in `m2-language-and-feedback` |
-| ☐ | Add a D14 parallel-check test with a non-unit `up` vector (e.g. `[0.0005, 0, 1000]` is parallel; `[0.01, 0, 1000]` is not) | `m1-first-pixels` Critic round 2 (informational); scheduled in `m2-language-and-feedback` |
+| ☑ | ~~Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`)~~ Delivered in `m2-language-and-feedback` | `m1-first-pixels` Critic round 2 (low) |
+| ☑ | ~~Add a D14 parallel-check test with a non-unit `up` vector~~ Delivered in `m2-language-and-feedback` (`test/core/camera.test.js`) | `m1-first-pixels` Critic round 2 (informational) |
+| ☐ | Editor-preview spec: say what happens when the window is too narrow for both 240 px minimums (`clampEditorWidth` keeps the editor's minimum, per design D-8) | `m2-language-and-feedback` Critic round 2 (low) |
+| ☐ | Nesting cap wording: DESIGN §5 says "each parenthesis", but call-argument parentheses are not counted (recursion stays bounded). Either count them or reword §5 | `m2-language-and-feedback` Critic round 2 (low) |
+| ☐ | Add an e2e test for a resize that arrives while a render is in progress (same cancel path as the tested newer-model case) | `m2-language-and-feedback` Critic round 2 (informational) |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |

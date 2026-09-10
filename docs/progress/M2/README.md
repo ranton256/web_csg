@@ -26,7 +26,7 @@ npm 10.9.3, `@playwright/test` 1.63.0. Owner decisions in this change:
 | Evidence: captures of a valid render and of the stale state with a visible diagnostic | `app.png`, `stale.png` above | Pass |
 | Full gate from a fresh checkout | `git clone --branch m2-language-and-feedback`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. Run at `5f99ad6`, and again at `a806056` after the Critic round 1 fixes | Pass at both: exit 0. At `a806056`: `node --test` 164/164; Playwright 63/63 |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `ede222a`: `[REJECTED]` ([details](#critic-round-1)). Round 2 is recorded in the merge | Round 2 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `ede222a`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `1df2aac`: **`[APPROVED]`** ([details](#critic-round-2-approved)) | Pass |
 
 ## Scenario coverage
 
@@ -96,6 +96,28 @@ It returned **`[REJECTED]`** for the findings below, fixed in `a806056`.
 | 2 | Three stated rules had no test that could fail: arguments of unsupported transforms still checked, and nested transform or Boolean blocks counting as solids | `language.test.js`: `arguments of an unsupported transform are still checked`, `a nested transform or Boolean block counts as a solid in a body` | Arguments no longer evaluated: `not ok … arguments of an unsupported transform are still checked`. Boolean or transform not counted: `not ok … a nested transform or Boolean block counts as a solid` |
 | 3 | Two requirements had no e2e test that could fail: an invalid edit must not cancel the render in progress, and the preview keeps 240 px when the window shrinks | `e2e/live-rebuild.spec.js`: `an invalid edit does not cancel the render in progress`, `when the window shrinks, the preview keeps its 240 px minimum` | Invalid edit cancels the job: `✘` (the cancelled render never finishes, so the status never clears). No window resize listener: `✘`, `Expected: 240, Received: 0` |
 | 4 | Drift: tasks.md 3.3 named `evaluate.test.js`; the default-scene render times did not reproduce (the Critic measured 88/72/73 ms) | tasks.md corrected; render times now list each run and are marked indicative | Documentation only |
+
+## Critic round 2 (approved)
+
+A fresh `project-critic` review of all four commits at `1df2aac` returned
+**`[APPROVED]`**. Its checks:
+- `npm run check` exited 0 (164/164 unit tests, 63/63 e2e), and strict
+  OpenSpec validation passed.
+- 16 unit mutants and 9 e2e mutants were applied; every effective one was
+  caught, including each round 1 fix mutated back.
+- 200,000 fuzzed inputs to `compile` never threw.
+- 5,000-level mixed nesting returned nesting diagnostics.
+
+Its low-severity notes are recorded as ROADMAP backlog lines, without
+changing the approved code:
+1. Below a 486 px window both panes cannot keep 240 px. `clampEditorWidth`
+   keeps the editor's minimum, as design D-8 says, but the spec sentence
+   does not mention the case.
+2. The parentheses around call arguments do not count as a nesting level,
+   while DESIGN §5 says "each parenthesis". Recursion is still bounded,
+   because the levels inside them are counted.
+3. There is no dedicated e2e test for a resize that arrives mid-render. It
+   uses the same cancel path as the tested newer-model case.
 
 ## Manual Safari smoke check
 

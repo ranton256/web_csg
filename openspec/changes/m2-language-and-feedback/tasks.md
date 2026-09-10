@@ -86,15 +86,15 @@
 
 - [x] 7.1 CONSTRAINTS §2: add the `src/ui/` modules and their Node-testable helpers
 - [x] 7.2 DESIGN: apply the D18 decision (§5 rows, D15 wording, §12 resolved)
-- [ ] 7.3 ROADMAP: set M2's status, and strike the two backlog lines as delivered
+- [x] 7.3 ROADMAP: set M2's status, and strike the two backlog lines as delivered
 
 ## 8. Verification, review, and merge
 
 - [x] 8.1 Seen to fail: in an isolated worktree, run the new e2e tests against a version where the debounce is 0 ms and where a cancelled job keeps drawing, and watch the relevant tests fail. Record the output
 - [x] 8.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
 - [x] 8.3 `npm run capture -- M2` (valid and stale shots), then write `docs/progress/M2/README.md`: each M2 "done when" criterion with its evidence, scenario coverage, render times for a large preview, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
-- [ ] 8.4 A separate Critic review (`project-critic`) of `main..m2-language-and-feedback`. Fix findings and re-review until `[APPROVED]`
-- [ ] 8.5 Merge into `main`, mark M2 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+- [x] 8.4 A separate Critic review (`project-critic`) of `main..m2-language-and-feedback`. Fix findings and re-review until `[APPROVED]`
+- [x] 8.5 Merge into `main`, mark M2 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
 
 ## 9. Critic round 1 fixes ([REJECTED] at `ede222a`)
 
