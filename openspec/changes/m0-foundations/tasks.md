@@ -82,6 +82,12 @@
 - [x] 9.5 Fix the documented `npm test` command in CONSTRAINTS §4 and DESIGN §9
 - [x] 9.6 Watch each new test fail against the reviewed code (`bf1f36d`) in an isolated worktree; `npm run check` green; update the M0 evidence README; commit
 
+## 10. Critic round 2 fixes ([REJECTED] at `2c4ce39`)
+
+- [x] 10.1 `parsePort` accepts decimal digits only (`" "` was port 0, and `1e3`, `0x1F90`, `+80` were accepted); spec wording and scenario updated; tests for `--port`, `PORT`, and the CLI
+- [x] 10.2 Fix the CLAUDE.md layout (`test/**/*.test.js`); add a ROADMAP backlog line for dotfile serving (informational)
+- [x] 10.3 Watch the new tests fail against `2c4ce39`; `npm run check` green; update the evidence README; commit
+
 ## 8. Evidence, review, and merge
 
 - [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:

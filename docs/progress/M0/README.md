@@ -15,21 +15,21 @@ device scale factor 1): the placeholder page with the "Web CSG" heading.
 
 | Criterion | Evidence | Result |
 | --- | --- | --- |
-| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975` after the Critic round 1 fixes | Pass at both: exit 0. At `d3e2975`: `node --test` 37/37; Playwright 3/3 (Chromium, Firefox, WebKit) |
+| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975` and `2b134cd` after the Critic round 1 and round 2 fixes | Pass at all three: exit 0. At `2b134cd`: `node --test` 38/38; Playwright 3/3 (Chromium, Firefox, WebKit) |
 | Each gate has been seen to fail once | [Seen to fail](#seen-to-fail) below, run in an isolated `git worktree` | Pass: every gate failed as intended and was restored |
 | `openspec/config.yaml` names DESIGN, CONSTRAINTS, and ROADMAP and carries the standing constraints | `openspec/config.yaml` (commit `dcb3864`) | Pass |
 | `CLAUDE.md` describes the toolchain as verified and matches the actual commands and layout | `CLAUDE.md` (commit `dcb3864`) | Pass |
 | The default branch is `main` | `git branch -m master main` before the change branch was cut | Pass |
 | Evidence: a first capture of the page is committed | `app.png` above | Pass |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)); round 2 recorded in the merge | Round 2 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 is recorded in the merge | Round 3 pending at time of writing |
 
 ## Full gate summary
 
 ```text
-$ npm run check < /dev/null          # in the fresh clone at d3e2975
-# tests 37
-# pass 37
+$ npm run check < /dev/null          # in the fresh clone at 2b134cd
+# tests 38
+# pass 38
 # fail 0
   ✓  [chromium] › e2e/app.spec.js › app page loads without errors
   ✓  [webkit]   › e2e/app.spec.js › app page loads without errors
@@ -72,6 +72,22 @@ The Critic also noted three informational items, left as they are:
 - The HEAD test cannot fail, because Node suppresses bodies on HEAD responses itself.
 - The traversal guards overlap with the realpath check (defense in depth).
 - A root file literally named `..foo` gets a 403.
+
+## Critic round 2
+
+A fresh `project-critic` review of the full range at `2c4ce39` confirmed that
+all five round 1 fixes hold under mutation, and that the gate is green,
+including from a fresh `npm ci` clone. It returned **`[REJECTED]`** for one
+finding, fixed in `2b134cd`:
+
+| # | Finding | Fix | New test seen red against `2c4ce39` |
+| --- | --- | --- | --- |
+| 1 | `parsePort` treated `--port " "` and `PORT=" "` as port 0, so the server started on a random port instead of exiting with an error, as the spec requires. It also accepted `1e3`, `0x1F90`, and `+80` | Port values must be decimal digits only, from 0 to 65535; spec wording and scenario updated | `only plain decimal digits are ports` (`Missing expected exception: --port " "`) and `the CLI exits non-zero on a missing or invalid port`: both `not ok` |
+
+Informational items from round 2:
+- The CLAUDE.md layout said `test/*.test.js`; it is now `test/**/*.test.js`.
+- The server serves dotfiles such as `/.git/config`. This is within the spec and loopback-only; it is now a ROADMAP backlog line.
+- The buffer-size guards overlap (defense in depth), and the HEAD test cannot fail by itself. Both were accepted as they are.
 
 ## Manual Safari smoke check
 
