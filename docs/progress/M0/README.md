@@ -15,21 +15,21 @@ device scale factor 1): the placeholder page with the "Web CSG" heading.
 
 | Criterion | Evidence | Result |
 | --- | --- | --- |
-| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975`, `2b134cd`, `2072b70`, and `5278f6d` (the last two with `npm ci`) after each Critic round's fixes | Pass at all five: exit 0. At `5278f6d`: `node --test` 38/38; Playwright 3/3 (Chromium, Firefox, WebKit) |
+| `npm run check` is green from a fresh checkout following the CONSTRAINTS §4 setup, with at least one unit, one golden, and one e2e test | Fresh `git clone --branch m0-foundations` into a scratch directory, then `npm install`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. First run at `dcb3864`; re-run at `d3e2975`, `2b134cd`, `2072b70`, `5278f6d`, and `bf4baba` (the last three with `npm ci`) after each Critic round's fixes | Pass at all six: exit 0. At `bf4baba`: `node --test` 39/39; Playwright 3/3 (Chromium, Firefox, WebKit). The clone sits under macOS `/tmp` (a symlink); `node <clone>/tools/serve.mjs --port abc` exits 1 with `serve: Invalid port "abc"` |
 | Each gate has been seen to fail once | [Seen to fail](#seen-to-fail) below, run in an isolated `git worktree` | Pass: every gate failed as intended and was restored |
 | `openspec/config.yaml` names DESIGN, CONSTRAINTS, and ROADMAP and carries the standing constraints | `openspec/config.yaml` (commit `dcb3864`) | Pass |
 | `CLAUDE.md` describes the toolchain as verified and matches the actual commands and layout | `CLAUDE.md` (commit `dcb3864`) | Pass |
 | The default branch is `main` | `git branch -m master main` before the change branch was cut | Pass |
 | Evidence: a first capture of the page is committed | `app.png` above | Pass |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 at `7cec485`: `[REJECTED]` ([details](#critic-round-3)). Round 4 at `0b5b815`: `[REJECTED]` ([details](#critic-round-4)). Round 5 is recorded in the merge | Round 5 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 at `7cec485`: `[REJECTED]` ([details](#critic-round-3)). Round 4 at `0b5b815`: `[REJECTED]` ([details](#critic-round-4)). Round 5 at `71f8502`: `[REJECTED]` ([details](#critic-round-5)). Round 6 is recorded in the merge | Round 6 pending at time of writing |
 
 ## Full gate summary
 
 ```text
-$ npm run check < /dev/null          # in the fresh clone at 5278f6d
-# tests 38
-# pass 38
+$ npm run check < /dev/null          # in the fresh clone at bf4baba
+# tests 39
+# pass 39
 # fail 0
   ✓  [chromium] › e2e/app.spec.js › app page loads without errors
   ✓  [webkit]   › e2e/app.spec.js › app page loads without errors
@@ -115,6 +115,20 @@ A fresh review at `0b5b815` found the round 3 fix incomplete and returned
 | --- | --- | --- | --- |
 | 1 | The PPM header was decoded as `'ascii'`, which clears each byte's high bit: `0xB2` read as `"2"`, `0xB2 0xB5 0xB5` as `"255"`, and `0xD0 0xB6` as `"P6"`. A non-breaking space (`0xA0`) counted as a separator | The header is checked byte by byte: tokens are decoded as latin1, separators must be ASCII whitespace, and whitespace is required after the maximum value; the spec scenario was updated | `malformed files are rejected with the file name` (`Missing expected exception: highbit-width.ppm`): `not ok`. A per-case probe showed all four files (high-bit width, high-bit maximum value, high-bit magic, NBSP) **accepted** by the old reader and **rejected** by the new one |
 | — (informational) | Design D-3 said the PPM helpers were in `golden.js` | D-3 now names `test/support/ppm.js` | Documentation only |
+
+## Critic round 5
+
+A fresh review at `71f8502` confirmed the round 4 fix under mutation:
+- Decoding as `ascii` fails the test on `highbit-width.ppm`.
+- Treating NBSP as whitespace fails it on `nbsp.ppm`.
+
+It also checked every channel of the smoke golden against its formula. It
+returned **`[REJECTED]`** for one finding:
+
+| # | Finding | Fix | New test seen red against `71f8502` |
+| --- | --- | --- | --- |
+| 1 | Started through a path that contains a symlink (e.g. under macOS `/tmp` → `/private/tmp`), `tools/serve.mjs` exited 0 silently: no server, and no port check. Its entry-point check compared the already-resolved `import.meta.url` with the unresolved `process.argv[1]`. `npm start` and Playwright were unaffected because they use a relative path from the real directory | Compare real paths (`fs.realpathSync(process.argv[1])`); spec scenario "Started through a symlinked path" | `the CLI works when started through a symlinked path` (`exit 0, stderr ""`): `not ok` |
+| — (cosmetic) | Sections 9–12 of `tasks.md` came before section 8 | Section 8 moved back into order | — |
 
 ## Manual Safari smoke check
 

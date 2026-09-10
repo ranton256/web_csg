@@ -115,4 +115,4 @@
 
 - [x] 13.1 `serve.mjs` detects that it is the entry point by comparing real paths, so it runs when started through a symlinked path (it silently exited 0); spec scenario and test
 - [x] 13.2 Put section 8 back in numeric order in this file (cosmetic)
-- [ ] 13.3 Watch the new test fail against `71f8502`; `npm run check` green (fresh clone); update the evidence README; commit
+- [x] 13.3 Watch the new test fail against `71f8502`; `npm run check` green (fresh clone); update the evidence README; commit
