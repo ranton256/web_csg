@@ -1,8 +1,9 @@
 # Web CSG — Project Design Document and Feature Specification
 
 > **Status: Agreed** in the planning interview (readback confirmed
-> 2026-09-10), derived from [`vision.md`](vision.md). Nothing is implemented
-> yet. `ε` and the supported scene scale in §5 are provisional until M4.
+> 2026-09-10), derived from [`vision.md`](vision.md). Implementation progress
+> is tracked in [ROADMAP.md](ROADMAP.md). `ε` and the supported scene scale in
+> §5 are provisional until M4.
 > Record new spec gaps in [§12](#12-open-decisions).
 
 ## How to read this document
@@ -714,6 +715,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D13~~ | **Resolved 2026-09-10:** rename `master` → `main`; branch per OpenSpec change; pre-commit hook runs `npm test`; full gate + Critic before merge. See CONSTRAINTS §4. | — | — |
 | ~~D14~~ | **Resolved 2026-09-10 (accepted by the owner):** position and lookAt are equal when their distance is ≤ `ε`; up is parallel when `‖f̂ × û‖ ≤ 1e-6`. Recorded in §5. | — | — |
 | ~~D15~~ | **Resolved 2026-09-10 (chosen by the owner):** expressions nest at most 100 levels; deeper input is a syntax error rather than a stack overflow. Recorded in §5. | — | — |
+| D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
 | D16 | Behavior for values far outside the supported scene scale. For example, a camera 1e200 away overflows the vector math to Infinity and is misreported as "up must not be parallel". Literals that overflow to Infinity are already rejected. | Not M1 (inputs are outside the provisional `[1e-3, 1e5]` scale) | Decide in M4, when the scale range is finalized: reject values outside the supported scale, or specify a best-effort behavior |
 
 ## Optional features (parked)

@@ -93,11 +93,11 @@
 - [x] 11.5 An implicit-union render test with the camera outside and the solids out of order (it fails if the union is replaced by concatenation)
 - [x] 11.6 Literals that overflow to Infinity are a syntax error ("number is too large"); columns count code points (an emoji is one column), and the unexpected-character message shows the whole character; D16 records the open question of values beyond the supported scale
 - [x] 11.7 Fix design D-1 signature drift and the spec punctuation list; note the scanner's regex-literal limit in design risks
-- [ ] 11.8 Watch each new test fail against `71a1e28` (or the Critic's mutants) in an isolated worktree; full gate and a fresh clone green; update the evidence README (correct the overstated coverage claims); commit; new Critic review
+- [x] 11.8 Watch each new test fail against `71a1e28` (or the Critic's mutants) in an isolated worktree; full gate and a fresh clone green; update the evidence README (correct the overstated coverage claims); commit; new Critic review
 
 ## 10. Verification, review, and merge
 
 - [x] 10.1 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
 - [x] 10.2 `npm run capture -- M1`, then write `docs/progress/M1/README.md`: each M1 "done when" criterion with its evidence, the gate summary, the core-purity seen-to-fail record, the render time, and the manual Safari smoke check (performed by the owner)
-- [ ] 10.3 A separate Critic review (`project-critic`) of `main..m1-first-pixels`. Fix findings and re-review until `[APPROVED]`
-- [ ] 10.4 Merge into `main`, mark M1 complete in ROADMAP, and archive the change with `/opsx:archive` (syncing the specs)
+- [x] 10.3 A separate Critic review (`project-critic`) of `main..m1-first-pixels`. Fix findings and re-review until `[APPROVED]`
+- [x] 10.4 Merge into `main`, mark M1 complete in ROADMAP, and archive the change with `/opsx:archive` (syncing the specs)

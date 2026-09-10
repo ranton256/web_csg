@@ -26,7 +26,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | | Milestone | Goal | Status |
 |---|---|---|---|
 | **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
-| **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | In progress (`m1-first-pixels`) |
+| **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Complete (2026-09-10; `m1-first-pixels`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M1/`) |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Planned |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
 | **M4** | CSG | Boolean operations; the bored cube renders | Planned |
@@ -224,6 +224,8 @@ strike it through with a reason.
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
 | ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
 | ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
+| ☐ | Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`) | `m1-first-pixels` Critic round 2 (low) |
+| ☐ | Add a D14 parallel-check test with a non-unit `up` vector (e.g. `[0.0005, 0, 1000]` is parallel; `[0.01, 0, 1000]` is not) | `m1-first-pixels` Critic round 2 (informational) |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |

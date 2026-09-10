@@ -23,7 +23,7 @@ device scale factor 1): the page with the example source beside the
 | `src/core/` passes the core-purity check | `test/core-purity.test.js` (scanner fixtures plus the real `src/core/`); [seen to fail](#seen-to-fail) | Pass |
 | Evidence: a capture of the rendered sphere | `app.png` above | Pass |
 | Full gate from a fresh checkout | `git clone --branch m1-first-pixels`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. Run at `4ba73c7`, and again at `76edd44` after the Critic round 1 fixes | Pass at both: exit 0. At `76edd44`: `node --test` 122/122; Playwright 12/12 |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `71a1e28`: `[REJECTED]` ([details](#critic-round-1)). Round 2 is recorded in the merge | Round 2 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `71a1e28`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `bf12596`: **`[APPROVED]`** ([details](#critic-round-2-approved)) | Pass |
 
 ## Scenario coverage
 
@@ -96,6 +96,31 @@ returned **`[REJECTED]`** for the findings below, all fixed in `76edd44`.
 | 6 | Literals that overflow to Infinity rendered impossible `[0,0,0,255]` pixels | Such literals are a syntax error ("number is too large"). The wider question of values beyond the supported scale is DESIGN §12 D16 (decide in M4) | Against `71a1e28`: `not ok … numbers too large to represent are rejected` |
 | — | Columns counted UTF-16 code units, not characters as the spec says; an emoji produced a lone-surrogate message | Columns count code points; the message shows the whole character | Against `71a1e28`: `not ok … columns count characters: an emoji is one column` |
 | — | Doc drift: design D-1 signatures, and the spec punctuation list omitted `+ * /` | Both corrected; the scanner's known regex-literal limit is noted in design risks | Documentation only |
+
+## Critic round 2 (approved)
+
+A fresh `project-critic` review of all four commits at `bf12596` returned
+**`[APPROVED]`**. Its checks:
+- `npm run check` exited 0 (122/122 unit tests, 12/12 e2e), and strict
+  OpenSpec validation passed.
+- 30 mutants were applied one at a time; 29 were caught, including every
+  round 1 fix mutated back.
+- Making the page clear the canvas on error turned the e2e red.
+- An independent renderer written from DESIGN §5 and §8 matched both goldens
+  exactly (0 of 9216 channels differ).
+- Every delta-spec scenario has a matching test.
+
+Its non-blocking notes were recorded without changing the approved code:
+1. The purity scanner misses imports and re-exports written without spaces
+   (`import{x}from'node:fs'`, `export*from'node:fs'`). This is now a ROADMAP
+   backlog line.
+2. The D14 parallel check is tested only with unit-length `up` vectors. The
+   code is correct for non-unit vectors, as the Critic verified; a test is a
+   ROADMAP backlog line.
+3. DESIGN's status line still said "Nothing is implemented yet". Corrected.
+4. Identifier letters are ASCII only (`é`, NBSP, and BOM are "unexpected
+   character"). This is consistent with the spec, and recorded as DESIGN §12
+   D17 for a decision before M6 adds opening files.
 
 ## Manual Safari smoke check
 
