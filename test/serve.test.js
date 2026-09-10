@@ -181,6 +181,15 @@ describe('port selection', () => {
     assert.throws(() => parsePort(['--port', '70000'], {}), /Invalid port/);
   });
 
+  test('only plain decimal digits are ports', () => {
+    for (const raw of [' ', ' 80', '1e3', '0x1F90', '+80', '-1', '80.0', '8o']) {
+      assert.throws(() => parsePort(['--port', raw], {}), /Invalid port/, `--port ${JSON.stringify(raw)}`);
+      assert.throws(() => parsePort([], { PORT: raw }), /Invalid port/, `PORT=${JSON.stringify(raw)}`);
+    }
+    assert.equal(parsePort(['--port', '0'], {}), 0);
+    assert.equal(parsePort(['--port', '65535'], {}), 65535);
+  });
+
   test('--port without a value is rejected, not defaulted', () => {
     for (const argv of [['--port'], ['--port', ''], ['--port=']]) {
       assert.throws(() => parsePort(argv, {}), /--port requires a value/, JSON.stringify(argv));
@@ -188,7 +197,7 @@ describe('port selection', () => {
   });
 
   test('the CLI exits non-zero on a missing or invalid port', () => {
-    for (const args of [['--port'], ['--port', 'abc']]) {
+    for (const args of [['--port'], ['--port', 'abc'], ['--port', ' ']]) {
       const result = spawnSync(process.execPath, [path.join(REPO_ROOT, 'tools', 'serve.mjs'), ...args], {
         encoding: 'utf8',
         timeout: 5000,

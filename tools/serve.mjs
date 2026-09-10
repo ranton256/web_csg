@@ -40,9 +40,10 @@ export function parsePort(argv, env) {
     if (raw === undefined || raw === '') throw new Error('--port requires a value');
   }
   if (raw === undefined || raw === '') return DEFAULT_PORT;
-  const port = Number(raw);
-  if (!Number.isInteger(port) || port < 0 || port > 65535) {
-    throw new Error(`Invalid port "${raw}": expected an integer from 0 to 65535`);
+  // Decimal digits only: Number() would also accept " " (→ 0), "1e3", "0x1F90", "+80".
+  const port = /^\d{1,5}$/.test(raw) ? Number(raw) : NaN;
+  if (!(port >= 0 && port <= 65535)) {
+    throw new Error(`Invalid port "${raw}": expected a decimal integer from 0 to 65535`);
   }
   return port;
 }

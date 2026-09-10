@@ -10,9 +10,11 @@ native ES modules, without exposing anything outside the repository.
 The dev server SHALL serve files from the repository root over HTTP, bound to
 the loopback interface (`127.0.0.1`) only. It SHALL listen on the port given
 by a `--port <n>` or `--port=<n>` argument, else the `PORT` environment
-variable, else `8080`. A `--port` flag without a value, or a port that is not
-an integer from 0 to 65535, SHALL be an error: the server exits non-zero and
-does not start. A request for `/` SHALL return `index.html`.
+variable, else `8080`. A port value SHALL consist of decimal digits only,
+from 0 to 65535. A `--port` flag without a value, or any other port value
+(including blanks, signs, decimals, exponents, and hexadecimal), SHALL be an
+error: the server exits non-zero and does not start. An empty `PORT` is
+treated as unset. A request for `/` SHALL return `index.html`.
 
 #### Scenario: Root serves the app page
 - **WHEN** the server is started with `npm start` and `/` is requested
@@ -23,7 +25,7 @@ does not start. A request for `/` SHALL return `index.html`.
 - **THEN** it accepts connections on `127.0.0.1:4173`
 
 #### Scenario: Missing or invalid port value
-- **WHEN** the server is started with `--port` and no value, or with `--port abc`
+- **WHEN** the server is started with `--port` and no value, or with `--port abc`, `--port " "`, or `--port 1e3`
 - **THEN** it reports the error and exits non-zero instead of falling back to another port
 
 #### Scenario: Not reachable from other interfaces

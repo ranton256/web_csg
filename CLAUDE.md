@@ -39,7 +39,7 @@ src/
   core/                     # DOM-free core (from M1)
   ui/                       # Browser shell (from M1)
 test/
-  *.test.js                 # Node unit + golden tests (npm test)
+  **/*.test.js              # Node unit + golden tests (npm test)
   support/                  # PPM + golden helpers (never run as tests)
   golden/                   # Reference renders (binary PPM)
 e2e/
