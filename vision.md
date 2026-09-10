@@ -1,10 +1,11 @@
 # Web CSG 
 
-Web CSG is a small constructive solid modeler that runs directly in your browser using ThreeJS.
+Web CSG is a small constructive solid modeler that runs directly in your browser, ray traced in pure JavaScript.
 
 A small number of primitives are supported:
 - sphere
 - cube
+- rectangular box
 - bounded cylinder
 
 CSG shapes are created out of simpler primitives using transformations and boolean operations.
@@ -122,7 +123,7 @@ difference {
 - Validator/evaluator: resolve names and arithmetic, check dimensions and operation arguments.
 - CSG representation: a small tree of primitives, transforms, and Boolean nodes.
 - Renderer: render a fullscreen surface by casting a ray for each pixel.
-- Editor interface: diagnostics, live rebuilding, camera controls, and save/load.
+- Editor interface: diagnostics, live rebuilding, and save/load. (The camera is set in source; interactive camera controls are a later, optional feature.)
 
 ## Considerations and Edge Cases
 
@@ -148,7 +149,7 @@ There are several concerns and edge cases we must handle correctly, including;
 | What order are transforms applied?                 | Nested blocks compose from the inside outward; rotation vector order is explicitly defined. |
 | What scaling is allowed?                           | Positive uniform scaling initially.                                                         |
 | What happens after an invalid edit?                | Keep the last valid rendering and visibly mark it as stale.                                 |
-| How much detail can the renderer resolve?          | Define supported scene scale, hit tolerance, and marching limits.                           |
+| How much detail can the renderer resolve?          | Define supported scene scale and hit tolerance (analytic tracing needs no marching limits). |
 
 ### Open Questions
 
