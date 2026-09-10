@@ -84,6 +84,17 @@
 - [x] 9.2 DESIGN: apply the owner's D14 decision (move the tolerances into §5 and mark D14 resolved, or amend them)
 - [x] 9.3 ROADMAP: strike the core-purity backlog line as delivered, and set M1's status; CLAUDE.md layout, if it changed
 
+## 11. Critic round 1 fixes ([REJECTED] at `71a1e28`)
+
+- [x] 11.1 Specular-gate test uses grazing geometry where the ungated term is about 0.29, so removing the gate fails it
+- [x] 11.2 The core-purity scanner reports `export * as name from '…'` and literal bracket access (`globalThis['document']`); spec wording and fixtures updated
+- [x] 11.3 Every semantic error is reported: a second camera block is validated too, and camera rules are checked independently (a mistyped `position` no longer hides the fov range); spec scenarios and tests
+- [x] 11.4 Nesting is bounded at 100 levels (owner decision D15, in DESIGN §5); deeper or pathological input returns a diagnostic, never a stack overflow; spec requirement and tests
+- [x] 11.5 An implicit-union render test with the camera outside and the solids out of order (it fails if the union is replaced by concatenation)
+- [x] 11.6 Literals that overflow to Infinity are a syntax error ("number is too large"); columns count code points (an emoji is one column), and the unexpected-character message shows the whole character; D16 records the open question of values beyond the supported scale
+- [x] 11.7 Fix design D-1 signature drift and the spec punctuation list; note the scanner's regex-literal limit in design risks
+- [ ] 11.8 Watch each new test fail against `71a1e28` (or the Critic's mutants) in an isolated worktree; full gate and a fresh clone green; update the evidence README (correct the overstated coverage claims); commit; new Critic review
+
 ## 10. Verification, review, and merge
 
 - [x] 10.1 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
