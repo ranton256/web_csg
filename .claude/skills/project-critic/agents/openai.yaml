@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project Critic"
+  short_description: "Adversarial review with independently verified evidence"
+  default_prompt: "Use $project-critic to review my working tree and return an evidence-backed verdict."
