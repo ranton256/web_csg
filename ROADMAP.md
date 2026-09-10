@@ -25,7 +25,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 
 | | Milestone | Goal | Status |
 |---|---|---|---|
-| **M0** | Foundations | The project can verify itself | In progress (`m0-foundations`) |
+| **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Planned |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Planned |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
@@ -210,6 +210,8 @@ strike it through with a reason.
 |---|---|---|
 | ☐ | Add CI (full gate on push) once a git remote exists | CONSTRAINTS §4, D13 |
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
+| ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
+| ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
 | ☐ | Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1) | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |

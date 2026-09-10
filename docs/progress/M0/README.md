@@ -22,7 +22,7 @@ device scale factor 1): the placeholder page with the "Web CSG" heading.
 | The default branch is `main` | `git branch -m master main` before the change branch was cut | Pass |
 | Evidence: a first capture of the page is committed | `app.png` above | Pass |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 at `7cec485`: `[REJECTED]` ([details](#critic-round-3)). Round 4 at `0b5b815`: `[REJECTED]` ([details](#critic-round-4)). Round 5 at `71f8502`: `[REJECTED]` ([details](#critic-round-5)). Round 6 is recorded in the merge | Round 6 pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | Round 1 at `bf1f36d`: `[REJECTED]` ([details](#critic-round-1)). Round 2 at `2c4ce39`: `[REJECTED]` ([details](#critic-round-2)). Round 3 at `7cec485`: `[REJECTED]` ([details](#critic-round-3)). Round 4 at `0b5b815`: `[REJECTED]` ([details](#critic-round-4)). Round 5 at `71f8502`: `[REJECTED]` ([details](#critic-round-5)). Round 6 at `fd267a2`: **`[APPROVED]`** ([details](#critic-round-6-approved)) | Pass |
 
 ## Full gate summary
 
@@ -129,6 +129,23 @@ returned **`[REJECTED]`** for one finding:
 | --- | --- | --- | --- |
 | 1 | Started through a path that contains a symlink (e.g. under macOS `/tmp` → `/private/tmp`), `tools/serve.mjs` exited 0 silently: no server, and no port check. Its entry-point check compared the already-resolved `import.meta.url` with the unresolved `process.argv[1]`. `npm start` and Playwright were unaffected because they use a relative path from the real directory | Compare real paths (`fs.realpathSync(process.argv[1])`); spec scenario "Started through a symlinked path" | `the CLI works when started through a symlinked path` (`exit 0, stderr ""`): `not ok` |
 | — (cosmetic) | Sections 9–12 of `tasks.md` came before section 8 | Section 8 moved back into order | — |
+
+## Critic round 6 (approved)
+
+A fresh `project-critic` review of all 13 commits at `fd267a2` returned
+**`[APPROVED]`**. Its checks:
+- `npm run check` exited 0, both in a worktree and in a fresh `npm ci` clone under macOS `/tmp`: 39/39 unit tests and 3/3 e2e.
+- `npm test` passed 39/39.
+- Strict OpenSpec validation passed.
+- `hooks:install` is idempotent, and the hook blocks a failing commit.
+- The smoke golden was recomputed channel by channel with no differences.
+- `app.png` is 1280×800.
+- Restoring the old entry-point check turns the symlink test red. Starting the server through `/tmp`, a case-variant path, `NODE_PRESERVE_SYMLINKS=1`, and `--preserve-symlinks` all exit 1 on an invalid port.
+
+Two informational items were not changed after approval. Both are ROADMAP
+backlog lines:
+1. Under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path still exits 0 silently. None of the documented commands use this flag.
+2. The CLAUDE.md layout shows `e2e/*.spec.js`, while CONSTRAINTS and design D-1 say `e2e/**/*.spec.js`. Behavior is identical.
 
 ## Manual Safari smoke check
 
