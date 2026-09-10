@@ -43,11 +43,11 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 `@playwright/test`); `tools/serve.mjs`; Playwright config for Chromium,
 Firefox, WebKit; `tools/hooks/pre-commit` and `npm run hooks:install`; PPM
 golden read/write helpers and `npm run golden:update`; `npm run capture`;
-`openspec/config.yaml` context and standing constraints; a project
-`CLAUDE.md` from `templates/CLAUDE.general-template.md`, adapted so the
-spec-gap register is DESIGN §12 (the template's `AMBIGUITIES.md`) and
-milestone evidence follows CONSTRAINTS §5; rename the `master`
-branch to `main` (D13).
+`openspec/config.yaml` context and standing constraints; rename the `master`
+branch to `main` (D13). `CLAUDE.md` was created from
+`templates/CLAUDE.general-template.md` ahead of M0 (2026-09-10); M0 updates
+it once the toolchain exists (drop the "not verified" and "planned" notes, fix
+the branch name, add the source layout).
 
 **Dependencies.** None.
 
@@ -63,8 +63,8 @@ branch to `main` (D13).
 - `openspec/config.yaml` names DESIGN.md, CONSTRAINTS.md, and ROADMAP.md and
   carries the standing constraints (pure-JS CPU renderer, no build step,
   DOM-free core, full gate).
-- `CLAUDE.md` exists with no remaining TODOs and is consistent with these
-  documents.
+- `CLAUDE.md` describes the toolchain as verified, matches the actual
+  commands and layout, and is consistent with these documents.
 - The default branch is `main`.
 - **Evidence:** a first `npm run capture` of the (empty) page committed to
   `docs/progress/M0/`.

@@ -69,7 +69,9 @@ block planning; it must be settled before M1 is implemented.
   delivered as one or more changes.
 - **Document authority:** DESIGN.md → CONSTRAINTS.md → ROADMAP.md → OpenSpec
   specs/changes. Spec gaps are recorded in [DESIGN §12](DESIGN.md#12-open-decisions),
-  never resolved silently.
+  never resolved silently. `CLAUDE.md` is the agent entrypoint: it summarizes
+  and links these documents and must be kept consistent with them. It does
+  not override them.
 - **Git** (D13, agreed 2026-09-10):
   - The default branch is `main` (the current local `master` is renamed in M0).
     No remote exists yet, so there is no CI or pull requests.
