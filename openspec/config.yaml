@@ -1,32 +1,41 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Web CSG is a small constructive solid geometry modeler that runs in desktop
+  browsers (current Chrome, Firefox, Safari), ray traced in pure JavaScript.
+  It is a course exemplar: students rebuild it from the spec and extend it.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+  Authoritative documents:
+  - DESIGN.md: behavior, constants (§5), BDD features (§8), open decisions
+    (§12). Wins over every other design or planning document.
+  - CONSTRAINTS.md: stack, architecture, workflow, commands; §5 definition of
+    done, §6 Critic review.
+  - ROADMAP.md: milestones M0-M6 and the backlog.
+  Spec gaps are recorded in DESIGN §12, never resolved silently.
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+  Standing constraints:
+  - A pure-JavaScript CPU ray tracer drawing to a 2D canvas. No ThreeJS,
+    WebGL, or GPU shaders.
+  - Plain JavaScript ES modules with no build step. No TypeScript, bundler,
+    or UI framework. No runtime dependencies; the only dev dependency is
+    @playwright/test.
+  - src/core/ is DOM-free and runs under Node. src/ui/ is the browser shell;
+    it depends on core, never the reverse.
+  - Rendering is deterministic. Numeric constants come only from DESIGN §5.
+  - Full gate: npm run check (node:test unit + golden tests, then Playwright
+    on Chromium, Firefox, WebKit). Golden images are PPM files in test/golden/
+    and are regenerated only with npm run golden:update.
+  - A separate Critic review (project-critic) must return [APPROVED] before
+    every archive and milestone.
+  - Features in DESIGN's "Optional features (parked)" are out of scope unless
+    specifically requested.
+  - Stage files explicitly; never git add -A or git add .
+
+rules:
+  proposal:
+    - Name the ROADMAP milestone the change delivers.
+  specs:
+    - Derive requirements and scenarios from DESIGN §8 features and §5 constants, and cite the DESIGN feature each requirement comes from.
+    - Do not contradict DESIGN; record any gap in DESIGN §12 instead.
+  tasks:
+    - Include tasks for tests covering every scenario, a green npm run check, updating affected documents, and a separate Critic review before archive.

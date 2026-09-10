@@ -25,7 +25,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 
 | | Milestone | Goal | Status |
 |---|---|---|---|
-| **M0** | Foundations | The project can verify itself | Planned |
+| **M0** | Foundations | The project can verify itself | In progress (`m0-foundations`) |
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Planned |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Planned |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
@@ -209,6 +209,7 @@ strike it through with a reason.
 | | Item | From |
 |---|---|---|
 | ☐ | Add CI (full gate on push) once a git remote exists | CONSTRAINTS §4, D13 |
+| ☐ | Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1) | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |
 

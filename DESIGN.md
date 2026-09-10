@@ -668,7 +668,7 @@ Scenario: Fixing the error clears the stale indicator
 ## 9. Build, test, and verify
 
 See [CONSTRAINTS §4–§5](CONSTRAINTS.md#4-development-and-planning-workflow).
-Agreed commands (D12; not yet verified — nothing exists to run):
+Commands (agreed in D12, verified in M0):
 
 ```
 npm install && npx playwright install && npm run hooks:install
@@ -676,7 +676,7 @@ npm start            # serve the app locally
 npm test             # unit + golden-image tests (node --test)
 npm run test:e2e     # Playwright: Chromium, Firefox, WebKit
 npm run check        # FULL GATE: both of the above
-npm run capture      # milestone screenshots into docs/progress/<milestone>/
+npm run capture -- <milestone>   # screenshots into docs/progress/<milestone>/
 ```
 
 Pure logic (parser, evaluator, intervals, shading) gets unit tests; every

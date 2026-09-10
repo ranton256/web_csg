@@ -51,27 +51,27 @@
 
 ## 6. Seen to fail (in an isolated `git worktree` under the scratchpad)
 
-- [ ] 6.1 Break a unit assertion and observe that `npm test` exits non-zero and names the test
-- [ ] 6.2 Change one channel of the smoke buffer by 2 and observe the golden failure message and the written `.actual.ppm`. Delete the golden file and observe the "missing golden" failure, with no file created
-- [ ] 6.3 Change the expected title and observe that `npm run test:e2e` fails, naming each engine. Observe that `npm run check` fails when either suite fails
-- [ ] 6.4 With the hook installed in the worktree and a failing unit test, observe that `git commit` is refused. Restore it and observe that the commit proceeds
-- [ ] 6.5 Record each command and its observed failure output for the M0 evidence README; remove the worktree
+- [x] 6.1 Break a unit assertion and observe that `npm test` exits non-zero and names the test
+- [x] 6.2 Change one channel of the smoke buffer by 2 and observe the golden failure message and the written `.actual.ppm`. Delete the golden file and observe the "missing golden" failure, with no file created
+- [x] 6.3 Change the expected title and observe that `npm run test:e2e` fails, naming each engine. Observe that `npm run check` fails when either suite fails
+- [x] 6.4 With the hook installed in the worktree and a failing unit test, observe that `git commit` is refused. Restore it and observe that the commit proceeds
+- [x] 6.5 Record each command and its observed failure output for the M0 evidence README; remove the worktree
 
 ## 7. Documentation
 
-- [ ] 7.1 Populate `openspec/config.yaml`:
+- [x] 7.1 Populate `openspec/config.yaml`:
   - `context` naming DESIGN.md, CONSTRAINTS.md, and ROADMAP.md, plus the standing constraints (pure-JS CPU renderer with no ThreeJS/WebGL, no build step, no runtime dependencies, DOM-free `src/core/`, full gate `npm run check`, Critic before archive)
   - artifact `rules` pointing specs at DESIGN §8 scenarios
-- [ ] 7.2 Update `CONSTRAINTS.md`:
+- [x] 7.2 Update `CONSTRAINTS.md`:
   - §1: the pinned Playwright version
   - §2: the repository layout from design D-1, replacing the "Deferred" note
   - §4: commands marked verified, `capture` usage `npm run capture -- <milestone>`, default branch `main`
-- [ ] 7.3 Update `CLAUDE.md`:
+- [x] 7.3 Update `CLAUDE.md`:
   - remove the "not verified" and "planned" notes
   - show the real layout
   - set the default branch to `main`
   - add the `capture` usage
-- [ ] 7.4 Update `ROADMAP.md`: set M0 status and add a backlog line "Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)"
+- [x] 7.4 Update `ROADMAP.md`: set M0 status and add a backlog line "Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)"
 
 ## 8. Evidence, review, and merge
 

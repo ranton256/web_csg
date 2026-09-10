@@ -1,8 +1,8 @@
 # Constraints
 
 > **Status: Agreed** in the planning interview (readback confirmed
-> 2026-09-10). Commands and tooling are agreed but not yet verified — nothing
-> exists to run until M0. Spec gaps are recorded in [DESIGN §12](DESIGN.md#12-open-decisions).
+> 2026-09-10). Commands and tooling were verified in M0. Spec gaps are
+> recorded in [DESIGN §12](DESIGN.md#12-open-decisions).
 
 How Web CSG is built and judged. Behavior is specified in
 [DESIGN.md](DESIGN.md), which wins over this document on questions of *what*
@@ -19,9 +19,9 @@ the product does; this document governs *how*. §5 is the definition of done;
 | Runtime dependencies | None. |
 | Unit tests | Node's built-in test runner (`node:test`, `node:assert`), including golden-image render tests of the core (D12). |
 | Browser tests | `@playwright/test`, headless Chromium, Firefox, and WebKit (D12). WebKit stands in for Safari; real Safari gets a manual smoke check at each milestone. |
-| Dev dependencies | `@playwright/test` only, pinned to an exact version in `package.json` (npm's current release on 2026-09-10 was 1.63.0; verify when installing). Adding any other dependency requires updating this table. |
+| Dev dependencies | `@playwright/test` only, pinned exactly at `1.63.0` in `package.json` (M0). Adding any other dependency, or changing the pin, requires updating this table. |
 | Dev server | `tools/serve.mjs`: a small zero-dependency static file server on `node:http`, used by `npm start` and Playwright's `webServer` (D12). |
-| Node / npm | Node.js 22 or newer (agreed at readback, 2026-09-10; author's machine: v22.20.0, npm 10.9.3); recorded in `package.json` `engines` in M0. |
+| Node / npm | Node.js 22 or newer (agreed at readback, 2026-09-10; author's machine: v22.20.0, npm 10.9.3); recorded in `package.json` `engines` as `>=22`. |
 | Python | Not currently used. If any Python tooling is added, it runs in `.venv` (or `venv`), created before installing packages. |
 
 ## 2. Architecture and boundaries
@@ -44,10 +44,23 @@ Boundaries agreed so far:
   core, never the reverse. The shell turns the core's pixel output into
   canvas `ImageData`.
 
-**Deferred to the M0/M1 OpenSpec proposals:** module/file layout and the exact
-interfaces between layers (including how the shell drives band-by-band
-rendering). Record them here when those proposals are accepted. This does not
-block planning; it must be settled before M1 is implemented.
+**Repository layout** (M0, design D-1 of `m0-foundations`):
+
+```text
+index.html                 # App entry page
+src/core/                  # DOM-free core (from M1)
+src/ui/                    # Browser shell (from M1)
+test/**/*.test.js          # Node unit + golden tests (npm test)
+test/support/              # Test helpers (PPM, golden comparison); never run as tests
+test/golden/*.ppm          # Committed reference images
+e2e/**/*.spec.js           # Playwright tests (npm run test:e2e)
+tools/                     # serve.mjs, capture.mjs, golden-update.mjs, hooks/
+docs/progress/<M>/         # Milestone evidence
+```
+
+**Deferred to the M1 proposal:** the module layout inside `src/core/` and
+`src/ui/`, and the interfaces between them (including how the shell drives
+band-by-band rendering). Record them here when that proposal is accepted.
 
 ## 3. Runtime and operational requirements
 
@@ -73,8 +86,8 @@ block planning; it must be settled before M1 is implemented.
   and links these documents and must be kept consistent with them. It does
   not override them.
 - **Git** (D13, agreed 2026-09-10):
-  - The default branch is `main` (the current local `master` is renamed in M0).
-    No remote exists yet, so there is no CI or pull requests.
+  - The default branch is `main`. No remote exists yet, so there is no CI or
+    pull requests.
   - One branch per OpenSpec change, merged into `main` only after the full gate
     (§5) passes and the Critic returns `[APPROVED]` (§6).
   - A committed pre-commit hook (`tools/hooks/pre-commit`, installed by
@@ -85,7 +98,7 @@ block planning; it must be settled before M1 is implemented.
 - **Golden images:** reference renders live in `test/golden/` as binary PPM
   files. They are regenerated only deliberately (`npm run golden:update`),
   and the image diff is reviewed in the same change.
-- **Commands** *(agreed in D12; not yet verified — nothing exists to run)*:
+- **Commands** *(agreed in D12, verified in M0 on 2026-09-10)*:
 
   | Purpose | Command |
   | --- | --- |
@@ -95,7 +108,7 @@ block planning; it must be settled before M1 is implemented.
   | One test file | `node --test path/to/file.test.js` |
   | Browser e2e | `npm run test:e2e` → `playwright test` (Chromium, Firefox, WebKit) |
   | **Full gate** | `npm run check` → `npm test` then `npm run test:e2e` |
-  | Milestone captures | `npm run capture` → screenshots of the app with each example into `docs/progress/<milestone>/` |
+  | Milestone captures | `npm run capture -- <milestone>` (e.g. `npm run capture -- M1`) → screenshots into `docs/progress/<milestone>/`; the shot list lives in `tools/capture.mjs` |
   | Update goldens | `npm run golden:update` (deliberate use only) |
 
 ## 5. Definition of done

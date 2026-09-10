@@ -20,7 +20,7 @@ silent divergence. Spec gaps go to the open-decisions register in
 | `DESIGN.md` | What the project is: objectives, principles, constants (§5), BDD features (§8), open decisions (§12), parked features. **Wins over every other project design or planning document.** |
 | `ROADMAP.md` | Milestones M0–M6, "done when", and the cross-change backlog |
 | `CONSTRAINTS.md` | Stack, architecture boundaries, determinism, workflow, and commands. §5 is the definition of done; §6 is how it is judged. |
-| `openspec/config.yaml` | Standing constraints injected into every planning artifact (populated in M0) |
+| `openspec/config.yaml` | Standing constraints injected into every planning artifact |
 | `vision.md` | The original high-level input. Historical; `DESIGN.md` supersedes it. |
 | `templates/` | Source templates for the planning documents. Not project requirements. |
 
@@ -32,6 +32,25 @@ DESIGN.md
 ROADMAP.md
 CONSTRAINTS.md
 vision.md
+index.html                  # App entry page
+package.json                # Scripts; @playwright/test is the only dev dependency
+playwright.config.js        # e2e: Chromium, Firefox, WebKit on port 4173
+src/
+  core/                     # DOM-free core (from M1)
+  ui/                       # Browser shell (from M1)
+test/
+  *.test.js                 # Node unit + golden tests (npm test)
+  support/                  # PPM + golden helpers (never run as tests)
+  golden/                   # Reference renders (binary PPM)
+e2e/
+  *.spec.js                 # Playwright tests (npm run test:e2e)
+tools/
+  serve.mjs                 # Zero-dependency static dev server
+  capture.mjs               # Milestone screenshots
+  golden-update.mjs         # Runs the suite in golden-update mode
+  hooks/pre-commit          # Runs npm test
+docs/
+  progress/<milestone>/     # Milestone evidence: captures + README.md
 templates/
 openspec/
   config.yaml
@@ -41,36 +60,26 @@ openspec/
       tasks.md              # Current implementation checklist
       specs/                # This change's specification deltas
     archive/                # Completed, verified, approved changes
-# Planned in M0 (do not exist yet):
-package.json
-tools/
-  serve.mjs                 # Zero-dependency static dev server
-  hooks/pre-commit          # Runs npm test
-test/
-  golden/                   # Reference renders (binary PPM)
-docs/
-  progress/<milestone>/     # Milestone evidence: captures + README.md
 ```
 
-Source module layout is decided in the M0/M1 OpenSpec proposals and recorded
-in CONSTRAINTS §2. Keep detailed behavior in its authoritative specification;
+The module layout inside `src/` is decided in the M1 proposal and recorded in
+CONSTRAINTS §2. Keep detailed behavior in its authoritative specification;
 link from planning documents rather than maintaining conflicting copies.
 
 ## Toolchain
 
-Agreed in the planning interview; **nothing below is verified until M0 lands**.
-Exact rules live in [CONSTRAINTS §1 and §4](CONSTRAINTS.md).
+Verified in M0. Exact rules live in [CONSTRAINTS §1 and §4](CONSTRAINTS.md).
 
 | Area | Requirement |
 | --- | --- |
 | Platform / runtime | Current stable desktop Chrome, Firefox, Safari. No mobile/touch. |
 | Languages / frameworks | Plain JavaScript ES modules, **no build step**. No TypeScript, bundler, UI framework, ThreeJS, or WebGL. No runtime dependencies. |
-| Environment / dependencies | Node.js ≥ 22. `npm install && npx playwright install && npm run hooks:install`. Dev dependency: `@playwright/test` only, pinned exactly. |
+| Environment / dependencies | Node.js ≥ 22. `npm install && npx playwright install && npm run hooks:install`. Dev dependency: `@playwright/test` only, pinned exactly at `1.63.0`. |
 | Run the app | `npm start` (serves the repo over HTTP; ES modules do not load from `file://`) |
 | Gate | `npm run check` — unit + golden-image tests (`npm test`) then Playwright e2e on Chromium, Firefox, WebKit (`npm run test:e2e`). Must be green before work is done. |
 | Gate enforcement | Pre-commit hook runs `npm test`. The full gate is run by process before every merge, archive, and milestone (no CI until a remote exists). |
 | Focused tests | `node --test path/to/file.test.js` — does not replace the full gate |
-| Verification evidence | `npm run capture` → `docs/progress/<milestone>/`, plus a README recording the criteria checked, gate result, and manual Safari smoke check |
+| Verification evidence | `npm run capture -- <milestone>` → `docs/progress/<milestone>/` (add shots to the list in `tools/capture.mjs`), plus a README recording the criteria checked, gate result, and manual Safari smoke check |
 | Golden images | `npm run golden:update` — deliberate use only; review the image diff in the same change |
 | Critic | **Required:** `project-critic` skill at `.claude/skills/project-critic/`, in a separate review pass with an explicit review target (CONSTRAINTS §6) |
 | Planning | OpenSpec 1.9.0 — `/opsx:explore` → `/opsx:propose` → `/opsx:apply` → `/opsx:archive` |
@@ -128,7 +137,6 @@ An unresolved gate or Critic setup is not a waiver of verification or review.
 
 ### Git workflow
 
-- Default branch: `main` (currently still `master`; renamed in M0). No remote
-  yet.
+- Default branch: `main`. No remote yet.
 - One branch per OpenSpec change. Merge into the default branch only after
   `npm run check` passes and the Critic returns `[APPROVED]`.
