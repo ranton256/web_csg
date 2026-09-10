@@ -65,9 +65,8 @@ test('long operator chains evaluate without nesting limits or crashes', () => {
   assert.equal(numberOf(`1${' + 1'.repeat(100000)}`), 100001);
 });
 
-test('arguments of an unsupported transform are still checked', () => {
+test('arguments of a transform are checked', () => {
   assert.deepEqual(diagnosticsOf('translate([q, 0, 0]) { sphere(1); }\n' + CAMERA), [
-    [1, 1, '`translate` is not supported yet'],
     [1, 12, '`q` is undeclared'],
   ]);
 });
@@ -101,11 +100,11 @@ test('shadowing inside a block is an error', () => {
 });
 
 test('the contents of unsupported constructs are still checked', () => {
-  assert.deepEqual(diagnosticsOf('union { sphere(q); }\ncube(1 + [1, 2, 3]);\n' + CAMERA), [
+  assert.deepEqual(diagnosticsOf('union { sphere(q); }\nmaterial { color: 1 + [1, 2, 3]; }\n' + CAMERA), [
     [1, 1, '`union` is not supported yet'],
     [1, 16, '`q` is undeclared'],
-    [2, 1, '`cube` is not supported yet'],
-    [2, 8, 'invalid operands for `+`: number and vector'],
+    [2, 1, '`material` is not supported yet'],
+    [2, 21, 'invalid operands for `+`: number and vector'],
   ]);
   assert.deepEqual(diagnosticsOf('union { sphere(0); }\n' + CAMERA), [
     [1, 1, '`union` is not supported yet'],
@@ -119,12 +118,6 @@ test('the contents of unsupported constructs are still checked', () => {
 
 test('every later construct is reported as not supported yet, at its keyword', () => {
   const cases = {
-    cube: 'cube(1);',
-    box: 'box([1, 2, 3]);',
-    cylinder: 'cylinder(1, 2);',
-    translate: 'translate([1, 0, 0]) { sphere(1); }',
-    rotate: 'rotate([0, 0, 90]) { sphere(1); }',
-    scale: 'scale(2) { sphere(1); }',
     union: 'union { sphere(1); }',
     intersection: 'intersection { sphere(1); }',
     difference: 'difference { sphere(1); }',
@@ -144,7 +137,53 @@ test('the vision example reports only constructs that are not supported yet', ()
     assert.ok(match, `unexpected diagnostic ${JSON.stringify(d)}`);
     return match[1];
   }));
-  assert.deepEqual([...keywords].sort(), ['cube', 'cylinder', 'difference', 'rotate', 'union']);
+  assert.deepEqual([...keywords].sort(), ['difference', 'union']);
+});
+
+test('primitive dimensions must be positive, of the right kind', () => {
+  assert.deepEqual(diagnosticsOf('cube(0);\n' + CAMERA), [[1, 6, 'the size must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('cube([1, 2, 3]);\n' + CAMERA), [[1, 6, 'the size must be a number']]);
+  assert.deepEqual(diagnosticsOf('box([10, -1, 10]);\n' + CAMERA), [[1, 5, 'each size component must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('box(10);\n' + CAMERA), [[1, 5, 'the size must be a vector']]);
+  assert.deepEqual(diagnosticsOf('cylinder(0, 10);\n' + CAMERA), [[1, 10, 'the radius must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('cylinder(5, -1);\n' + CAMERA), [[1, 13, 'the height must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('cylinder(5);\n' + CAMERA), [[1, 1, 'missing parameter `height` for cylinder']]);
+  assert.deepEqual(diagnosticsOf('cube(1, 2);\n' + CAMERA), [[1, 9, 'cube takes 1 argument']]);
+});
+
+test('cylinder arguments in any order when named', () => {
+  const solids = (source) => compile(source + '\n' + CAMERA).scene.solids.map(({ type, radius, height }) => ({ type, radius, height }));
+  assert.deepEqual(solids('cylinder(12, 62);'), solids('cylinder(height: 62, radius: 12);'));
+  assert.deepEqual(solids('cylinder(12, 62);'), [{ type: 'cylinder', radius: 12, height: 62 }]);
+});
+
+test('transforms take exactly one positional argument (D19)', () => {
+  for (const source of ['translate() { sphere(1); }', 'translate([1, 0, 0], [0, 1, 0]) { sphere(1); }', 'translate(by: [1, 0, 0]) { sphere(1); }']) {
+    assert.deepEqual(diagnosticsOf(source + '\n' + CAMERA), [[1, 1, '`translate` takes exactly one positional argument']], source);
+  }
+  assert.deepEqual(diagnosticsOf('scale() { sphere(1); }\n' + CAMERA), [[1, 1, '`scale` takes exactly one positional argument']]);
+});
+
+test('transform argument kinds, and a positive scale factor', () => {
+  assert.deepEqual(diagnosticsOf('translate(5) { sphere(1); }\n' + CAMERA), [[1, 11, '`translate` needs a vector']]);
+  assert.deepEqual(diagnosticsOf('rotate(90) { sphere(1); }\n' + CAMERA), [[1, 8, '`rotate` needs a vector of angles in degrees']]);
+  assert.deepEqual(diagnosticsOf('scale([1, 1, 1]) { sphere(1); }\n' + CAMERA), [[1, 7, 'the scale factor must be a number']]);
+  assert.deepEqual(diagnosticsOf('scale(0) { sphere(1); }\n' + CAMERA), [[1, 7, 'the scale factor must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('scale(-1) { sphere(1); }\n' + CAMERA), [[1, 7, 'the scale factor must be greater than 0']]);
+});
+
+test('an invalid transform still has its body checked', () => {
+  assert.deepEqual(diagnosticsOf('scale(0) { sphere(q); }\n' + CAMERA), [
+    [1, 7, 'the scale factor must be greater than 0'],
+    [1, 19, '`q` is undeclared'],
+  ]);
+});
+
+test('primitives inside an unsupported Boolean are still checked, but not rendered', () => {
+  assert.deepEqual(diagnosticsOf('union { translate([1, 0, 0]) { cube(0); } }\n' + CAMERA), [
+    [1, 1, '`union` is not supported yet'],
+    [1, 37, 'the size must be greater than 0'],
+  ]);
 });
 
 test('a camera block inside a body is an error, and is still checked', () => {

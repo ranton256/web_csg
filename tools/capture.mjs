@@ -6,29 +6,34 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+import { SCENES } from '../test/support/scenes.js';
 import { REPO_ROOT, startServer } from './serve.mjs';
 
-import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+// Waits until no render is in progress (a cancelled render never finishes,
+// so the status is the reliable signal).
+const renderIdle = (page) => page.waitForFunction(() => document.getElementById('status').hidden
+  && Number(document.body.dataset.rendersDone ?? 0) > 0);
 
-// Waits until the page has finished every render it started.
-const renderIdle = (page) => page.waitForFunction(() => {
-  const data = document.body.dataset;
-  return document.getElementById('status').hidden
-    && Number(data.rendersStarted ?? 0) > 0
-    && Number(data.rendersDone ?? 0) === Number(data.rendersStarted ?? 0);
-});
+// Replaces the editor text, then waits for the rebuild and its render.
+async function showSource(page, text) {
+  const before = await page.evaluate(() => Number(document.body.dataset.rebuilds ?? 0));
+  await page.locator('#source').fill(text);
+  await page.waitForFunction((count) => Number(document.body.dataset.rebuilds ?? 0) > count, before);
+  await renderIdle(page);
+}
 
 // Later milestones add shots (e.g. one per built-in example).
 const SHOTS = [
-  { name: 'app', path: '/', prepare: async () => {} },
+  { name: 'app', prepare: async () => {} },
   {
     name: 'stale',
-    path: '/',
     prepare: async (page) => {
-      await page.locator('#source').fill(DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);'));
+      await showSource(page, DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);'));
       await page.locator('#stale').waitFor({ state: 'visible' });
     },
   },
+  { name: 'primitives', prepare: (page) => showSource(page, SCENES.arrangement) },
 ];
 const VIEWPORT = { width: 1280, height: 800 };
 
@@ -50,7 +55,7 @@ try {
   const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   fs.mkdirSync(outputDir, { recursive: true });
   for (const shot of SHOTS) {
-    await page.goto(baseURL + shot.path, { waitUntil: 'load' });
+    await page.goto(`${baseURL}/`, { waitUntil: 'load' });
     await renderIdle(page);
     await shot.prepare(page);
     const file = path.join(outputDir, `${shot.name}.png`);

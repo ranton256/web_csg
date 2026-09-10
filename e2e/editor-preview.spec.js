@@ -83,3 +83,10 @@ test('arrow keys move the focused divider 16 px', async ({ page }) => {
   expect(Math.round(await widthOf(page, '#editor-pane') - editor)).toBe(32);
   await expect(page.locator('#divider')).toHaveAttribute('aria-valuenow', String(Math.round(editor) + 32));
 });
+
+test('a window too narrow for both minimums keeps the editor at 240 px', async ({ page }) => {
+  await page.setViewportSize({ width: 400, height: 700 });
+  await expect.poll(async () => Math.round(await widthOf(page, '#editor-pane'))).toBe(240);
+  const divider = await widthOf(page, '#divider');
+  expect(Math.round(await widthOf(page, '#preview-panel'))).toBe(Math.round(400 - 240 - divider));
+});

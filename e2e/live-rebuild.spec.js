@@ -178,6 +178,24 @@ test.describe('on real time', () => {
     expect(Math.round(await widthOf(page, '#editor-pane'))).toBe(900 - 240 - 6);
   });
 
+  test('a resize during a render cancels it and restarts at the new size', async ({ page }) => {
+    const started = await counter(page, 'rendersStarted');
+    const done = await counter(page, 'rendersDone');
+    const cancelled = await counter(page, 'rendersCancelled');
+    await page.locator('#source').fill(heavy(40));
+    await waitForCounter(page, 'rendersStarted', started + 1);
+    await expect(page.locator('#status')).toBeVisible();
+    await page.setViewportSize({ width: 1100, height: 700 });
+    await waitForCounter(page, 'rendersStarted', started + 2);
+    await waitForIdle(page);
+    expect(await counter(page, 'rendersCancelled')).toBe(cancelled + 1);
+    expect(await counter(page, 'rendersDone')).toBe(done + 1);
+    const panel = await page.locator('#preview-panel').evaluate((el) => [el.clientWidth, el.clientHeight]);
+    const stats = await imageStats(page);
+    expect([stats.width, stats.height]).toEqual(panel.map(Math.floor));
+    expect(await mismatchesWithFullRender(page)).toBe(0);
+  });
+
   test('resizing while stale re-renders the last valid model and stays stale', async ({ page }) => {
     const valid = await imageStats(page);
     await editAndSettle(page, INVALID);

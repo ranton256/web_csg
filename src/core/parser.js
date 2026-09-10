@@ -99,8 +99,9 @@ export function parse(tokens) {
     return { type: 'PropertyBlock', keyword: keyword.value, properties, loc: loc(keyword) };
   }
 
+  // The parentheses around arguments are a nesting level (DESIGN §5, D18).
   function argumentList() {
-    expect('(');
+    enter(expect('('), 'expressions');
     const args = [];
     let sawNamed = false;
     if (!isPunct(peek(), ')')) {
@@ -120,6 +121,7 @@ export function parse(tokens) {
       }
     }
     expect(')');
+    leave();
     return args;
   }
 

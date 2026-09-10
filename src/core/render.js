@@ -1,14 +1,17 @@
 // The core's entry points (DESIGN §7): compile source to a scene, and render a
 // scene, whole or in row bands, into an RGBA buffer. No browser APIs.
 
+import { intersectBox } from './box.js';
 import { cameraBasis, primaryRay } from './camera.js';
 import { BACKGROUND, DEFAULT_COLOR } from './constants.js';
+import { intersectCylinder } from './cylinder.js';
 import { evaluate } from './evaluate.js';
 import { facingNormal, union, visibleHit } from './intervals.js';
 import { SourceError, tokenize } from './lexer.js';
 import { parse } from './parser.js';
 import { encode, keyLight, shade } from './shade.js';
 import { intersectSphere } from './sphere.js';
+import { normalToWorld, toLocal } from './transform.js';
 import { negate } from './vec3.js';
 
 // Returns { diagnostics, scene }; scene is null when there are diagnostics.
@@ -30,13 +33,34 @@ function checkSize(width, height) {
   }
 }
 
+// Local-space intersection for each primitive type.
+const INTERSECT = {
+  sphere: (solid, origin, direction) => intersectSphere(solid.radius, origin, direction, solid),
+  cube: (solid, origin, direction) => intersectBox([solid.size, solid.size, solid.size], origin, direction, solid),
+  box: (solid, origin, direction) => intersectBox(solid.size, origin, direction, solid),
+  cylinder: (solid, origin, direction) => intersectCylinder(solid.radius, solid.height, origin, direction, solid),
+};
+
+// A placed primitive's intervals along a world ray. The ray moves into the
+// primitive's local space without renormalizing, so t stays a world distance;
+// normals move back to world space (DESIGN §8 Ray–solid intervals).
 function intersectSolid(solid, ray) {
-  switch (solid.type) {
-    case 'sphere':
-      return intersectSphere(solid.radius, ray.origin, ray.direction, solid);
-    default:
-      throw new Error(`unknown solid type ${solid.type}`);
-  }
+  const intersect = INTERSECT[solid.type];
+  if (intersect === undefined) throw new Error(`unknown solid type ${solid.type}`);
+  const local = toLocal(solid.placement, ray.origin, ray.direction);
+  const toWorld = (end) => ({ ...end, normal: normalToWorld(solid.placement, end.normal) });
+  return intersect(solid, local.origin, local.direction).map((interval) => ({
+    in: toWorld(interval.in),
+    out: toWorld(interval.out),
+  }));
+}
+
+// The scene's intervals along a world ray: several solids form their union
+// (DESIGN §8 Implicit union).
+export function sceneIntervals(scene, ray) {
+  let intervals = [];
+  for (const solid of scene.solids) intervals = union(intervals, intersectSolid(solid, ray));
+  return intervals;
 }
 
 // Renders rows [y0, y1) of a width × height image of scene into rgba, a
@@ -58,10 +82,7 @@ export function renderRows(scene, width, height, y0, y1, rgba) {
   for (let y = y0; y < y1; y++) {
     for (let x = 0; x < width; x++) {
       const ray = primaryRay(basis, width, height, x, y);
-      // Several top-level solids form their union (DESIGN §8 Implicit union).
-      let intervals = [];
-      for (const solid of scene.solids) intervals = union(intervals, intersectSolid(solid, ray));
-      const hit = visibleHit(intervals);
+      const hit = visibleHit(sceneIntervals(scene, ray));
 
       const i = (y * width + x) * 4;
       if (hit === null) {

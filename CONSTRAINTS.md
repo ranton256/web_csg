@@ -68,7 +68,10 @@ src/core/
   parser.js      # parse(tokens) → syntax tree with locations; throws at the first syntax error
   evaluate.js    # evaluate(program) → { diagnostics, scene }; reports every semantic error
   camera.js      # validateCamera, cameraBasis, primaryRay
-  sphere.js      # intersectSphere → interval list
+  transform.js   # placements { s, R, t }: translation, rotation (exact right angles), scaling, compose, toLocal, normalToWorld
+  sphere.js      # intersectSphere → interval list (general quadratic: local directions need not be unit)
+  box.js         # intersectBox (slabs; cube = box with equal sides)
+  cylinder.js    # intersectCylinder (side quadratic ∩ cap slab)
   intervals.js   # union, visibleHit, facingNormal
   shade.js       # keyLight, shade, encode
   render.js      # compile, renderRows, renderSource (the public entry points)
@@ -92,6 +95,10 @@ src/ui/
   Any split into bands equals one full render; the shell uses this for
   progressive rendering from M2.
 - Diagnostics are `{ line, column, message }`, with 1-based positions.
+- `scene.solids` lists placed primitives `{ type, <parameters>, placement, loc }`.
+  Transform blocks are folded into each primitive's `placement` at
+  evaluation. `sceneIntervals(scene, ray)` returns their merged world-space
+  intervals.
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.
 - The pure `src/ui/` helpers (`text-position`, `debounce`, `render-job`,

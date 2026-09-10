@@ -120,11 +120,17 @@ test('parentheses and bodies count as nesting levels (D18)', () => {
   assert.deepEqual(syntaxError(parens(101)), [1, 109, 'expressions are nested too deeply (more than 100 levels)']);
 
   const bodies = (k) => `${'union { '.repeat(k)}sphere(1);${' }'.repeat(k)}\n` + CAMERA;
-  assert.ok(compile(bodies(100)).diagnostics.every((d) => !/nested too deeply/.test(d.message)));
+  // 99 bodies plus the sphere's argument parentheses is exactly 100 levels.
+  assert.ok(compile(bodies(99)).diagnostics.every((d) => !/nested too deeply/.test(d.message)));
   assert.deepEqual(syntaxError(bodies(101)), [1, 801, 'blocks are nested too deeply (more than 100 levels)']);
 
   // Levels are shared: 99 bodies plus 2 levels of unary minus is 101.
   assert.match(syntaxError(`${'union { '.repeat(99)}sphere(--1);${' }'.repeat(99)}`)[2], /nested too deeply/);
+});
+
+test('argument parentheses count as a nesting level', () => {
+  assert.deepEqual(compile(`sphere(${'-'.repeat(99)}1);\n` + CAMERA).diagnostics.filter((d) => /nested/.test(d.message)), []);
+  assert.deepEqual(syntaxError(`sphere(${'-'.repeat(100)}1);\n` + CAMERA), [1, 107, 'expressions are nested too deeply (more than 100 levels)']);
 });
 
 test('pathologically deep input yields a diagnostic, not a crash', () => {

@@ -213,7 +213,8 @@ Agreed in D9 (2026-09-10). Rules:
   parameter is given exactly once; all are required; unknown names are errors.
 - **Transforms:** `translate(vector) { … }`, `rotate(vector) { … }`,
   `scale(number) { … }`. The braced body is required; transforms are not
-  chained (nest blocks instead).
+  chained (nest blocks instead). Each transform takes exactly one positional
+  argument; a named argument or a different argument count is an error (D19).
 - **Booleans:** `union { … }`, `intersection { … }`, `difference { … }`.
 - **Bodies:** every Boolean or transform body contains at least one solid;
   an empty body is an error. Bodies may also contain `let` statements.
@@ -720,6 +721,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D14~~ | **Resolved 2026-09-10 (accepted by the owner):** position and lookAt are equal when their distance is ≤ `ε`; up is parallel when `‖f̂ × û‖ ≤ 1e-6`. Recorded in §5. | — | — |
 | ~~D15~~ | **Resolved 2026-09-10 (chosen by the owner):** expressions nest at most 100 levels; deeper input is a syntax error rather than a stack overflow. Recorded in §5. | — | — |
 | ~~D18~~ | **Resolved 2026-09-10 (accepted by the owner; may be tuned later):** recorded in §5 (render time slice, divider, nesting depth). The slice rule was amended the same day, with the owner's agreement, after Critic review: a slice starts no new row once 12 ms have elapsed (at most one row past 12 ms), because a loop that checks the clock after each row cannot promise a strict maximum. Original proposal: (a) progressive rendering yields after at most **12 ms** of rendering per slice; (b) the divider keeps the editor and the preview each at least **240 px** wide, the editor starts **420 px** wide, and the arrow keys move the focused divider **16 px**; (c) the D15 cap of 100 levels also counts **parentheses and block bodies** (`{ … }` of transforms and Booleans), so the new grammar cannot overflow the stack. | — | — |
+| ~~D19~~ | **Resolved 2026-09-10 (owner):** transforms take exactly one positional argument (`translate(vector)`, `rotate(vector)`, `scale(number)`). Named arguments on transforms, or a different argument count, are errors. DESIGN had defined named arguments only for primitives. Recorded in §8. | — | — |
 | D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
 | D16 | Behavior for values far outside the supported scene scale. For example, a camera 1e200 away overflows the vector math to Infinity and is misreported as "up must not be parallel". Literals that overflow to Infinity are already rejected. | Not M1 (inputs are outside the provisional `[1e-3, 1e5]` scale) | Decide in M4, when the scale range is finalized: reject values outside the supported scale, or specify a best-effort behavior |
 

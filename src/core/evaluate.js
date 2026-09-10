@@ -1,15 +1,23 @@
 // Walks the syntax tree: resolves names, evaluates expressions, binds primitive
-// arguments, validates the camera, and checks bodies. Never throws for bad
-// input: every semantic error becomes a diagnostic, and evaluation continues
-// so that all of them are reported (DESIGN §8 Modeling language).
+// and transform arguments, validates the camera, checks bodies, and composes
+// transforms into each primitive's placement. Never throws for bad input:
+// every semantic error becomes a diagnostic, and evaluation continues so that
+// all of them are reported (DESIGN §8 Modeling language).
 //
 // Values are numbers or 3-element arrays. A value that already produced a
 // diagnostic is represented as null, so one mistake does not cascade.
 
 import { validateCamera } from './camera.js';
+import { IDENTITY, compose, rotation, scaling, translation } from './transform.js';
 
-// Parameter order for positional arguments (DESIGN §5 primitive table).
-const PARAMETERS = { sphere: ['radius'] };
+// Parameters in positional order, with their kind (DESIGN §5 primitive table).
+// Every dimension must be greater than 0.
+const PRIMITIVES = {
+  sphere: [{ name: 'radius', kind: 'number' }],
+  cube: [{ name: 'size', kind: 'number' }],
+  box: [{ name: 'size', kind: 'vector' }],
+  cylinder: [{ name: 'radius', kind: 'number' }, { name: 'height', kind: 'number' }],
+};
 
 class Scope {
   constructor(parent) {
@@ -31,12 +39,15 @@ class Scope {
 }
 
 // Returns { diagnostics, scene }. scene is null whenever any diagnostic exists.
+// scene.solids lists placed primitives: { type, <parameters>, placement, loc }.
 export function evaluate(program) {
   const diagnostics = [];
   const report = (loc, message) => diagnostics.push({ line: loc.line, column: loc.column, message });
   const state = { cameraNode: null, camera: null, solids: [] };
 
-  evaluateStatements(program.statements, new Scope(null), { topLevel: true, report, state });
+  evaluateStatements(program.statements, new Scope(null), {
+    topLevel: true, rendered: true, placement: IDENTITY, report, state,
+  });
   if (state.cameraNode === null) report({ line: 1, column: 1 }, 'exactly one camera block is required');
 
   diagnostics.sort((a, b) => a.line - b.line || a.column - b.column);
@@ -45,6 +56,8 @@ export function evaluate(program) {
 }
 
 // Evaluates a statement list in scope; returns how many solids it contains.
+// context.placement is the composed placement of the enclosing transforms;
+// context.rendered is false inside constructs that are not supported yet.
 function evaluateStatements(statements, scope, context) {
   const { report } = context;
   const evaluateIn = (node) => evaluateExpression(node, scope, report);
@@ -65,22 +78,24 @@ function evaluateStatements(statements, scope, context) {
       case 'PropertyBlock':
         evaluatePropertyBlock(statement, evaluateIn, context);
         break;
-      case 'Call':
+      case 'Call': {
         solids++;
-        evaluateCall(statement, evaluateIn, context);
+        const solid = evaluatePrimitive(statement, evaluateIn, report);
+        if (solid !== null && context.rendered) context.state.solids.push({ ...solid, placement: context.placement });
         break;
-      case 'Transform':
-        // Parsed now; semantics arrive in M3. Its contents are still checked.
+      }
+      case 'Transform': {
         solids++;
-        report(statement.loc, `\`${statement.keyword}\` is not supported yet`);
-        for (const arg of statement.args) evaluateIn(arg.value);
-        evaluateBody(statement, scope, context);
+        // An invalid transform still has its body checked, in place.
+        const placement = evaluateTransform(statement, evaluateIn, context);
+        evaluateBody(statement, scope, { ...context, placement: placement ?? context.placement });
         break;
+      }
       case 'Boolean':
         // Parsed now; semantics arrive in M4. Its contents are still checked.
         solids++;
         report(statement.loc, `\`${statement.keyword}\` is not supported yet`);
-        evaluateBody(statement, scope, context);
+        evaluateBody(statement, scope, { ...context, rendered: false });
         break;
       default:
         throw new Error(`unknown statement type ${statement.type}`);
@@ -116,16 +131,46 @@ function evaluatePropertyBlock(block, evaluateIn, context) {
   }
 }
 
-function evaluateCall(call, evaluateIn, context) {
-  if (call.callee !== 'sphere') {
-    // cube, box, and cylinder arrive in M3; their arguments are still checked.
-    context.report(call.loc, `\`${call.callee}\` is not supported yet`);
-    for (const arg of call.args) evaluateIn(arg.value);
-    return;
+// translate(vector), rotate(vector), scale(number > 0): exactly one positional
+// argument (DESIGN §12 D19). Returns the composed placement for the body, or
+// null after reporting.
+function evaluateTransform(block, evaluateIn, context) {
+  const { report } = context;
+  const values = block.args.map((arg) => evaluateIn(arg.value));
+  if (block.args.length !== 1 || block.args[0].name !== null) {
+    report(block.loc, `\`${block.keyword}\` takes exactly one positional argument`);
+    return null;
   }
-  const solid = evaluateSphere(call, evaluateIn, context.report);
-  // A sphere inside an unsupported block is checked but cannot be rendered.
-  if (solid !== null && context.topLevel) context.state.solids.push(solid);
+  const [value] = values;
+  const { loc } = block.args[0];
+  if (value === null) return null;
+
+  switch (block.keyword) {
+    case 'translate':
+      if (!Array.isArray(value)) {
+        report(loc, '`translate` needs a vector');
+        return null;
+      }
+      return compose(context.placement, translation(value));
+    case 'rotate':
+      if (!Array.isArray(value)) {
+        report(loc, '`rotate` needs a vector of angles in degrees');
+        return null;
+      }
+      return compose(context.placement, rotation(value));
+    case 'scale':
+      if (typeof value !== 'number') {
+        report(loc, 'the scale factor must be a number');
+        return null;
+      }
+      if (!(value > 0)) {
+        report(loc, 'the scale factor must be greater than 0');
+        return null;
+      }
+      return compose(context.placement, scaling(value));
+    default:
+      throw new Error(`unknown transform ${block.keyword}`);
+  }
 }
 
 function evaluateExpression(node, scope, report) {
@@ -219,10 +264,36 @@ function applyOperator(op, left, right, loc, report) {
   return result;
 }
 
-// Binds a sphere call's arguments to its parameters and validates them.
-// Returns the solid, or null after reporting.
-function evaluateSphere(call, evaluateIn, report) {
-  const parameters = PARAMETERS[call.callee];
+// Checks one dimension: a number > 0, or a vector whose components are > 0.
+function checkDimension(parameter, value, loc, report) {
+  if (value === null) return false;
+  if (parameter.kind === 'number') {
+    if (typeof value !== 'number') {
+      report(loc, `the ${parameter.name} must be a number`);
+      return false;
+    }
+    if (!(value > 0)) {
+      report(loc, `the ${parameter.name} must be greater than 0`);
+      return false;
+    }
+    return true;
+  }
+  if (!Array.isArray(value)) {
+    report(loc, `the ${parameter.name} must be a vector`);
+    return false;
+  }
+  if (!value.every((component) => component > 0)) {
+    report(loc, `each ${parameter.name} component must be greater than 0`);
+    return false;
+  }
+  return true;
+}
+
+// Binds a primitive call's arguments to its parameters and validates them.
+// Returns { type, <parameters>, loc }, or null after reporting.
+function evaluatePrimitive(call, evaluateIn, report) {
+  const parameters = PRIMITIVES[call.callee];
+  const names = parameters.map((parameter) => parameter.name);
   const given = new Map();
   let positional = 0;
   let valid = true;
@@ -231,14 +302,14 @@ function evaluateSphere(call, evaluateIn, report) {
     const value = evaluateIn(arg.value);
     let name = arg.name;
     if (name === null) {
-      if (positional >= parameters.length) {
-        const count = parameters.length;
+      if (positional >= names.length) {
+        const count = names.length;
         report(arg.loc, `${call.callee} takes ${count} argument${count === 1 ? '' : 's'}`);
         valid = false;
         continue;
       }
-      name = parameters[positional++];
-    } else if (!parameters.includes(name)) {
+      name = names[positional++];
+    } else if (!names.includes(name)) {
       report(arg.loc, `unknown parameter \`${name}\` for ${call.callee}`);
       valid = false;
       continue;
@@ -251,23 +322,21 @@ function evaluateSphere(call, evaluateIn, report) {
     given.set(name, { value, loc: arg.loc });
   }
 
-  for (const parameter of parameters) {
-    if (!given.has(parameter)) {
-      report(call.loc, `missing parameter \`${parameter}\` for ${call.callee}`);
+  for (const name of names) {
+    if (!given.has(name)) {
+      report(call.loc, `missing parameter \`${name}\` for ${call.callee}`);
       valid = false;
     }
   }
   if (!valid) return null;
 
-  const radius = given.get('radius');
-  if (radius.value === null) return null;
-  if (typeof radius.value !== 'number') {
-    report(radius.loc, 'the radius must be a number');
-    return null;
+  for (const parameter of parameters) {
+    const { value, loc } = given.get(parameter.name);
+    if (!checkDimension(parameter, value, loc, report)) valid = false;
   }
-  if (!(radius.value > 0)) {
-    report(radius.loc, 'the radius must be greater than 0');
-    return null;
-  }
-  return { type: 'sphere', radius: radius.value, loc: call.loc };
+  if (!valid) return null;
+
+  const solid = { type: call.callee, loc: call.loc };
+  for (const name of names) solid[name] = given.get(name).value;
+  return solid;
 }
