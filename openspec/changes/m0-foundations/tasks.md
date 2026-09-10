@@ -73,6 +73,15 @@
   - add the `capture` usage
 - [x] 7.4 Update `ROADMAP.md`: set M0 status and add a backlog line "Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)"
 
+## 9. Critic round 1 fixes ([REJECTED] at `bf1f36d`)
+
+- [x] 9.1 Golden comparison fails when the RGBA buffer does not hold width × height pixels (compare and update mode), with a spec scenario and tests for empty and truncated buffers
+- [x] 9.2 Test the `GOLDEN_UPDATE` default (unset → compare only, `1` → write), and test that `tools/golden-update.mjs` writes goldens while a plain `node --test` run does not. `golden-update.mjs` accepts optional test files for this
+- [x] 9.3 Set Playwright `outputDir` to `test-results/playwright`, so e2e runs no longer delete `test-results/golden/*.actual.ppm`; add a config test and check it manually
+- [x] 9.4 `capture.mjs` rejects milestone names that do not start with a letter or digit (e.g. `--help`); `parsePort` rejects `--port` without a value and accepts `--port=<n>`; spec scenarios and tests for both
+- [x] 9.5 Fix the documented `npm test` command in CONSTRAINTS §4 and DESIGN §9
+- [x] 9.6 Watch each new test fail against the reviewed code (`bf1f36d`) in an isolated worktree; `npm run check` green; update the M0 evidence README; commit
+
 ## 8. Evidence, review, and merge
 
 - [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
