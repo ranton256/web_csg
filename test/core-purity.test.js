@@ -44,6 +44,15 @@ describe('core-purity scanner', () => {
     ]);
   });
 
+  test('namespace re-exports and bracket access are reported', () => {
+    write('h.js', "export * as fs from 'node:fs';\nexport * as ui from '../ui/main.js';\nconst d = globalThis['document'];\n");
+    assert.deepEqual(scanCoreDir(core).map((v) => [v.line, v.token]), [
+      [1, "import 'node:fs'"],
+      [2, "import '../ui/main.js'"],
+      [3, 'document'],
+    ]);
+  });
+
   test('relative imports inside the core are allowed', () => {
     fs.mkdirSync(path.join(core, 'sub'));
     write('sub/d.js', "import { a } from '../vec.js';\nexport { b } from './e.js';\n");

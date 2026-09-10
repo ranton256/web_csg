@@ -68,6 +68,14 @@ test('from inside sphere(50) every pixel shows the sphere', () => {
   for (let i = 0; i < rgba.length; i += 4) assert.ok(!isBackground(rgba, i), `pixel ${i / 4} is background`);
 });
 
+test('from outside, overlapping spheres render as their union regardless of order', () => {
+  // sphere(5) is listed first but lies behind sphere(10)'s surface on every ray.
+  assert.deepEqual(
+    renderSource(DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(5);\nsphere(radius: r);'), 64, 48).rgba,
+    renderSource(DEFAULT_SOURCE, 64, 48).rgba,
+  );
+});
+
 test('inside nested spheres, the image equals the outer sphere alone', () => {
   const camera = 'camera { position: [0, 0, 0]; lookAt: [1, 0, 0]; }\n';
   assert.deepEqual(

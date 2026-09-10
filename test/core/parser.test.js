@@ -67,6 +67,19 @@ test('parsing stops at the first syntax error', () => {
   assert.equal(line, 3);
 });
 
+test('expressions may nest up to 100 levels (D15)', () => {
+  assert.deepEqual(compile(`let a = ${'-'.repeat(100)}1;\n` + CAMERA).diagnostics, []);
+  assert.deepEqual(syntaxError(`let a = ${'-'.repeat(101)}1;\n` + CAMERA), [1, 109, 'expressions are nested too deeply (more than 100 levels)']);
+  const nestedVectors = (k) => `let v = ${'['.repeat(k)}1${', 2, 3]'.repeat(k)};\n` + CAMERA;
+  assert.equal(compile(nestedVectors(100)).diagnostics[0].message, 'vector elements must be numbers');
+  assert.match(syntaxError(nestedVectors(101))[2], /nested too deeply/);
+});
+
+test('pathologically deep input yields a diagnostic, not a crash', () => {
+  assert.match(syntaxError(`let a = ${'-'.repeat(10000)}1;`)[2], /nested too deeply/);
+  assert.match(syntaxError(`let v = ${'['.repeat(5000)}1;`)[2], /nested too deeply/);
+});
+
 test('an unclosed camera block is a syntax error', () => {
   assert.match(syntaxError('camera { position: [0, 0, 1];')[2], /expected a camera property name or `}` but found the end of the source/);
 });

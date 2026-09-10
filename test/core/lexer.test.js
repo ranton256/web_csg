@@ -59,6 +59,19 @@ test('\\r\\n counts as one line break and a tab as one column', () => {
   assert.deepEqual([tab[0].line, tab[0].column], [1, 2]);
 });
 
+test('columns count characters: an emoji is one column', () => {
+  const tokens = tokenize('/*😀*/ sphere(0);');
+  assert.deepEqual(tokens.find((t) => t.type === 'number').column, 14);
+  const error = errorFrom('let 😀 = 1;');
+  assert.deepEqual([error.column, error.message], [5, "unexpected character '😀'"]);
+  assert.equal(tokenize('x\n/*😀*/ y')[1].column, 7);
+});
+
+test('numbers too large to represent are rejected', () => {
+  const error = errorFrom(`sphere(1${'0'.repeat(400)});`);
+  assert.deepEqual([error.line, error.column, error.message], [1, 8, 'number is too large']);
+});
+
 test('an unexpected character is reported where it appears', () => {
   const error = errorFrom('let a = 1;\nlet $ = 2;');
   assert.deepEqual([error.line, error.column, error.message], [2, 5, "unexpected character '$'"]);

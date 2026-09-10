@@ -9,9 +9,13 @@ Source: CONSTRAINTS §2 (DOM-free core); DESIGN §6 item 3.
   `sessionStorage`, `requestAnimationFrame`, `HTMLCanvasElement`, `ImageData`,
   `CanvasRenderingContext2D`, `fetch`, and `self`.
 - **Imports:** the only permitted form is a relative specifier that resolves
-  inside `src/core/`. Package, `node:`, and URL imports are forbidden.
+  inside `src/core/`. Package, `node:`, and URL imports are forbidden. This
+  applies to `import`, dynamic `import()`, and every re-export form, including
+  `export * as name from`.
 
-Occurrences inside comments and string literals SHALL be ignored. The
+Bracket access with a literal name (for example `globalThis['document']`)
+SHALL count as a reference. Other occurrences inside comments and string
+literals SHALL be ignored. The
 failure SHALL name the file, the line, and the offending identifier or import.
 
 #### Scenario: A browser API in the core fails the suite
@@ -19,7 +23,7 @@ failure SHALL name the file, the line, and the offending identifier or import.
 - **THEN** `npm test` fails, naming that file, line 3, and `document`
 
 #### Scenario: An import from outside the core fails the suite
-- **WHEN** a file in `src/core/` imports `../ui/main.js` or `node:fs`
+- **WHEN** a file in `src/core/` imports `../ui/main.js` or `node:fs`, or contains `export * as fs from 'node:fs';`
 - **THEN** `npm test` fails, naming the file and the import
 
 #### Scenario: Mentions in comments are allowed

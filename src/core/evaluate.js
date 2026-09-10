@@ -53,14 +53,18 @@ export function evaluate(program) {
         }
         break;
       }
-      case 'Camera':
+      case 'Camera': {
+        // Every block is validated, so all of its errors are reported; only the
+        // first block is used.
+        const validated = validateCamera(statement, evaluateIn, report);
         if (cameraNode !== null) {
           report(statement.loc, 'exactly one camera block is required');
         } else {
           cameraNode = statement;
-          camera = validateCamera(statement, evaluateIn, report);
+          camera = validated;
         }
         break;
+      }
       case 'Call': {
         const solid = evaluateCall(statement, evaluateIn, report);
         if (solid !== null) solids.push(solid);

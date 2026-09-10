@@ -44,9 +44,9 @@ src/core/
   parser.js      # parse(tokens) → AST with node locations; throws a positioned error at the first syntax error
   evaluate.js    # evaluate(ast) → { diagnostics, scene }; environment chain for let
   camera.js      # validateCamera, cameraBasis(camera), primaryRay(basis, width, height, x, y)
-  sphere.js      # intersectSphere(radius, ray) → interval list
-  intervals.js   # union(a, b), visibleHit(intervals), EPSILON
-  shade.js       # keyLight(basis), shade(hit, V, lights, color) → [r, g, b], encode
+  sphere.js      # intersectSphere(radius, origin, direction, primitive) → interval list
+  intervals.js   # union(a, b), visibleHit(intervals), facingNormal(normal, toViewer)
+  shade.js       # keyLight(basis), shade(normal, toViewer, lights, color) → [r, g, b], encode
   render.js      # compile(source), renderRows(scene, w, h, y0, y1, rgba), renderSource(source, w, h)
 src/ui/
   default-source.js  # The page's example source (no browser APIs, so Node tests can render it)
@@ -197,7 +197,10 @@ would be a dependency, which CONSTRAINTS §1 forbids.
   structural facts (background vs. not), not exact shaded values.
 - [The regex purity scanner can be fooled by exotic syntax] → Core code is
   written in plain style. The scanner has its own tests for comments,
-  strings, and templates, and its seen-to-fail run is recorded.
+  strings, templates, namespace re-exports, and literal bracket access, and
+  its seen-to-fail run is recorded. Known limit: a regex literal containing a
+  quote character confuses string blanking for the rest of its line, so core
+  code avoids quotes inside regex literals.
 - [D14 tolerances might not match the owner's intent] → They are flagged in
   DESIGN §12 as proposed, and are easy to change: they are single constants.
 

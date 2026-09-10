@@ -10,6 +10,7 @@
 //   argument   := NAME ':' expression | expression
 //   expression := '-' expression | NUMBER | NAME | '[' expression ',' expression ',' expression ']'
 
+import { MAX_NESTING_DEPTH } from './constants.js';
 import { SourceError } from './lexer.js';
 
 // Reserved words whose constructs arrive in later milestones.
@@ -38,6 +39,14 @@ export function parse(tokens) {
     const token = peek();
     if (!isPunct(token, value)) fail(token, `expected \`${value}\` but found ${describe(token)}`);
     return next();
+  };
+
+  // Unary minus and vectors nest. Bounding the depth keeps the parser and the
+  // evaluator (both recursive) within any engine's stack.
+  let depth = 0;
+  const enter = (token) => {
+    depth++;
+    if (depth > MAX_NESTING_DEPTH) fail(token, `expressions are nested too deeply (more than ${MAX_NESTING_DEPTH} levels)`);
   };
 
   function statement() {
@@ -119,7 +128,10 @@ export function parse(tokens) {
     const token = peek();
     if (isPunct(token, '-')) {
       next();
-      return { type: 'Negate', operand: unary(), loc: loc(token) };
+      enter(token);
+      const operand = unary();
+      depth--;
+      return { type: 'Negate', operand, loc: loc(token) };
     }
     return primary();
   }
@@ -142,6 +154,7 @@ export function parse(tokens) {
 
   function vector() {
     const open = next();
+    enter(open);
     const elements = [expression()];
     while (elements.length < 3) {
       const token = peek();
@@ -152,6 +165,7 @@ export function parse(tokens) {
     const close = peek();
     if (!isPunct(close, ']')) fail(close, `a vector needs exactly three elements; expected \`]\` but found ${describe(close)}`);
     next();
+    depth--;
     return { type: 'Vector', elements, loc: loc(open) };
   }
 

@@ -21,6 +21,10 @@ SHALL be an error reported at that block.
 - **WHEN** a source has two camera blocks
 - **THEN** a diagnostic at the second block says exactly one camera block is required
 
+#### Scenario: The second block's contents are still checked
+- **WHEN** a second camera block contains an undeclared name and `fov: 200;`
+- **THEN** both are reported, in addition to the extra-block diagnostic
+
 ### Requirement: Camera properties and defaults
 Source: DESIGN §8 Camera definition, §5 (camera defaults).
 
@@ -60,7 +64,10 @@ The camera SHALL be rejected when:
   the cross product of their unit vectors is ≤ `1e-6`);
 - `fov` is not strictly between `0` and `180`.
 
-Each case SHALL be an error naming the rule.
+Each case SHALL be an error naming the rule. Each rule SHALL be checked
+whenever the values it needs are valid, so independent problems are all
+reported. For example, a mistyped `position` does not hide an out-of-range
+`fov`.
 
 #### Scenario: position equal to lookAt is an error
 - **WHEN** a camera has position `[1, 2, 3]` and lookAt `[1, 2, 3]`
@@ -77,6 +84,10 @@ Each case SHALL be an error naming the rule.
 #### Scenario: fov outside (0, 180) is an error
 - **WHEN** a camera has `fov: 0;`, or `fov: 180;`
 - **THEN** a diagnostic says fov must be strictly between 0 and 180 degrees
+
+#### Scenario: Independent errors are all reported
+- **WHEN** a camera has `position: 5;` and `fov: 0;`
+- **THEN** both the `position` type error and the fov range error are reported
 
 ### Requirement: Perspective projection
 Source: DESIGN §8 Camera definition, §5 (render resolution).

@@ -7,6 +7,10 @@ export const EPSILON = 1e-6;
 // count as parallel (DESIGN §5, decision D14).
 export const PARALLEL_TOLERANCE = 1e-6;
 
+// Levels of unary minus and vector brackets an expression may nest; deeper
+// input is a syntax error, which keeps parsing within every engine's stack (D15).
+export const MAX_NESTING_DEPTH = 100;
+
 export const CAMERA_DEFAULTS = Object.freeze({
   up: Object.freeze([0, 0, 1]),
   fov: 45, // degrees, vertical

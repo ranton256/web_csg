@@ -21,9 +21,15 @@ test('a full highlight saturates to 1', () => {
 });
 
 test('an unlit side gets only ambient, even where N·H > 0', () => {
+  // Grazing geometry: the light is just below the surface (N·L = -0.01) and
+  // the viewer is low on the other side, so H is nearly N. Ungated, the
+  // specular term would be about 0.29; the gate must remove it.
   const normal = [0, 0, 1];
-  const toViewer = normalize([1, 0, 1]);
-  const toLight = normalize([1, 0, -0.1]); // N·L < 0, but N·H > 0
+  const toViewer = normalize([-1, 0, 0.1]);
+  const toLight = normalize([1, 0, -0.01]);
+  const halfway = normalize([toLight[0] + toViewer[0], 0, toLight[2] + toViewer[2]]);
+  const ungatedSpecular = 0.3 * halfway[2] ** 32;
+  assert.ok(toLight[2] < 0 && ungatedSpecular > 0.2, `geometry must make the gate matter (ungated ${ungatedSpecular})`);
   close(shade(normal, toViewer, [{ toLight, intensity: 1 }], DEFAULT_COLOR), [0.12, 0.12, 0.12]);
 });
 

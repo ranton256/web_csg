@@ -14,18 +14,21 @@ The language SHALL recognize:
   which do not nest.
 - **Numbers:** decimal numbers made of digits with an optional fraction
   (`12`, `1.5`, `0.5`). There is no exponent form, and no leading or trailing
-  bare `.`.
+  bare `.`. A literal too large to represent as a finite number is an error.
 - **Identifiers:** a letter or `_`, then letters, digits, or `_`.
 - **Reserved words:** `let`, `camera`, `light`, `material`, `sphere`, `cube`,
   `box`, `cylinder`, `translate`, `rotate`, `scale`, `union`, `intersection`,
   `difference`.
-- **Punctuation:** `; : , = { } ( ) [ ]` and `-`.
+- **Punctuation:** `; : , = { } ( ) [ ]` and `-`. Also `+ * /`, which are
+  recognized only so that binary arithmetic can be reported as not supported
+  yet.
 
 Comments and whitespace separate tokens and are otherwise ignored. Any other
 character, an unterminated block comment, or a malformed number SHALL be a
 syntax error. Line numbers SHALL count `\n` line breaks, with `\r\n` counted as
-one line break. Columns SHALL count characters from 1, with a tab counting as
-one character.
+one line break. Columns SHALL count characters (Unicode code points) from 1:
+a tab counts as one character, and so does a character outside the Basic
+Multilingual Plane, such as an emoji.
 
 #### Scenario: Comments are ignored
 - **WHEN** a valid source has `// note` and `/* multi\nline */` comments added between statements
@@ -38,6 +41,14 @@ one character.
 #### Scenario: Unterminated block comment
 - **WHEN** a `/*` comment starting at line 2, column 1 is never closed
 - **THEN** one syntax error is reported at line 2, column 1
+
+#### Scenario: Columns count characters
+- **WHEN** the source is `/*😀*/ sphere(0);` with a camera
+- **THEN** the radius diagnostic is reported at column 14, because the emoji counts as one column
+
+#### Scenario: Oversized literals are rejected
+- **WHEN** a number literal is `1` followed by 400 zeros
+- **THEN** a syntax error at its start says the number is too large
 
 ### Requirement: Statements of the M1 subset
 Source: DESIGN §8 Modeling language.
@@ -81,6 +92,26 @@ diagnostic saying they are not supported yet, at the operator or parenthesis.
 #### Scenario: Binary arithmetic is not supported yet
 - **WHEN** the source contains `let a = 1 + 2;`
 - **THEN** a diagnostic at `+` says binary arithmetic is not supported yet
+
+### Requirement: Bounded expression nesting
+Source: DESIGN §5 (maximum expression nesting depth, decision D15).
+
+Expressions SHALL nest at most 100 levels, counting each unary minus and each
+vector bracket. A deeper expression SHALL be a syntax error at the token that
+exceeds the limit. However deep the input, compiling SHALL return
+diagnostics rather than crash.
+
+#### Scenario: One hundred levels are allowed
+- **WHEN** the source contains `let a = ` followed by 100 minus signs and `1;`
+- **THEN** there is no nesting diagnostic
+
+#### Scenario: The 101st level is an error
+- **WHEN** the source contains `let a = ` followed by 101 minus signs and `1;`
+- **THEN** a syntax error at the 101st `-` says expressions are nested too deeply
+
+#### Scenario: Pathological depth does not crash
+- **WHEN** the source contains 10,000 minus signs, or 5,000 nested `[`
+- **THEN** compiling returns a nesting diagnostic instead of throwing
 
 ### Requirement: Immutable let bindings with lexical scope
 Source: DESIGN §8 Modeling language.
@@ -144,8 +175,9 @@ Source: DESIGN §8 Modeling language (diagnostics).
 Each diagnostic SHALL have a 1-based line, a 1-based column (the start of the
 offending token), and a message. Parsing SHALL stop at the first syntax error
 and report exactly that one. When parsing succeeds, evaluation SHALL report
-every semantic error it finds, ordered by position. A source with any
-diagnostic SHALL produce no scene.
+every semantic error it finds, ordered by position. That includes errors
+inside a second, rejected camera block. A source with any diagnostic SHALL
+produce no scene.
 
 #### Scenario: Parsing stops at the first syntax error
 - **WHEN** a source has syntax errors on lines 3 and 7

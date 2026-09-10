@@ -128,6 +128,7 @@ strictly greater than 0.
 | Tolerance `ε` | `1e-6` world units | **Provisional** until the scaled-render check passes (D7) |
 | Camera point equality | `position` and `lookAt` are equal when their distance is ≤ `ε` | (D14) |
 | Camera up parallel tolerance | `up` is parallel to the view direction when `‖f̂ × û‖ ≤ 1e-6` (f̂, û unit vectors) | Dimensionless, independent of scene scale (D14) |
+| Maximum expression nesting depth | `100` levels (each unary minus and each vector bracket is a level) | Deeper input is a syntax error at the token that exceeds it (D15) |
 | Supported scene scale | Dimensions and coordinates with magnitude in `[1e-3, 1e5]` world units | **Provisional** until the scaled-render check passes (D7) |
 | Right-angle rotations | Angles that are exact multiples of 90° use exact sin/cos values (`0`, `±1`) | Keeps flush cuts exact (D7) |
 
@@ -712,6 +713,8 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D12~~ | **Resolved 2026-09-10:** `node:test` unit + golden-PPM render tests; Playwright e2e on Chromium/Firefox/WebKit; `npm run capture` evidence; manual Safari check; `tools/serve.mjs`. See §7, §9, CONSTRAINTS §4–§5. | — | — |
 | ~~D13~~ | **Resolved 2026-09-10:** rename `master` → `main`; branch per OpenSpec change; pre-commit hook runs `npm test`; full gate + Critic before merge. See CONSTRAINTS §4. | — | — |
 | ~~D14~~ | **Resolved 2026-09-10 (accepted by the owner):** position and lookAt are equal when their distance is ≤ `ε`; up is parallel when `‖f̂ × û‖ ≤ 1e-6`. Recorded in §5. | — | — |
+| ~~D15~~ | **Resolved 2026-09-10 (chosen by the owner):** expressions nest at most 100 levels; deeper input is a syntax error rather than a stack overflow. Recorded in §5. | — | — |
+| D16 | Behavior for values far outside the supported scene scale. For example, a camera 1e200 away overflows the vector math to Infinity and is misreported as "up must not be parallel". Literals that overflow to Infinity are already rejected. | Not M1 (inputs are outside the provisional `[1e-3, 1e5]` scale) | Decide in M4, when the scale range is finalized: reject values outside the supported scale, or specify a best-effort behavior |
 
 ## Optional features (parked)
 

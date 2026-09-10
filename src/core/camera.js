@@ -10,7 +10,8 @@ const REQUIRED = ['position', 'lookAt'];
 // Returns { position, lookAt, up, fov }, or null after reporting diagnostics.
 // evaluate(node) returns a number, a 3-array, or null (already reported).
 export function validateCamera(node, evaluate, report) {
-  const values = {};
+  const given = new Set();
+  const usable = {}; // properties whose value has the right kind
   const locs = {};
   let valid = true;
 
@@ -21,12 +22,12 @@ export function validateCamera(node, evaluate, report) {
       valid = false;
       continue;
     }
-    if (Object.hasOwn(values, property.name)) {
+    if (given.has(property.name)) {
       report(property.loc, `camera property \`${property.name}\` is given more than once`);
       valid = false;
       continue;
     }
-    values[property.name] = value;
+    given.add(property.name);
     locs[property.name] = property.loc;
     if (value === null) {
       valid = false;
@@ -36,38 +37,49 @@ export function validateCamera(node, evaluate, report) {
     if (kind === 'vector' ? !Array.isArray(value) : typeof value !== 'number') {
       report(property.loc, `camera property \`${property.name}\` must be a ${kind}`);
       valid = false;
+      continue;
     }
+    usable[property.name] = value;
   }
 
   for (const name of REQUIRED) {
-    if (!Object.hasOwn(values, name)) {
+    if (!given.has(name)) {
       report(node.loc, `camera block is missing \`${name}\``);
       valid = false;
     }
   }
-  if (!valid) return null;
 
+  // Each remaining rule is checked whenever the values it needs are usable, so
+  // independent problems are all reported.
+  const withDefault = (name) => (given.has(name) ? usable[name] : CAMERA_DEFAULTS[name]);
   const camera = {
-    position: values.position,
-    lookAt: values.lookAt,
-    up: values.up ?? CAMERA_DEFAULTS.up,
-    fov: values.fov ?? CAMERA_DEFAULTS.fov,
+    position: usable.position,
+    lookAt: usable.lookAt,
+    up: withDefault('up'),
+    fov: withDefault('fov'),
   };
 
-  const view = sub(camera.lookAt, camera.position);
-  const viewValid = length(view) > EPSILON;
-  if (!viewValid) {
-    report(locs.lookAt, 'position and lookAt must differ');
-    valid = false;
+  let viewValid = false;
+  if (camera.position !== undefined && camera.lookAt !== undefined) {
+    viewValid = length(sub(camera.lookAt, camera.position)) > EPSILON;
+    if (!viewValid) {
+      report(locs.lookAt, 'position and lookAt must differ');
+      valid = false;
+    }
   }
-  if (length(camera.up) === 0) {
-    report(locs.up ?? node.loc, 'up must be nonzero');
-    valid = false;
-  } else if (viewValid && length(cross(normalize(view), normalize(camera.up))) <= PARALLEL_TOLERANCE) {
-    report(locs.up ?? node.loc, 'up must not be parallel to the viewing direction');
-    valid = false;
+  if (camera.up !== undefined) {
+    if (length(camera.up) === 0) {
+      report(locs.up ?? node.loc, 'up must be nonzero');
+      valid = false;
+    } else if (viewValid) {
+      const view = normalize(sub(camera.lookAt, camera.position));
+      if (length(cross(view, normalize(camera.up))) <= PARALLEL_TOLERANCE) {
+        report(locs.up ?? node.loc, 'up must not be parallel to the viewing direction');
+        valid = false;
+      }
+    }
   }
-  if (!(camera.fov > 0 && camera.fov < 180)) {
+  if (camera.fov !== undefined && !(camera.fov > 0 && camera.fov < 180)) {
     report(locs.fov, 'fov must be strictly between 0 and 180 degrees');
     valid = false;
   }

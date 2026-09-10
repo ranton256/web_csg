@@ -36,6 +36,25 @@ test('unknown, duplicate, and mistyped properties', () => {
   assert.deepEqual(messages('camera { position: 5; lookAt: [0, 0, 0]; }'), ['camera property `position` must be a vector']);
 });
 
+test('independent camera errors are all reported', () => {
+  assert.deepEqual(messages('camera { position: 5; lookAt: [0, 0, 0]; fov: 0; }'), [
+    'camera property `position` must be a vector',
+    'fov must be strictly between 0 and 180 degrees',
+  ]);
+  assert.deepEqual(messages('camera { position: [0, -100, 0]; lookAt: q; up: [0, 0, 0]; }'), [
+    '`q` is undeclared',
+    'up must be nonzero',
+  ]);
+});
+
+test('a second camera block is still checked', () => {
+  assert.deepEqual(compile(CAMERA + 'camera { position: [q, 0, 0]; lookAt: [0, 0, 0]; fov: 200; }').diagnostics.map((d) => [d.line, d.column, d.message]), [
+    [2, 1, 'exactly one camera block is required'],
+    [2, 21, '`q` is undeclared'],
+    [2, 50, 'fov must be strictly between 0 and 180 degrees'],
+  ]);
+});
+
 test('camera expressions may use earlier bindings', () => {
   const { scene } = compile('let d = 100;\ncamera { position: [d, -d, d]; lookAt: [0, 0, 0]; }');
   assert.deepEqual(scene.camera.position, [100, -100, 100]);

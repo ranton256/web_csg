@@ -22,6 +22,8 @@ const isDigit = (ch) => ch >= '0' && ch <= '9';
 const isIdentifierStart = (ch) => (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch === '_';
 const isIdentifierPart = (ch) => isIdentifierStart(ch) || isDigit(ch);
 const isSpace = (ch) => ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r' || ch === '\f' || ch === '\v';
+const isHighSurrogate = (ch) => ch >= '\uD800' && ch <= '\uDBFF';
+const isLowSurrogate = (ch) => ch >= '\uDC00' && ch <= '\uDFFF';
 
 // Returns an array of { type, value, line, column } tokens ending with an
 // 'eof' token. Types: 'number', 'identifier', 'keyword', 'punct'.
@@ -32,12 +34,17 @@ export function tokenize(source) {
   let line = 1;
   let column = 1;
 
+  // Columns count characters (code points): a surrogate pair such as an emoji
+  // is one column.
   const advance = () => {
     const ch = source[i++];
     if (ch === '\n') {
       line++;
       column = 1;
-    } else if (!(ch === '\r' && source[i] === '\n')) {
+    } else if (ch === '\r' && source[i] === '\n') {
+      // The following \n ends the line.
+    } else {
+      if (isHighSurrogate(ch) && isLowSurrogate(source[i])) i++;
       column++;
     }
   };
@@ -85,7 +92,9 @@ export function tokenize(source) {
       if (i < source.length && (isIdentifierPart(source[i]) || source[i] === '.')) {
         throw new SourceError('malformed number: numbers are digits with an optional fraction, like 12 or 1.5', startLine, startColumn);
       }
-      tokens.push({ type: 'number', value: Number(text), text, line: startLine, column: startColumn });
+      const value = Number(text);
+      if (!Number.isFinite(value)) throw new SourceError('number is too large', startLine, startColumn);
+      tokens.push({ type: 'number', value, text, line: startLine, column: startColumn });
       continue;
     }
 
@@ -106,7 +115,7 @@ export function tokenize(source) {
       continue;
     }
 
-    throw new SourceError(`unexpected character '${ch}'`, startLine, startColumn);
+    throw new SourceError(`unexpected character '${String.fromCodePoint(source.codePointAt(i))}'`, startLine, startColumn);
   }
 
   tokens.push({ type: 'eof', value: null, line, column });

@@ -90,7 +90,7 @@ const lineAt = (text, index) => text.slice(0, index).split('\n').length;
 
 const IMPORT_PATTERNS = [
   /\bimport\s+(?:[\w$*{}\s,]+?\s+from\s*)?(['"])([^'"\n]*)\1/g,
-  /\bexport\s+(?:\*|\{[^}]*\})\s*from\s*(['"])([^'"\n]*)\1/g,
+  /\bexport\s+(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*(['"])([^'"\n]*)\1/g,
   /\bimport\s*\(\s*(['"])([^'"\n]*)\1\s*\)/g,
 ];
 const NON_LITERAL_DYNAMIC_IMPORT = /\bimport\s*\((?!\s*['"])/g;
@@ -109,6 +109,11 @@ export function scanFile(file, coreDir) {
   }
 
   const codeWithStrings = blankCommentsAndStrings(text, { keepStrings: true });
+  // Bracket access with a literal name, e.g. globalThis['document'].
+  const bracketAccess = new RegExp(`\\[\\s*(['"\`])(${FORBIDDEN_IDENTIFIERS.join('|')})\\1\\s*\\]`, 'g');
+  for (const match of codeWithStrings.matchAll(bracketAccess)) {
+    violations.push({ file, line: lineAt(codeWithStrings, match.index), token: match[2] });
+  }
   for (const pattern of IMPORT_PATTERNS) {
     for (const match of codeWithStrings.matchAll(pattern)) {
       const specifier = match[2];
