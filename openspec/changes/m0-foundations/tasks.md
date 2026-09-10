@@ -94,6 +94,12 @@
 - [x] 11.2 `parsePort` accepts any number of decimal digits within 0–65535 (`000080` was rejected by the 5-digit cap; informational)
 - [x] 11.3 Watch the new tests fail against `7cec485`; `npm run check` green (fresh clone); update the evidence README; commit
 
+## 12. Critic round 4 fixes ([REJECTED] at `0b5b815`)
+
+- [x] 12.1 The PPM header is checked at byte level: tokens decoded as latin1 (not ascii, which clears the high bit), with ASCII-only whitespace; the separator after the maximum value must be whitespace; tests for high-bit and NBSP headers; spec scenario updated
+- [x] 12.2 Fix design D-3 drift (PPM read/write live in `test/support/ppm.js`)
+- [x] 12.3 Watch the new tests fail against `0b5b815`; `npm run check` green (fresh clone); update the evidence README; commit
+
 ## 8. Evidence, review, and merge
 
 - [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
