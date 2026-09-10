@@ -65,6 +65,10 @@ describe('PPM format', () => {
       'ascii.ppm': Buffer.from('P3\n1 1\n255\n1 2 3\n'),
       'deep.ppm': Buffer.concat([Buffer.from('P6\n1 1\n65535\n'), Buffer.alloc(6)]),
       'short.ppm': Buffer.concat([Buffer.from('P6\n2 2\n255\n'), Buffer.alloc(5)]),
+      'hexwidth.ppm': Buffer.concat([Buffer.from('P6\n0x2 1\n255\n'), Buffer.alloc(6)]),
+      'hexmax.ppm': Buffer.concat([Buffer.from('P6\n2 1\n0xFF\n'), Buffer.alloc(6)]),
+      'exponent.ppm': Buffer.concat([Buffer.from('P6\n2e0 1\n255\n'), Buffer.alloc(6)]),
+      'signed.ppm': Buffer.concat([Buffer.from('P6\n+2 1\n255\n'), Buffer.alloc(6)]),
     };
     for (const [name, content] of Object.entries(cases)) {
       const file = path.join(tmp, name);

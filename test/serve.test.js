@@ -188,6 +188,8 @@ describe('port selection', () => {
     }
     assert.equal(parsePort(['--port', '0'], {}), 0);
     assert.equal(parsePort(['--port', '65535'], {}), 65535);
+    assert.equal(parsePort(['--port', '000080'], {}), 80);
+    assert.throws(() => parsePort(['--port', '65536'], {}), /Invalid port/);
   });
 
   test('--port without a value is rejected, not defaulted', () => {

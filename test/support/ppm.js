@@ -37,10 +37,18 @@ export function decodePPM(buffer, name = '<buffer>') {
     return buffer.toString('ascii', start, offset);
   };
 
+  // Header numbers are plain decimal digits in PPM; Number() alone would
+  // also accept "0xFF", "2e0", or "+2".
+  const nextDecimal = (field) => {
+    const token = nextToken();
+    if (!/^\d+$/.test(token)) fail(`${field} "${token}" is not a decimal integer`);
+    return Number(token);
+  };
+
   if (nextToken() !== 'P6') fail('not a binary P6 image');
-  const width = Number(nextToken());
-  const height = Number(nextToken());
-  const maxValue = Number(nextToken());
+  const width = nextDecimal('width');
+  const height = nextDecimal('height');
+  const maxValue = nextDecimal('maximum value');
   if (!Number.isInteger(width) || width <= 0 || !Number.isInteger(height) || height <= 0) {
     fail('invalid width or height');
   }

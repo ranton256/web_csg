@@ -41,7 +41,7 @@ export function parsePort(argv, env) {
   }
   if (raw === undefined || raw === '') return DEFAULT_PORT;
   // Decimal digits only: Number() would also accept " " (→ 0), "1e3", "0x1F90", "+80".
-  const port = /^\d{1,5}$/.test(raw) ? Number(raw) : NaN;
+  const port = /^\d+$/.test(raw) ? Number(raw) : NaN;
   if (!(port >= 0 && port <= 65535)) {
     throw new Error(`Invalid port "${raw}": expected a decimal integer from 0 to 65535`);
   }
