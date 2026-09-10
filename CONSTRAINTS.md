@@ -58,9 +58,37 @@ tools/                     # serve.mjs, capture.mjs, golden-update.mjs, hooks/
 docs/progress/<M>/         # Milestone evidence
 ```
 
-**Deferred to the M1 proposal:** the module layout inside `src/core/` and
-`src/ui/`, and the interfaces between them (including how the shell drives
-band-by-band rendering). Record them here when that proposal is accepted.
+**Module layout** (M1, design D-1 of `m1-first-pixels`):
+
+```text
+src/core/
+  constants.js   # Every DESIGN §5 number; change DESIGN first, then here
+  vec3.js        # [x, y, z] helpers; never modify their arguments
+  lexer.js       # tokenize(source) → tokens with line/column; SourceError
+  parser.js      # parse(tokens) → syntax tree with locations; throws at the first syntax error
+  evaluate.js    # evaluate(program) → { diagnostics, scene }; reports every semantic error
+  camera.js      # validateCamera, cameraBasis, primaryRay
+  sphere.js      # intersectSphere → interval list
+  intervals.js   # union, visibleHit, facingNormal
+  shade.js       # keyLight, shade, encode
+  render.js      # compile, renderRows, renderSource (the public entry points)
+src/ui/
+  default-source.js  # The page's example (no browser APIs)
+  main.js            # Page wiring (browser APIs live only here)
+```
+
+**Interfaces:**
+- `compile(source)` returns `{ diagnostics, scene }`. `scene` is `null` when
+  any diagnostic exists.
+- `renderSource(source, width, height)` returns `{ diagnostics, rgba }`.
+  `rgba` is a `Uint8ClampedArray` of `width·height·4` bytes (row-major, top
+  row first), or `null`.
+- `renderRows(scene, width, height, y0, y1, rgba)` fills rows `[y0, y1)`.
+  Any split into bands equals one full render; the shell uses this for
+  progressive rendering from M2.
+- Diagnostics are `{ line, column, message }`, with 1-based positions.
+- `test/core-purity.test.js` enforces the boundary: no browser identifiers,
+  and only relative imports within `src/core/`.
 
 ## 3. Runtime and operational requirements
 

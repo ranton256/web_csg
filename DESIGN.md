@@ -126,6 +126,8 @@ strictly greater than 0.
 | Resize debounce | `150` ms after the last resize | (D10) |
 | Numeric type | IEEE-754 double (JS `number`) throughout | (D7) |
 | Tolerance `ε` | `1e-6` world units | **Provisional** until the scaled-render check passes (D7) |
+| Camera point equality | `position` and `lookAt` are equal when their distance is ≤ `ε` | (D14) |
+| Camera up parallel tolerance | `up` is parallel to the view direction when `‖f̂ × û‖ ≤ 1e-6` (f̂, û unit vectors) | Dimensionless, independent of scene scale (D14) |
 | Supported scene scale | Dimensions and coordinates with magnitude in `[1e-3, 1e5]` world units | **Provisional** until the scaled-render check passes (D7) |
 | Right-angle rotations | Angles that are exact multiples of 90° use exact sin/cos values (`0`, `±1`) | Keeps flush cuts exact (D7) |
 
@@ -709,6 +711,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D11~~ | **Resolved 2026-09-10:** current stable desktop Chrome, Firefox, Safari; no mobile/touch. | — | — |
 | ~~D12~~ | **Resolved 2026-09-10:** `node:test` unit + golden-PPM render tests; Playwright e2e on Chromium/Firefox/WebKit; `npm run capture` evidence; manual Safari check; `tools/serve.mjs`. See §7, §9, CONSTRAINTS §4–§5. | — | — |
 | ~~D13~~ | **Resolved 2026-09-10:** rename `master` → `main`; branch per OpenSpec change; pre-commit hook runs `npm test`; full gate + Critic before merge. See CONSTRAINTS §4. | — | — |
+| ~~D14~~ | **Resolved 2026-09-10 (accepted by the owner):** position and lookAt are equal when their distance is ≤ `ε`; up is parallel when `‖f̂ × û‖ ≤ 1e-6`. Recorded in §5. | — | — |
 
 ## Optional features (parked)
 

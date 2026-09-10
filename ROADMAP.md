@@ -26,7 +26,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | | Milestone | Goal | Status |
 |---|---|---|---|
 | **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
-| **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Planned |
+| **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | In progress (`m1-first-pixels`) |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Planned |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
 | **M4** | CSG | Boolean operations; the bored cube renders | Planned |
@@ -74,13 +74,22 @@ the branch name, add the source layout).
 **Goal.** The thinnest end-to-end slice: source text → parser → evaluator →
 tracer → canvas, proven by one golden image.
 
-**Scope.** Language subset: comments, numbers, vectors, `let`, a top-level
-`camera` block, and `sphere` (DESIGN §8 Modeling language, restricted to these
-constructs). Camera construction and vertical-fov projection (DESIGN §8 Camera
-definition: defaults and the "depends only on source and canvas size"
-scenario). Ray–sphere hits shaded with Blinn-Phong using the default key light
-and default color (DESIGN §5). The core render function from DESIGN §7.
-The page shows the source in a text area and the render in a canvas.
+**Scope.** Each construct arrives with its full validation (agreed
+2026-09-10 in the `m1-first-pixels` proposal):
+- **Language subset:** a real lexer and parser for comments, numbers, unary
+  minus, vectors, `let`, a top-level `camera` block, and `sphere`.
+- **Validation:** every DESIGN §8 Modeling language and Camera definition rule
+  that applies to those constructs — the first syntax error at line:col;
+  positional and named arguments; radius > 0; undeclared names; no shadowing;
+  all semantic errors reported; camera rules and defaults.
+- **Rendering:** camera construction and vertical-fov projection. Ray–sphere
+  hits shaded with Blinn-Phong using the default key light and default color
+  (DESIGN §5).
+- **Core:** the core render function from DESIGN §7, and the core-purity check
+  from the backlog.
+- **Page:** a `<textarea>` prefilled with a sphere example re-renders
+  synchronously on every edit into a fixed 640×480 canvas. Diagnostics appear
+  as a plain list, and the last image stays on error. M2 replaces this trigger.
 
 **Dependencies.** M0.
 
@@ -91,18 +100,21 @@ The page shows the source in a text area and the render in a canvas.
 - The core render function returns a buffer that matches a committed sphere
   golden image within 1 per channel.
 - Rendering the same source at the same size twice gives identical pixels.
+- Every DESIGN §8 Modeling language and Camera definition scenario that
+  applies to M1's constructs passes as a unit test.
+- `src/core/` passes the core-purity check.
 - **Evidence:** a capture of the rendered sphere in `docs/progress/M1/`.
 
 ## M2 — Language & feedback
 
 **Goal.** Editing feels live, and errors never cost the picture.
 
-**Scope.** The full parser for the whole grammar, with source locations and
-first-syntax-error stopping. Evaluator rules for names, scoping, arithmetic,
-argument binding, dimension checks, and camera validation, reporting all
-semantic errors (DESIGN §8 Modeling language, Camera definition). Constructs
-whose semantics arrive in M3–M5 parse in M2 but are rejected by the evaluator
-with a diagnostic until their milestone. Editor features: `<textarea>` with a
+**Scope.** The parser is extended from M1's subset to the whole grammar:
+binary arithmetic, and the transform, Boolean, `light`, and `material` syntax.
+The evaluator adds the arithmetic rules (operand types, division by zero) and
+the empty-body rule. Name, scoping, argument, and camera rules already arrive
+in M1. Constructs whose semantics arrive in M3–M5 parse in M2 but are rejected
+by the evaluator with a diagnostic until their milestone. Editor features: `<textarea>` with a
 line-number gutter, diagnostics list, clicking a diagnostic moves the caret,
 300 ms debounced rebuild, stale indicator, progressive cancelable rendering,
 150 ms resize re-render, and "Rendering…" status (DESIGN §8 Invalid edits keep
@@ -212,7 +224,7 @@ strike it through with a reason.
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
 | ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
 | ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
-| ☐ | Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1) | `m0-foundations` design, CONSTRAINTS §2 |
+| ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |
 
