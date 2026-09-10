@@ -10,7 +10,7 @@ const PROGRESS_DIR = path.join(REPO_ROOT, 'docs', 'progress');
 
 const listProgress = () => (fs.existsSync(PROGRESS_DIR) ? fs.readdirSync(PROGRESS_DIR).sort() : null);
 
-for (const args of [[], ['../escape']]) {
+for (const args of [[], ['../escape'], ['--help'], ['-M0']]) {
   test(`capture ${JSON.stringify(args)} prints usage, fails, and writes nothing`, () => {
     const before = listProgress();
     const result = spawnSync(process.execPath, [CAPTURE, ...args], { cwd: REPO_ROOT, encoding: 'utf8' });

@@ -14,8 +14,22 @@ export const GOLDEN_DIR = path.join(REPO_ROOT, 'test', 'golden');
 export const ACTUAL_DIR = path.join(REPO_ROOT, 'test-results', 'golden');
 export const CHANNEL_TOLERANCE = 1;
 
-// Compares RGBA pixels against RGB golden pixels.
+function checkBufferSize(name, width, height, rgba) {
+  const expectedBytes = width * height * 4;
+  if (!Number.isInteger(width) || width <= 0 || !Number.isInteger(height) || height <= 0 ||
+      rgba.length !== expectedBytes) {
+    throw new AssertionError({
+      message: `Golden image "${name}": the rendered buffer has ${rgba.length} bytes, ` +
+        `but ${width}×${height} RGBA needs ${expectedBytes}. No image was written.`,
+    });
+  }
+}
+
+// Compares RGBA pixels against RGB golden pixels. The RGBA buffer must hold
+// exactly width × height pixels; a short buffer would otherwise read as
+// undefined → NaN differences, which never exceed the tolerance.
 export function compareImages(actual, golden) {
+  checkBufferSize('<image>', actual.width, actual.height, actual.rgba);
   if (actual.width !== golden.width || actual.height !== golden.height) {
     return { ok: false, sizeMismatch: true, differingPixels: 0, maxDifference: 0 };
   }
@@ -40,6 +54,7 @@ export function expectMatchesGolden(name, width, height, rgba, options = {}) {
     update = process.env.GOLDEN_UPDATE === '1',
   } = options;
   const goldenPath = path.join(goldenDir, `${name}.ppm`);
+  checkBufferSize(name, width, height, rgba);
 
   if (update) {
     writePPM(goldenPath, width, height, rgba);

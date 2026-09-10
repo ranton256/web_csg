@@ -83,6 +83,11 @@ and the largest channel difference. The actual image SHALL be written to
 - **WHEN** the rendered image and the golden image have different dimensions
 - **THEN** the comparison fails and reports both sizes
 
+#### Scenario: Buffer does not hold the stated image
+- **WHEN** the rendered RGBA buffer's length is not width × height × 4 (for example, it is empty, or a render stopped partway)
+- **THEN** the comparison fails, reporting the actual and expected byte counts, in both compare and update mode
+- **AND** no golden or actual image is written
+
 ### Requirement: Deliberate golden regeneration
 A missing golden image SHALL fail its comparison with a message naming the
 file and `npm run golden:update`. It SHALL NOT be created automatically. Golden
@@ -110,6 +115,10 @@ argument, it SHALL exit non-zero with a usage message and write nothing.
 
 #### Scenario: Missing milestone argument
 - **WHEN** `npm run capture` is run with no argument
+- **THEN** it exits non-zero with a usage message and writes no files
+
+#### Scenario: Invalid milestone name
+- **WHEN** the milestone argument does not start with a letter or digit, or contains characters other than letters, digits, `-`, and `_` (for example `--help` or `../escape`)
 - **THEN** it exits non-zero with a usage message and writes no files
 
 ### Requirement: Pre-commit hook

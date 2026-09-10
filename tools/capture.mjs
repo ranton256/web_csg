@@ -13,8 +13,9 @@ const SHOTS = [{ name: 'app', path: '/' }];
 const VIEWPORT = { width: 1280, height: 800 };
 
 const milestone = process.argv[2];
-if (!milestone || !/^[A-Za-z0-9_-]+$/.test(milestone)) {
-  console.error('Usage: npm run capture -- <milestone>   (letters, digits, "-" or "_", e.g. M0)');
+// Must start with a letter or digit, so flags like --help are never taken as a name.
+if (!milestone || !/^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(milestone)) {
+  console.error('Usage: npm run capture -- <milestone>   (starts with a letter or digit; then letters, digits, "-" or "_"; e.g. M0)');
   process.exit(2);
 }
 

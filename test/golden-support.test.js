@@ -1,10 +1,28 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, test } from 'node:test';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { expectMatchesGolden } from './support/golden.js';
 import { decodePPM, encodePPM, readPPM, writePPM } from './support/ppm.js';
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const GOLDEN_MODULE = pathToFileURL(path.join(REPO_ROOT, 'test', 'support', 'golden.js')).href;
+
+// Runs fn with GOLDEN_UPDATE set to value (undefined = unset), then restores it.
+function withGoldenUpdate(value, fn) {
+  const saved = process.env.GOLDEN_UPDATE;
+  if (value === undefined) delete process.env.GOLDEN_UPDATE;
+  else process.env.GOLDEN_UPDATE = value;
+  try {
+    return fn();
+  } finally {
+    if (saved === undefined) delete process.env.GOLDEN_UPDATE;
+    else process.env.GOLDEN_UPDATE = saved;
+  }
+}
 
 function solidImage(width, height, [r, g, b]) {
   const rgba = new Uint8Array(width * height * 4);
@@ -119,5 +137,85 @@ describe('golden comparison', () => {
     const written = readPPM(path.join(goldenDir, 'fresh.ppm'));
     assert.deepEqual([...written.rgb.subarray(0, 3)], [1, 2, 3]);
     check('fresh', width, height, rgba);
+  });
+
+  test('a buffer that does not hold width × height pixels fails', () => {
+    const truncated = solidImage(width, height, [100, 100, 100]).subarray(0, width * 1 * 4);
+    for (const rgba of [new Uint8Array(0), truncated]) {
+      assert.throws(
+        () => check('img', width, height, rgba),
+        new RegExp(`buffer has ${rgba.length} bytes, but 4×3 RGBA needs 48`),
+      );
+    }
+    assert.throws(
+      () => expectMatchesGolden('short', width, height, truncated, { goldenDir, actualDir, update: true }),
+      /buffer has 16 bytes/,
+    );
+    assert.equal(fs.existsSync(path.join(goldenDir, 'short.ppm')), false);
+  });
+
+  test('without an update option, an unset GOLDEN_UPDATE compares and never writes', () => {
+    withGoldenUpdate(undefined, () => {
+      assert.throws(
+        () => expectMatchesGolden('absent', width, height, solidImage(width, height, [0, 0, 0]), { goldenDir, actualDir }),
+        /not found/,
+      );
+    });
+    assert.equal(fs.existsSync(path.join(goldenDir, 'absent.ppm')), false);
+  });
+
+  test('without an update option, GOLDEN_UPDATE=1 writes the golden', () => {
+    withGoldenUpdate('1', () => {
+      expectMatchesGolden('viaenv', width, height, solidImage(width, height, [7, 8, 9]), { goldenDir, actualDir });
+    });
+    assert.deepEqual([...readPPM(path.join(goldenDir, 'viaenv.ppm')).rgb.subarray(0, 3)], [7, 8, 9]);
+  });
+});
+
+describe('golden commands', () => {
+  let tmp;
+  let fixture;
+  let goldenFile;
+
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'web-csg-golden-cmd-'));
+    goldenFile = path.join(tmp, 'fixture.ppm');
+    fixture = path.join(tmp, 'fixture.test.js');
+    fs.writeFileSync(fixture, [
+      "import { test } from 'node:test';",
+      `import { expectMatchesGolden } from ${JSON.stringify(GOLDEN_MODULE)};`,
+      "test('fixture golden', () => {",
+      `  expectMatchesGolden('fixture', 1, 1, new Uint8Array([10, 20, 30, 255]), { goldenDir: ${JSON.stringify(tmp)} });`,
+      '});',
+      '',
+    ].join('\n'));
+  });
+  afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  // Also drop NODE_TEST_CONTEXT: the outer runner sets it, and a child
+  // `node --test` that inherits it runs in reporting-child mode instead of
+  // running the fixture as a normal top-level suite.
+  const envWithoutUpdate = () => {
+    const env = { ...process.env };
+    delete env.GOLDEN_UPDATE;
+    delete env.NODE_TEST_CONTEXT;
+    return env;
+  };
+
+  test('a plain node --test run (as npm test) fails on a missing golden and creates nothing', () => {
+    const result = spawnSync(process.execPath, ['--test', fixture], { cwd: REPO_ROOT, env: envWithoutUpdate(), encoding: 'utf8' });
+    assert.notEqual(result.status, 0);
+    assert.match(result.stdout, /Golden image "fixture" not found/);
+    assert.equal(fs.existsSync(goldenFile), false);
+  });
+
+  test('npm run golden:update (tools/golden-update.mjs) writes the golden and passes', () => {
+    const result = spawnSync(process.execPath, [path.join(REPO_ROOT, 'tools', 'golden-update.mjs'), fixture], {
+      cwd: REPO_ROOT,
+      env: envWithoutUpdate(),
+      encoding: 'utf8',
+    });
+    assert.equal(result.status, 0, result.stdout + result.stderr);
+    assert.deepEqual([...readPPM(goldenFile).rgb], [10, 20, 30]);
   });
 });

@@ -29,10 +29,16 @@ export function contentTypeFor(filePath) {
   return MIME_TYPES[path.extname(filePath).toLowerCase()] ?? DEFAULT_MIME_TYPE;
 }
 
-// Port precedence: --port argument, then the PORT environment variable, then 8080.
+// Port precedence: --port <n> or --port=<n>, then the PORT environment
+// variable, then 8080. A --port flag without a value is an error.
 export function parsePort(argv, env) {
-  const flagIndex = argv.indexOf('--port');
-  const raw = flagIndex >= 0 ? argv[flagIndex + 1] : env.PORT;
+  let raw = env.PORT;
+  const flagIndex = argv.findIndex((arg) => arg === '--port' || arg.startsWith('--port='));
+  if (flagIndex >= 0) {
+    const flag = argv[flagIndex];
+    raw = flag === '--port' ? argv[flagIndex + 1] : flag.slice('--port='.length);
+    if (raw === undefined || raw === '') throw new Error('--port requires a value');
+  }
   if (raw === undefined || raw === '') return DEFAULT_PORT;
   const port = Number(raw);
   if (!Number.isInteger(port) || port < 0 || port > 65535) {

@@ -5,6 +5,9 @@ const PORT = 4173;
 
 export default defineConfig({
   testDir: 'e2e',
+  // Playwright empties its output directory on every run; keep it away from
+  // test-results/golden/, where golden mismatches leave images for review.
+  outputDir: 'test-results/playwright',
   forbidOnly: true,
   retries: 0,
   reporter: 'list',

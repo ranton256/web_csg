@@ -673,7 +673,7 @@ Commands (agreed in D12, verified in M0):
 ```
 npm install && npx playwright install && npm run hooks:install
 npm start            # serve the app locally
-npm test             # unit + golden-image tests (node --test)
+npm test             # unit + golden-image tests (node --test "test/**/*.test.js")
 npm run test:e2e     # Playwright: Chromium, Firefox, WebKit
 npm run check        # FULL GATE: both of the above
 npm run capture -- <milestone>   # screenshots into docs/progress/<milestone>/

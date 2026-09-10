@@ -104,12 +104,12 @@ band-by-band rendering). Record them here when that proposal is accepted.
   | --- | --- |
   | Setup | `npm install`, then `npx playwright install` for browser binaries, then `npm run hooks:install` |
   | Run the app | `npm start` (serves the repo root over HTTP; ES modules do not load from `file://`) |
-  | Unit + golden suite | `npm test` → `node --test` |
+  | Unit + golden suite | `npm test` → `node --test "test/**/*.test.js"` |
   | One test file | `node --test path/to/file.test.js` |
   | Browser e2e | `npm run test:e2e` → `playwright test` (Chromium, Firefox, WebKit) |
   | **Full gate** | `npm run check` → `npm test` then `npm run test:e2e` |
   | Milestone captures | `npm run capture -- <milestone>` (e.g. `npm run capture -- M1`) → screenshots into `docs/progress/<milestone>/`; the shot list lives in `tools/capture.mjs` |
-  | Update goldens | `npm run golden:update` (deliberate use only) |
+  | Update goldens | `npm run golden:update` (deliberate use only), optionally limited to files: `npm run golden:update -- test/x.test.js` |
 
 ## 5. Definition of done
 

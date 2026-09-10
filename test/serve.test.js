@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import http from 'node:http';
 import net from 'node:net';
@@ -172,9 +172,30 @@ describe('port selection', () => {
     assert.equal(DEFAULT_PORT, 8080);
   });
 
+  test('--port=<n> is accepted', () => {
+    assert.equal(parsePort(['--port=4173'], { PORT: '9000' }), 4173);
+  });
+
   test('invalid ports are rejected', () => {
     assert.throws(() => parsePort(['--port', 'abc'], {}), /Invalid port/);
     assert.throws(() => parsePort(['--port', '70000'], {}), /Invalid port/);
+  });
+
+  test('--port without a value is rejected, not defaulted', () => {
+    for (const argv of [['--port'], ['--port', ''], ['--port=']]) {
+      assert.throws(() => parsePort(argv, {}), /--port requires a value/, JSON.stringify(argv));
+    }
+  });
+
+  test('the CLI exits non-zero on a missing or invalid port', () => {
+    for (const args of [['--port'], ['--port', 'abc']]) {
+      const result = spawnSync(process.execPath, [path.join(REPO_ROOT, 'tools', 'serve.mjs'), ...args], {
+        encoding: 'utf8',
+        timeout: 5000,
+      });
+      assert.equal(result.status, 1, JSON.stringify(args));
+      assert.match(result.stderr, /serve: (--port requires a value|Invalid port)/);
+    }
   });
 
   test('the CLI listens on the --port it is given', async () => {
