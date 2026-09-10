@@ -6,7 +6,7 @@
 import fs from 'node:fs';
 import http from 'node:http';
 import path from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 export const HOST = '127.0.0.1';
 export const DEFAULT_PORT = 8080;
@@ -152,8 +152,18 @@ export async function startServer({ port = DEFAULT_PORT, root = REPO_ROOT } = {}
   return server;
 }
 
-const isMain = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
-if (isMain) {
+// Compare real paths: import.meta.url is already resolved through symlinks
+// (e.g. /tmp → /private/tmp on macOS), but process.argv[1] is not.
+function isMainModule() {
+  if (!process.argv[1]) return false;
+  try {
+    return fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+  } catch {
+    return false;
+  }
+}
+
+if (isMainModule()) {
   try {
     const server = await startServer({ port: parsePort(process.argv.slice(2), process.env) });
     const { port } = server.address();

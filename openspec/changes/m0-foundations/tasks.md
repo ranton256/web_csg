@@ -73,6 +73,17 @@
   - add the `capture` usage
 - [x] 7.4 Update `ROADMAP.md`: set M0 status and add a backlog line "Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)"
 
+## 8. Evidence, review, and merge
+
+- [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
+  - the M0 "done when" criteria, each with its evidence
+  - the `npm run check` result summary
+  - the seen-to-fail records from 6.5
+  - the manual Safari smoke check (performed by the user, with the result recorded)
+- [x] 8.2 Clone the branch into a fresh scratch directory, follow the CONSTRAINTS §4 setup exactly, and confirm `npm run check` is green there
+- [ ] 8.3 Run a separate Critic review (`project-critic`) of `main..m0-foundations`. Fix any `[REJECTED]` findings and re-review until `[APPROVED]`
+- [ ] 8.4 Merge `m0-foundations` into `main`, mark M0 complete in `ROADMAP.md`, and archive the change with `/opsx:archive`
+
 ## 9. Critic round 1 fixes ([REJECTED] at `bf1f36d`)
 
 - [x] 9.1 Golden comparison fails when the RGBA buffer does not hold width × height pixels (compare and update mode), with a spec scenario and tests for empty and truncated buffers
@@ -100,13 +111,8 @@
 - [x] 12.2 Fix design D-3 drift (PPM read/write live in `test/support/ppm.js`)
 - [x] 12.3 Watch the new tests fail against `0b5b815`; `npm run check` green (fresh clone); update the evidence README; commit
 
-## 8. Evidence, review, and merge
+## 13. Critic round 5 fixes ([REJECTED] at `71f8502`)
 
-- [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
-  - the M0 "done when" criteria, each with its evidence
-  - the `npm run check` result summary
-  - the seen-to-fail records from 6.5
-  - the manual Safari smoke check (performed by the user, with the result recorded)
-- [x] 8.2 Clone the branch into a fresh scratch directory, follow the CONSTRAINTS §4 setup exactly, and confirm `npm run check` is green there
-- [ ] 8.3 Run a separate Critic review (`project-critic`) of `main..m0-foundations`. Fix any `[REJECTED]` findings and re-review until `[APPROVED]`
-- [ ] 8.4 Merge `m0-foundations` into `main`, mark M0 complete in `ROADMAP.md`, and archive the change with `/opsx:archive`
+- [x] 13.1 `serve.mjs` detects that it is the entry point by comparing real paths, so it runs when started through a symlinked path (it silently exited 0); spec scenario and test
+- [x] 13.2 Put section 8 back in numeric order in this file (cosmetic)
+- [ ] 13.3 Watch the new test fail against `71f8502`; `npm run check` green (fresh clone); update the evidence README; commit

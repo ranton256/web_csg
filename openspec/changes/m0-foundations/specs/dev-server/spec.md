@@ -24,6 +24,10 @@ treated as unset. A request for `/` SHALL return `index.html`.
 - **WHEN** the server is started with `--port 4173`
 - **THEN** it accepts connections on `127.0.0.1:4173`
 
+#### Scenario: Started through a symlinked path
+- **WHEN** the server script is started through a path that contains a symbolic link (for example, a checkout under macOS `/tmp`)
+- **THEN** it behaves exactly as when started through its real path: it listens on the given port, and exits non-zero on an invalid port
+
 #### Scenario: Missing or invalid port value
 - **WHEN** the server is started with `--port` and no value, or with `--port abc`, `--port " "`, or `--port 1e3`
 - **THEN** it reports the error and exits non-zero instead of falling back to another port

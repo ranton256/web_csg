@@ -209,6 +209,34 @@ describe('port selection', () => {
     }
   });
 
+  test('the CLI works when started through a symlinked path', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'web-csg-link-'));
+    const link = path.join(tmp, 'repo');
+    fs.symlinkSync(REPO_ROOT, link);
+    const script = path.join(link, 'tools', 'serve.mjs');
+    try {
+      const invalid = spawnSync(process.execPath, [script, '--port', 'abc'], { encoding: 'utf8', timeout: 5000 });
+      assert.equal(invalid.status, 1, `exit ${invalid.status}, stderr ${JSON.stringify(invalid.stderr)}`);
+      assert.match(invalid.stderr, /Invalid port/);
+
+      const port = await freePort();
+      const child = spawn(process.execPath, [script, '--port', String(port)]);
+      try {
+        await new Promise((resolve, reject) => {
+          child.stdout.on('data', (chunk) => {
+            if (chunk.toString().includes('Serving')) resolve();
+          });
+          child.once('exit', (code) => reject(new Error(`serve.mjs exited with ${code}`)));
+        });
+        assert.equal((await request(port, '/')).status, 200);
+      } finally {
+        child.kill();
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
   test('the CLI listens on the --port it is given', async () => {
     const port = await freePort();
     const child = spawn(process.execPath, [path.join(REPO_ROOT, 'tools', 'serve.mjs'), '--port', String(port)]);
