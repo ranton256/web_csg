@@ -75,11 +75,11 @@
 
 ## 8. Evidence, review, and merge
 
-- [ ] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
+- [x] 8.1 Run `npm run capture -- M0` and write `docs/progress/M0/README.md` containing:
   - the M0 "done when" criteria, each with its evidence
   - the `npm run check` result summary
   - the seen-to-fail records from 6.5
   - the manual Safari smoke check (performed by the user, with the result recorded)
-- [ ] 8.2 Clone the branch into a fresh scratch directory, follow the CONSTRAINTS §4 setup exactly, and confirm `npm run check` is green there
+- [x] 8.2 Clone the branch into a fresh scratch directory, follow the CONSTRAINTS §4 setup exactly, and confirm `npm run check` is green there
 - [ ] 8.3 Run a separate Critic review (`project-critic`) of `main..m0-foundations`. Fix any `[REJECTED]` findings and re-review until `[APPROVED]`
 - [ ] 8.4 Merge `m0-foundations` into `main`, mark M0 complete in `ROADMAP.md`, and archive the change with `/opsx:archive`
