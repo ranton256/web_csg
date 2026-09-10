@@ -7,22 +7,47 @@
     <!-- Empty icon: stops the browser requesting /favicon.ico (a 404 is a console error). -->
     <link rel="icon" href="data:,">
     <style>
-      body { margin: 16px; font-family: system-ui, sans-serif; }
-      main { display: flex; gap: 16px; align-items: flex-start; }
-      #source { width: 420px; height: 480px; box-sizing: border-box; font: 13px/1.4 ui-monospace, monospace; }
-      /* CSS size equals pixel size: one ray per CSS pixel (DESIGN §5). */
-      #preview { width: 640px; height: 480px; background: #1f1f24; }
-      #diagnostics { margin: 8px 0 0; padding-left: 20px; color: #b00020; font: 13px/1.4 ui-monospace, monospace; }
+      html, body { height: 100%; margin: 0; }
+      body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+      h1 { margin: 8px 16px; font-size: 20px; }
+      #workspace { flex: 1; display: flex; min-height: 0; }
+      #editor-pane { width: var(--editor-width, 420px); flex: none; display: flex; flex-direction: column; min-height: 0; }
+      #editor { flex: 1; display: flex; min-height: 0; border-top: 1px solid #ddd; }
+      /* Gutter and text area share font, line height, and top padding so line numbers align. */
+      #gutter, #source { font: 13px/18px ui-monospace, Menlo, Consolas, monospace; padding-top: 4px; }
+      #gutter { flex: none; min-width: 2.5em; padding: 4px 6px 24px; text-align: right; white-space: pre;
+                overflow: hidden; color: #888; background: #f4f4f6; user-select: none; }
+      #source { flex: 1; min-width: 0; margin: 0; border: 0; padding-left: 6px; resize: none; white-space: pre; overflow: auto; }
+      #diagnostics { flex: none; max-height: 30%; overflow: auto; margin: 0; padding: 4px 8px 4px 24px;
+                     color: #b00020; font: 13px/1.4 ui-monospace, Menlo, Consolas, monospace; }
+      #diagnostics:empty { display: none; }
+      #diagnostics button { font: inherit; color: inherit; background: none; border: 0; padding: 1px 0; text-align: left; cursor: pointer; }
+      #diagnostics button:hover { text-decoration: underline; }
+      #divider { flex: none; width: 6px; cursor: col-resize; background: #d6d6dc; touch-action: none; }
+      #divider:focus-visible { outline: 2px solid #4a7dff; outline-offset: -2px; }
+      #preview-panel { flex: 1; min-width: 0; position: relative; overflow: hidden; background: #1f1f24; }
+      /* The canvas's CSS size is set equal to its pixel size: one ray per CSS pixel (DESIGN §5). */
+      #preview { position: absolute; top: 0; left: 0; }
+      #stale { position: absolute; top: 8px; left: 8px; margin: 0; padding: 4px 8px; font-size: 13px; color: #fff; background: #b00020; border-radius: 3px; }
+      #status { position: absolute; bottom: 8px; right: 8px; margin: 0; padding: 2px 8px; font-size: 12px; color: #fff; background: rgba(0, 0, 0, 0.6); border-radius: 3px; }
     </style>
   </head>
   <body>
     <h1>Web CSG</h1>
-    <main>
-      <section>
-        <textarea id="source" spellcheck="false" aria-label="Model source"></textarea>
+    <main id="workspace">
+      <section id="editor-pane" aria-label="Editor">
+        <div id="editor">
+          <div id="gutter" aria-hidden="true"></div>
+          <textarea id="source" wrap="off" spellcheck="false" aria-label="Model source"></textarea>
+        </div>
         <ul id="diagnostics" aria-label="Diagnostics"></ul>
       </section>
-      <canvas id="preview" width="640" height="480" aria-label="Rendered preview"></canvas>
+      <div id="divider" role="separator" aria-orientation="vertical" aria-label="Resize editor and preview" tabindex="0"></div>
+      <section id="preview-panel" aria-label="Preview">
+        <canvas id="preview" aria-label="Rendered preview"></canvas>
+        <p id="stale" role="status" hidden>Stale: showing the last valid model</p>
+        <p id="status" hidden>Rendering…</p>
+      </section>
     </main>
     <script type="module" src="src/ui/main.js"></script>
   </body>

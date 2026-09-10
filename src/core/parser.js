@@ -1,24 +1,31 @@
-// Recursive-descent parser for the M1 language subset. Produces a syntax tree
-// whose nodes carry { line, column } locations, and throws SourceError at the
-// first syntax error (DESIGN §8 Modeling language).
+// Recursive-descent parser for the Web CSG language (DESIGN §8 Modeling
+// language). Produces a syntax tree whose nodes carry { line, column }
+// locations, and throws SourceError at the first syntax error.
 //
-//   program    := statement*
-//   statement  := 'let' NAME '=' expression ';'
-//               | 'camera' '{' (NAME ':' expression ';')* '}'
-//               | 'sphere' '(' arguments? ')' ';'
+//   statement  := 'let' NAME '=' expr ';'
+//               | PROPERTY_BLOCK '{' (NAME ':' expr ';')* '}'    camera | light | material
+//               | PRIMITIVE '(' arguments? ')' ';'                sphere | cube | box | cylinder
+//               | TRANSFORM '(' arguments? ')' body              translate | rotate | scale
+//               | BOOLEAN body                                    union | intersection | difference
+//   body       := '{' statement* '}'
 //   arguments  := argument (',' argument)*
-//   argument   := NAME ':' expression | expression
-//   expression := '-' expression | NUMBER | NAME | '[' expression ',' expression ',' expression ']'
+//   argument   := NAME ':' expr | expr
+//   expr       := term (('+' | '-') term)*
+//   term       := unary (('*' | '/') unary)*
+//   unary      := '-' unary | primary
+//   primary    := NUMBER | NAME | '(' expr ')' | '[' expr ',' expr ',' expr ']'
+//
+// Operator chains become flat Chain nodes, so a long chain adds no recursion.
+// Each unary minus, bracket, parenthesis, and body is a nesting level, and
+// MAX_NESTING_DEPTH bounds recursion here and in the evaluator for any input.
 
 import { MAX_NESTING_DEPTH } from './constants.js';
 import { SourceError } from './lexer.js';
 
-// Reserved words whose constructs arrive in later milestones.
-const NOT_YET_SUPPORTED = new Set([
-  'cube', 'box', 'cylinder', 'translate', 'rotate', 'scale',
-  'union', 'intersection', 'difference', 'light', 'material',
-]);
-const OPERATORS = new Set(['+', '-', '*', '/']);
+const PROPERTY_BLOCKS = new Set(['camera', 'light', 'material']);
+const PRIMITIVES = new Set(['sphere', 'cube', 'box', 'cylinder']);
+const TRANSFORMS = new Set(['translate', 'rotate', 'scale']);
+const BOOLEANS = new Set(['union', 'intersection', 'difference']);
 
 export function parse(tokens) {
   let pos = 0;
@@ -41,21 +48,24 @@ export function parse(tokens) {
     return next();
   };
 
-  // Unary minus and vectors nest. Bounding the depth keeps the parser and the
-  // evaluator (both recursive) within any engine's stack.
   let depth = 0;
-  const enter = (token) => {
+  const enter = (token, what) => {
     depth++;
-    if (depth > MAX_NESTING_DEPTH) fail(token, `expressions are nested too deeply (more than ${MAX_NESTING_DEPTH} levels)`);
+    if (depth > MAX_NESTING_DEPTH) fail(token, `${what} are nested too deeply (more than ${MAX_NESTING_DEPTH} levels)`);
+  };
+  const leave = () => {
+    depth--;
   };
 
   function statement() {
     const token = peek();
     if (token.type === 'keyword') {
-      if (token.value === 'let') return letStatement();
-      if (token.value === 'camera') return cameraBlock();
-      if (token.value === 'sphere') return call();
-      if (NOT_YET_SUPPORTED.has(token.value)) fail(token, `\`${token.value}\` is not supported yet`);
+      const keyword = token.value;
+      if (keyword === 'let') return letStatement();
+      if (PROPERTY_BLOCKS.has(keyword)) return propertyBlock();
+      if (PRIMITIVES.has(keyword)) return call();
+      if (TRANSFORMS.has(keyword)) return transform();
+      if (BOOLEANS.has(keyword)) return boolean();
     }
     fail(token, `expected a statement but found ${describe(token)}`);
   }
@@ -72,13 +82,13 @@ export function parse(tokens) {
     return { type: 'Let', name: name.value, nameLoc: loc(name), value, loc: loc(start) };
   }
 
-  function cameraBlock() {
-    const start = next();
+  function propertyBlock() {
+    const keyword = next();
     expect('{');
     const properties = [];
     while (!isPunct(peek(), '}')) {
       const name = peek();
-      if (name.type !== 'identifier') fail(name, `expected a camera property name or \`}\` but found ${describe(name)}`);
+      if (name.type !== 'identifier') fail(name, `expected a ${keyword.value} property name or \`}\` but found ${describe(name)}`);
       next();
       expect(':');
       const value = expression();
@@ -86,11 +96,10 @@ export function parse(tokens) {
       properties.push({ name: name.value, value, loc: loc(name) });
     }
     next();
-    return { type: 'Camera', properties, loc: loc(start) };
+    return { type: 'PropertyBlock', keyword: keyword.value, properties, loc: loc(keyword) };
   }
 
-  function call() {
-    const callee = next();
+  function argumentList() {
     expect('(');
     const args = [];
     let sawNamed = false;
@@ -111,26 +120,69 @@ export function parse(tokens) {
       }
     }
     expect(')');
+    return args;
+  }
+
+  function call() {
+    const callee = next();
+    const args = argumentList();
     expect(';');
     return { type: 'Call', callee: callee.value, args, loc: loc(callee) };
   }
 
-  function expression() {
-    const value = unary();
-    const token = peek();
-    if (token.type === 'punct' && OPERATORS.has(token.value)) {
-      fail(token, `binary arithmetic (\`${token.value}\`) is not supported yet`);
+  function transform() {
+    const keyword = next();
+    const args = argumentList();
+    const statements = body(keyword);
+    return { type: 'Transform', keyword: keyword.value, args, body: statements, loc: loc(keyword) };
+  }
+
+  function boolean() {
+    const keyword = next();
+    const statements = body(keyword);
+    return { type: 'Boolean', keyword: keyword.value, body: statements, loc: loc(keyword) };
+  }
+
+  // A braced body; the block's keyword token marks its nesting level.
+  function body(keyword) {
+    enter(keyword, 'blocks');
+    expect('{');
+    const statements = [];
+    while (!isPunct(peek(), '}')) {
+      if (peek().type === 'eof') fail(peek(), 'expected `}` but found the end of the source');
+      statements.push(statement());
     }
-    return value;
+    next();
+    leave();
+    return statements;
+  }
+
+  // A chain of left-associative operators at one precedence level.
+  function chain(operand, operators) {
+    const first = operand();
+    const rest = [];
+    while (peek().type === 'punct' && operators.includes(peek().value)) {
+      const op = next();
+      rest.push({ op: op.value, operand: operand(), loc: loc(op) });
+    }
+    return rest.length === 0 ? first : { type: 'Chain', first, rest, loc: first.loc };
+  }
+
+  function expression() {
+    return chain(term, ['+', '-']);
+  }
+
+  function term() {
+    return chain(unary, ['*', '/']);
   }
 
   function unary() {
     const token = peek();
     if (isPunct(token, '-')) {
       next();
-      enter(token);
+      enter(token, 'expressions');
       const operand = unary();
-      depth--;
+      leave();
       return { type: 'Negate', operand, loc: loc(token) };
     }
     return primary();
@@ -146,15 +198,22 @@ export function parse(tokens) {
       next();
       return { type: 'Name', name: token.value, loc: loc(token) };
     }
+    if (isPunct(token, '(')) {
+      next();
+      enter(token, 'expressions');
+      const inner = expression();
+      expect(')');
+      leave();
+      return inner;
+    }
     if (isPunct(token, '[')) return vector();
-    if (isPunct(token, '(')) fail(token, 'parentheses are not supported yet');
     if (token.type === 'keyword') fail(token, `\`${token.value}\` is a reserved word and cannot be used in an expression`);
     fail(token, `expected an expression but found ${describe(token)}`);
   }
 
   function vector() {
     const open = next();
-    enter(open);
+    enter(open, 'expressions');
     const elements = [expression()];
     while (elements.length < 3) {
       const token = peek();
@@ -165,7 +224,7 @@ export function parse(tokens) {
     const close = peek();
     if (!isPunct(close, ']')) fail(close, `a vector needs exactly three elements; expected \`]\` but found ${describe(close)}`);
     next();
-    depth--;
+    leave();
     return { type: 'Vector', elements, loc: loc(open) };
   }
 

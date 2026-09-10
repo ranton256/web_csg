@@ -74,6 +74,11 @@ test('up must be nonzero and not parallel to the view direction (D14)', () => {
   assert.deepEqual(messages('camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; up: [0, 0, 0]; }'), ['up must be nonzero']);
 });
 
+test('the parallel test uses unit vectors, whatever the length of up (D14)', () => {
+  assert.deepEqual(messages('camera { position: [0, 0, 10]; lookAt: [0, 0, 0]; up: [0.0005, 0, 1000]; }'), ['up must not be parallel to the viewing direction']);
+  assert.deepEqual(messages('camera { position: [0, 0, 10]; lookAt: [0, 0, 0]; up: [0.01, 0, 1000]; }'), []);
+});
+
 test('fov must be strictly between 0 and 180 degrees', () => {
   for (const fov of ['0', '180', '-10', '200']) {
     assert.deepEqual(messages(`camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; fov: ${fov}; }`), ['fov must be strictly between 0 and 180 degrees'], fov);

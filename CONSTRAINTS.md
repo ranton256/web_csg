@@ -74,7 +74,12 @@ src/core/
   render.js      # compile, renderRows, renderSource (the public entry points)
 src/ui/
   default-source.js  # The page's example (no browser APIs)
-  main.js            # Page wiring (browser APIs live only here)
+  settings.js        # Editor numbers mirroring DESIGN §5 (debounces, time slice, divider)
+  text-position.js   # lineCount, lineColumnToOffset (code-point columns → UTF-16 offsets)
+  debounce.js        # createDebouncer(delay, timers): injectable timers
+  render-job.js      # startRenderJob: time-sliced, cancelable progressive rendering (injectable clock/scheduler)
+  divider.js         # clampEditorWidth (pure) and the divider's pointer/keyboard wiring
+  main.js            # Page wiring (browser APIs live only here and in divider wiring)
 ```
 
 **Interfaces:**
@@ -89,6 +94,10 @@ src/ui/
 - Diagnostics are `{ line, column, message }`, with 1-based positions.
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.
+- The pure `src/ui/` helpers (`text-position`, `debounce`, `render-job`,
+  `clampEditorWidth`, `settings`) take their timers and clock as parameters,
+  and are unit-tested in Node under `test/ui/`. `main.js` is covered by the
+  e2e tests.
 
 ## 3. Runtime and operational requirements
 

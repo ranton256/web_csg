@@ -27,7 +27,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 |---|---|---|---|
 | **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Complete (2026-09-10; `m1-first-pixels`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M1/`) |
-| **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Planned |
+| **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | In progress (`m2-language-and-feedback`) |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Planned |
 | **M4** | CSG | Boolean operations; the bored cube renders | Planned |
 | **M5** | Lighting & material | Lights and model color come from the source | Planned |
@@ -114,7 +114,9 @@ binary arithmetic, and the transform, Boolean, `light`, and `material` syntax.
 The evaluator adds the arithmetic rules (operand types, division by zero) and
 the empty-body rule. Name, scoping, argument, and camera rules already arrive
 in M1. Constructs whose semantics arrive in M3–M5 parse in M2 but are rejected
-by the evaluator with a diagnostic until their milestone. Editor features: `<textarea>` with a
+by the evaluator with a diagnostic until their milestone. The preview fills the rest of the window, and a draggable divider sets the
+split (agreed 2026-09-10). The two small M1 backlog items (the purity scanner
+without spaces, and the D14 non-unit test) are folded in. Editor features: `<textarea>` with a
 line-number gutter, diagnostics list, clicking a diagnostic moves the caret,
 300 ms debounced rebuild, stale indicator, progressive cancelable rendering,
 150 ms resize re-render, and "Rendering…" status (DESIGN §8 Invalid edits keep
@@ -224,8 +226,8 @@ strike it through with a reason.
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
 | ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
 | ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
-| ☐ | Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`) | `m1-first-pixels` Critic round 2 (low) |
-| ☐ | Add a D14 parallel-check test with a non-unit `up` vector (e.g. `[0.0005, 0, 1000]` is parallel; `[0.01, 0, 1000]` is not) | `m1-first-pixels` Critic round 2 (informational) |
+| ☐ | Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`) | `m1-first-pixels` Critic round 2 (low); scheduled in `m2-language-and-feedback` |
+| ☐ | Add a D14 parallel-check test with a non-unit `up` vector (e.g. `[0.0005, 0, 1000]` is parallel; `[0.01, 0, 1000]` is not) | `m1-first-pixels` Critic round 2 (informational); scheduled in `m2-language-and-feedback` |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |

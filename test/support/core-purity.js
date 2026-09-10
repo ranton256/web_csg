@@ -89,8 +89,9 @@ export function blankCommentsAndStrings(text, { keepStrings = false } = {}) {
 const lineAt = (text, index) => text.slice(0, index).split('\n').length;
 
 const IMPORT_PATTERNS = [
-  /\bimport\s+(?:[\w$*{}\s,]+?\s+from\s*)?(['"])([^'"\n]*)\1/g,
-  /\bexport\s+(?:\*(?:\s+as\s+[\w$]+)?|\{[^}]*\})\s*from\s*(['"])([^'"\n]*)\1/g,
+  // Whitespace is optional wherever JavaScript allows none: import{x}from'y'.
+  /\bimport\s*(?:[\w$*{}\s,]*?\bfrom\s*)?(['"])([^'"\n]*)\1/g,
+  /\bexport\s*(?:\*(?:\s*as\s+[\w$]+)?|\{[^}]*\})\s*from\s*(['"])([^'"\n]*)\1/g,
   /\bimport\s*\(\s*(['"])([^'"\n]*)\1\s*\)/g,
 ];
 const NON_LITERAL_DYNAMIC_IMPORT = /\bimport\s*\((?!\s*['"])/g;

@@ -53,6 +53,15 @@ describe('core-purity scanner', () => {
     ]);
   });
 
+  test('imports and re-exports written without spaces are reported', () => {
+    write('i.js', "import{readFileSync}from'node:fs';\nexport*from'node:fs';\nexport*as ui from'../ui/main.js';\n");
+    assert.deepEqual(scanCoreDir(core).map((v) => [v.line, v.token]), [
+      [1, "import 'node:fs'"],
+      [2, "import 'node:fs'"],
+      [3, "import '../ui/main.js'"],
+    ]);
+  });
+
   test('relative imports inside the core are allowed', () => {
     fs.mkdirSync(path.join(core, 'sub'));
     write('sub/d.js', "import { a } from '../vec.js';\nexport { b } from './e.js';\n");

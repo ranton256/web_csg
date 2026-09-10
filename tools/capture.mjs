@@ -8,8 +8,28 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { REPO_ROOT, startServer } from './serve.mjs';
 
+import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+
+// Waits until the page has finished every render it started.
+const renderIdle = (page) => page.waitForFunction(() => {
+  const data = document.body.dataset;
+  return document.getElementById('status').hidden
+    && Number(data.rendersStarted ?? 0) > 0
+    && Number(data.rendersDone ?? 0) === Number(data.rendersStarted ?? 0);
+});
+
 // Later milestones add shots (e.g. one per built-in example).
-const SHOTS = [{ name: 'app', path: '/' }];
+const SHOTS = [
+  { name: 'app', path: '/', prepare: async () => {} },
+  {
+    name: 'stale',
+    path: '/',
+    prepare: async (page) => {
+      await page.locator('#source').fill(DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);'));
+      await page.locator('#stale').waitFor({ state: 'visible' });
+    },
+  },
+];
 const VIEWPORT = { width: 1280, height: 800 };
 
 const milestone = process.argv[2];
@@ -31,6 +51,8 @@ try {
   fs.mkdirSync(outputDir, { recursive: true });
   for (const shot of SHOTS) {
     await page.goto(baseURL + shot.path, { waitUntil: 'load' });
+    await renderIdle(page);
+    await shot.prepare(page);
     const file = path.join(outputDir, `${shot.name}.png`);
     await page.screenshot({ path: file });
     console.log(`Wrote ${path.relative(REPO_ROOT, file)}`);

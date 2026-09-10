@@ -66,7 +66,9 @@ spec-driven development that students read, rebuild, and extend.
 
 ## 4. Visual design and assets
 
-- Layout: source editor plus a resizable preview panel.
+- Layout: a source editor (with a line-number gutter) plus a resizable
+  preview panel. The preview fills the rest of the window, and a draggable
+  divider sets the split between editor and preview (agreed 2026-09-10).
 - Perspective camera; surfaces shaded with a Blinn-Phong model from
   directional white lights declared in the source (or a default camera key
   light); one model color set by an optional `material` block; solid dark
@@ -125,11 +127,13 @@ strictly greater than 0.
 | Render resolution | 1 ray per CSS pixel, through the pixel center; `devicePixelRatio` ignored; no anti-aliasing | (D10) |
 | Rebuild debounce | `300` ms after the last edit | (D10) |
 | Resize debounce | `150` ms after the last resize | (D10) |
+| Render time slice | At most `12` ms of rendering per slice before yielding to the browser | (D18) |
+| Divider | The editor starts `420` px wide; the editor and preview are each at least `240` px wide; the arrow keys move the focused divider `16` px | (D18) |
 | Numeric type | IEEE-754 double (JS `number`) throughout | (D7) |
 | Tolerance `ε` | `1e-6` world units | **Provisional** until the scaled-render check passes (D7) |
 | Camera point equality | `position` and `lookAt` are equal when their distance is ≤ `ε` | (D14) |
 | Camera up parallel tolerance | `up` is parallel to the view direction when `‖f̂ × û‖ ≤ 1e-6` (f̂, û unit vectors) | Dimensionless, independent of scene scale (D14) |
-| Maximum expression nesting depth | `100` levels (each unary minus and each vector bracket is a level) | Deeper input is a syntax error at the token that exceeds it (D15) |
+| Maximum nesting depth | `100` levels (each unary minus, vector bracket, parenthesis, and transform or Boolean body is a level) | Deeper input is a syntax error at the token that exceeds it (D15; parentheses and bodies added by D18) |
 | Supported scene scale | Dimensions and coordinates with magnitude in `[1e-3, 1e5]` world units | **Provisional** until the scaled-render check passes (D7) |
 | Right-angle rotations | Angles that are exact multiples of 90° use exact sin/cos values (`0`, `±1`) | Keeps flush cuts exact (D7) |
 
@@ -715,6 +719,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D13~~ | **Resolved 2026-09-10:** rename `master` → `main`; branch per OpenSpec change; pre-commit hook runs `npm test`; full gate + Critic before merge. See CONSTRAINTS §4. | — | — |
 | ~~D14~~ | **Resolved 2026-09-10 (accepted by the owner):** position and lookAt are equal when their distance is ≤ `ε`; up is parallel when `‖f̂ × û‖ ≤ 1e-6`. Recorded in §5. | — | — |
 | ~~D15~~ | **Resolved 2026-09-10 (chosen by the owner):** expressions nest at most 100 levels; deeper input is a syntax error rather than a stack overflow. Recorded in §5. | — | — |
+| ~~D18~~ | **Resolved 2026-09-10 (accepted by the owner; may be tuned later):** recorded in §5 (render time slice, divider, nesting depth). Original proposal: (a) progressive rendering yields after at most **12 ms** of rendering per slice; (b) the divider keeps the editor and the preview each at least **240 px** wide, the editor starts **420 px** wide, and the arrow keys move the focused divider **16 px**; (c) the D15 cap of 100 levels also counts **parentheses and block bodies** (`{ … }` of transforms and Booleans), so the new grammar cannot overflow the stack. | — | — |
 | D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
 | D16 | Behavior for values far outside the supported scene scale. For example, a camera 1e200 away overflows the vector math to Infinity and is misreported as "up must not be parallel". Literals that overflow to Infinity are already rejected. | Not M1 (inputs are outside the provisional `[1e-3, 1e5]` scale) | Decide in M4, when the scale range is finalized: reject values outside the supported scale, or specify a best-effort behavior |
 
