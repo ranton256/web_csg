@@ -13,7 +13,10 @@ Source: DESIGN §8 Camera definition.
 
 A source SHALL contain exactly one `camera { … }` block at the top level.
 A missing block SHALL be an error reported at line 1, column 1. A second block
-SHALL be an error reported at that block.
+SHALL be an error reported at that block. A camera block inside a transform or
+Boolean body SHALL be an error at that block, saying the camera block must be
+at the top level; it does not count as the scene's camera. Its properties are
+still checked.
 
 #### Scenario: Missing camera block is an error
 - **WHEN** a source has no camera block
@@ -26,6 +29,10 @@ SHALL be an error reported at that block.
 #### Scenario: The second block's contents are still checked
 - **WHEN** a second camera block contains an undeclared name and `fov: 200;`
 - **THEN** both are reported, in addition to the extra-block diagnostic
+
+#### Scenario: A camera block inside a body is an error
+- **WHEN** a valid top-level camera exists and the source also contains `union { camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; } sphere(1); }`
+- **THEN** a diagnostic at the inner `camera` says the camera block must be at the top level
 
 ### Requirement: Camera properties and defaults
 Source: DESIGN §8 Camera definition, §5 (camera defaults).
@@ -90,6 +97,10 @@ reported. For example, a mistyped `position` does not hide an out-of-range
 #### Scenario: Independent errors are all reported
 - **WHEN** a camera has `position: 5;` and `fov: 0;`
 - **THEN** both the `position` type error and the fov range error are reported
+
+#### Scenario: The parallel test uses unit vectors
+- **WHEN** a camera at `[0, 0, 10]` looking at the origin has `up: [0.0005, 0, 1000];` (sine 5e-7), or `up: [0.01, 0, 1000];` (sine 1e-5)
+- **THEN** the first is rejected as parallel and the second is accepted, regardless of the vectors' length
 
 ### Requirement: Perspective projection
 Source: DESIGN §8 Camera definition, §5 (render resolution).

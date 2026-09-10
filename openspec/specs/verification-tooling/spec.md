@@ -154,12 +154,13 @@ Source: CONSTRAINTS §2 (DOM-free core); DESIGN §6 item 3.
 - **Imports:** the only permitted form is a relative specifier that resolves
   inside `src/core/`. Package, `node:`, and URL imports are forbidden. This
   applies to `import`, dynamic `import()`, and every re-export form, including
-  `export * as name from`.
+  `export * as name from`, whether or not there is whitespace between the
+  tokens (for example `import{x}from'node:fs'` or `export*from'node:fs'`).
 
 Bracket access with a literal name (for example `globalThis['document']`)
 SHALL count as a reference. Other occurrences inside comments and string
-literals SHALL be ignored. The
-failure SHALL name the file, the line, and the offending identifier or import.
+literals SHALL be ignored. The failure SHALL name the file, the line, and the
+offending identifier or import.
 
 #### Scenario: A browser API in the core fails the suite
 - **WHEN** a file in `src/core/` contains `document.title = 'x';` on line 3
@@ -167,6 +168,10 @@ failure SHALL name the file, the line, and the offending identifier or import.
 
 #### Scenario: An import from outside the core fails the suite
 - **WHEN** a file in `src/core/` imports `../ui/main.js` or `node:fs`, or contains `export * as fs from 'node:fs';`
+- **THEN** `npm test` fails, naming the file and the import
+
+#### Scenario: Imports without whitespace are caught
+- **WHEN** a file in `src/core/` contains `import{readFileSync}from'node:fs';` or `export*from'node:fs';`
 - **THEN** `npm test` fails, naming the file and the import
 
 #### Scenario: Mentions in comments are allowed
