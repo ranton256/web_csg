@@ -138,7 +138,6 @@ There are several concerns and edge cases we must handle correctly, including;
 
 ## Questions and Answers
 
-
 ### Answered
 
 | Question                                           | A sensible initial rule                                                                     |
@@ -151,8 +150,9 @@ There are several concerns and edge cases we must handle correctly, including;
 | What happens after an invalid edit?                | Keep the last valid rendering and visibly mark it as stale.                                 |
 | How much detail can the renderer resolve?          | Define supported scene scale, hit tolerance, and marching limits.                           |
 
+### Open Questions
 
-
+Add any option questions or ambiguities here.
 
 ## Later, optional improvements
 
