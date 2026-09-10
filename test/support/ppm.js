@@ -24,17 +24,23 @@ export function decodePPM(buffer, name = '<buffer>') {
     throw new Error(`Invalid PPM ${name}: ${reason}`);
   };
 
+  // The header is examined byte by byte. PPM whitespace is ASCII only (space,
+  // TAB, LF, VT, FF, CR). Tokens are decoded as latin1, which maps each byte to
+  // the same code point; 'ascii' decoding would clear the high bit and turn
+  // byte 0xB2 into "2".
+  const isSpace = (byte) => byte === 0x20 || (byte >= 0x09 && byte <= 0x0d);
+
   let offset = 0;
   // Reads the next header token, skipping whitespace and # comments.
   const nextToken = () => {
     for (;;) {
-      while (offset < buffer.length && /\s/.test(String.fromCharCode(buffer[offset]))) offset++;
+      while (offset < buffer.length && isSpace(buffer[offset])) offset++;
       if (buffer[offset] !== 0x23) break; // '#'
       while (offset < buffer.length && buffer[offset] !== 0x0a) offset++;
     }
     const start = offset;
-    while (offset < buffer.length && !/\s/.test(String.fromCharCode(buffer[offset]))) offset++;
-    return buffer.toString('ascii', start, offset);
+    while (offset < buffer.length && !isSpace(buffer[offset])) offset++;
+    return buffer.toString('latin1', start, offset);
   };
 
   // Header numbers are plain decimal digits in PPM; Number() alone would
@@ -53,7 +59,9 @@ export function decodePPM(buffer, name = '<buffer>') {
     fail('invalid width or height');
   }
   if (maxValue !== 255) fail(`maximum value is ${maxValue}; expected 255`);
-  offset++; // exactly one whitespace byte separates the header from the pixels
+  // Exactly one whitespace byte separates the header from the pixels.
+  if (!isSpace(buffer[offset])) fail('missing whitespace after the maximum value');
+  offset++;
 
   const rgb = buffer.subarray(offset);
   if (rgb.length !== width * height * 3) {

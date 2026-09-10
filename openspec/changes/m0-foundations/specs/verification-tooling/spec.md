@@ -59,7 +59,7 @@ is not stored.
 - **THEN** the width, height, and every R, G, and B value are unchanged
 
 #### Scenario: Malformed file
-- **WHEN** a golden file is not a valid `P6` image with maximum value `255`: for example, its header numbers are not plain decimal digits (`0xFF`, `2e0`, `+2`), or its pixel data has the wrong length
+- **WHEN** a golden file is not a valid `P6` image with maximum value `255`: for example, its header numbers are not plain ASCII decimal digits (`0xFF`, `2e0`, `+2`, or bytes with the high bit set), its header separators are not ASCII whitespace, or its pixel data has the wrong length
 - **THEN** reading it fails with an error naming the file
 
 ### Requirement: Golden image comparison

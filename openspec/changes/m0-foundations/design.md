@@ -64,7 +64,8 @@ helpers are never run as tests, and e2e files (`*.spec.js` in `e2e/`) stay
 out of the Node suite.
 
 ### D-3: Golden helper and update mode
-`test/support/golden.js` exports PPM `read`/`write` and
+`test/support/ppm.js` exports PPM `readPPM`/`writePPM` (and the in-memory
+`encodePPM`/`decodePPM`). `test/support/golden.js` exports
 `expectMatchesGolden(name, width, height, rgba)`. Update mode is on when
 `GOLDEN_UPDATE=1`. `npm run golden:update` runs `tools/golden-update.mjs`,
 which sets that variable and starts `node --test` with the same glob.

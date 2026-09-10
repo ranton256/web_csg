@@ -69,6 +69,12 @@ describe('PPM format', () => {
       'hexmax.ppm': Buffer.concat([Buffer.from('P6\n2 1\n0xFF\n'), Buffer.alloc(6)]),
       'exponent.ppm': Buffer.concat([Buffer.from('P6\n2e0 1\n255\n'), Buffer.alloc(6)]),
       'signed.ppm': Buffer.concat([Buffer.from('P6\n+2 1\n255\n'), Buffer.alloc(6)]),
+      // High-bit bytes that 'ascii' decoding would turn into "2", "255", and "P6".
+      'highbit-width.ppm': Buffer.concat([Buffer.from('P6\n'), Buffer.from([0xb2]), Buffer.from(' 1\n255\n'), Buffer.alloc(6)]),
+      'highbit-max.ppm': Buffer.concat([Buffer.from('P6\n2 1\n'), Buffer.from([0xb2, 0xb5, 0xb5]), Buffer.from('\n'), Buffer.alloc(6)]),
+      'highbit-magic.ppm': Buffer.concat([Buffer.from([0xd0, 0xb6]), Buffer.from('\n2 1\n255\n'), Buffer.alloc(6)]),
+      // A non-breaking space (0xA0) is not PPM whitespace.
+      'nbsp.ppm': Buffer.concat([Buffer.from('P6\n2'), Buffer.from([0xa0]), Buffer.from('1\n255\n'), Buffer.alloc(6)]),
     };
     for (const [name, content] of Object.entries(cases)) {
       const file = path.join(tmp, name);
