@@ -140,9 +140,10 @@ Transforms (D19):
   - the D4 direction scenarios;
   - exactness for 90° and 180°;
   - composition order;
-  - the round trip `toLocal` / world;
-  - world-distance `t` for scaled solids;
-  - world normals for rotated boxes.
+  - the round trip `toLocal` / world.
+
+  World-distance `t` for scaled solids, world normals for rotated boxes, and
+  nested placements are checked at scene level in `test/core/scene.test.js`.
 - **Language tests:** the not-supported lists shrink. The vision example now
   expects only `difference` and `union`. There are binding tests for the new
   primitives and transforms.

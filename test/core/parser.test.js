@@ -131,6 +131,9 @@ test('parentheses and bodies count as nesting levels (D18)', () => {
 test('argument parentheses count as a nesting level', () => {
   assert.deepEqual(compile(`sphere(${'-'.repeat(99)}1);\n` + CAMERA).diagnostics.filter((d) => /nested/.test(d.message)), []);
   assert.deepEqual(syntaxError(`sphere(${'-'.repeat(100)}1);\n` + CAMERA), [1, 107, 'expressions are nested too deeply (more than 100 levels)']);
+  // They also leave it: the depth does not build up across sequential calls and transform blocks.
+  assert.deepEqual(compile(CAMERA + 'sphere(1);\n'.repeat(101)).diagnostics, []);
+  assert.deepEqual(compile(CAMERA + 'translate([1, 0, 0]) { sphere(1); }\n'.repeat(60)).diagnostics, []);
 });
 
 test('pathologically deep input yields a diagnostic, not a crash', () => {

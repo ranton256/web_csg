@@ -184,6 +184,36 @@ Seen to fail, in a scratch worktree of `da20cf8` with the new
 Gate after the round 4 fixes: `npm run check < /dev/null` in the working tree
 exits 0, with `node --test` at 213/213 and Playwright at 69/69.
 
+## Critic round 5: `[REJECTED]`, and fixes
+
+The Critic reviewed `7995ba5` and confirmed mutants V and W fail. Its
+independent sweep compared the renderer against its own general 4×4
+matrices, over 600 random chains of translate, arbitrary rotations, and
+scale on all four primitives (24,000 rays). All 9,764 hits matched in `t` and
+normals. Every delta-spec scenario maps to a test. The gates passed (213/213
+and 69/69). It rejected for test gaps only.
+
+| Finding | Fix |
+| --- | --- |
+| Medium: deleting `leave()` in `argumentList()` (`src/core/parser.js:124`, task 4.3) passed 213/213. The depth would then build up across calls, so 101 sequential `sphere(1);` report "nested too deeply" | `argument parentheses count as a nesting level` now also checks that 101 sequential `sphere(1);` and 60 sequential `translate([1, 0, 0]) { sphere(1); }` compile without diagnostics |
+| Low: the `ε` length drop was untested for boxes and cylinders. Only zero-length touches were covered, so `> 0` in place of `> EPSILON` survived | Chords across a box corner and across the cylinder rim: one of length 4.2e-7 (≤ ε) is dropped, and one of length 4.2e-6 is kept |
+| Informational: design D-7 named `transform.test.js` for the scaled-`t` and rotated-normal tests | D-7 now names `scene.test.js` |
+| Informational: the first union test (`sphere(5); cube(8);`, `[95, 105]`) cannot tell the union from the sphere alone | The same test adds `sphere(5); box([4, 4, 20]);` in a transform body. The union gives `[95, 105]` along X and `[90, 110]` along Z, which neither child gives alone. The delta-spec scenario is unchanged |
+
+Seen to fail, in a scratch worktree of `7995ba5` with the new `parser`,
+`primitives`, and `scene` tests copied in. Each run used those three plus
+`language`, with a baseline of 72/72.
+
+| Mutant | Failed |
+| --- | --- |
+| X1: `box.js` drops only zero-length intervals (`> 0`) | 1/72: `box: a chord of length ≤ ε across a corner is dropped; a longer one is kept` |
+| X2: `cylinder.js` drops only zero-length intervals | 1/72: `cylinder: a chord of length ≤ ε across the rim is dropped; a longer one is kept` |
+| X3: `leave()` deleted from `argumentList()` (line 124) | 1/72: `argument parentheses count as a nesting level` |
+| Y: a transform body renders only its first child | 1/72: `several children of a transform block are unioned` |
+
+Gate after the round 5 fixes: `npm run check < /dev/null` in the working tree
+exits 0, with `node --test` at 215/215 and Playwright at 69/69.
+
 ## Implementation notes
 
 - **Scene tests:** they live in a new `test/core/scene.test.js`, and the new

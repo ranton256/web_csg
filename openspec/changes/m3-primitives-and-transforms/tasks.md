@@ -89,4 +89,11 @@
 
 - [x] 12.1 `test/core/scene.test.js`: a rotation nested inside a rotation is applied first (`rotate([0, 0, 90]) { rotate([90, 0, 0]) { cylinder(1, 10); } }` lies along X)
 - [x] 12.2 `test/core/scene.test.js`: an in-face ray of a translated cylinder's bottom cap is a hit
-- [ ] 12.3 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README
+- [x] 12.3 Seen to fail, the full gate, and a fresh clone at the new head (`7995ba5`: 213/213, 69/69); recorded in the README
+
+## 13. Critic round 5 fixes
+
+- [x] 13.1 `test/core/parser.test.js`: argument-list parentheses leave their nesting level; 101 sequential calls and 60 sequential transform blocks parse without a nesting error
+- [x] 13.2 `test/core/primitives.test.js`: a chord of length ≤ `ε` across a box corner or the cylinder rim is dropped, and a longer one is kept
+- [x] 13.3 `test/core/scene.test.js`: a union in a transform body that neither child alone could produce; design D-7 names the right test file
+- [ ] 13.4 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README

@@ -115,6 +115,10 @@ test('under other rotations, rays clearly inside or outside a face behave normal
 
 test('several children of a transform block are unioned', () => {
   assert.deepEqual(spans(sceneOf('translate([0, 0, 0]) { sphere(5); cube(8); }'), ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
+  // Neither child alone gives both spans: the sphere sets the extent along X, the tall box along Z.
+  const tall = sceneOf('translate([0, 0, 0]) { sphere(5); box([4, 4, 20]); }');
+  assert.deepEqual(spans(tall, ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
+  assert.deepEqual(spans(tall, ray([0, 0, -100], [0, 0, 1])), [[90, 110]]);
 });
 
 test('the transform applies to the whole union in its body', () => {

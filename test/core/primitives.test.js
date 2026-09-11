@@ -27,6 +27,13 @@ test('box: touching an edge from outside misses (length ≤ ε)', () => {
   assert.deepEqual(intersectBox([2, 2, 2], [0, 2, 0], normalize([1, -1, 0]), null), []);
 });
 
+test('box: a chord of length ≤ ε across a corner is dropped; a longer one is kept', () => {
+  // The line x + y = 2 - δ cuts the corner at (1, 1) with a chord of length δ·√2.
+  const across = normalize([1, -1, 0]);
+  assert.deepEqual(intersectBox([2, 2, 2], [0, 2 - 3e-7, 0], across, null), [], 'chord 4.2e-7');
+  assert.equal(intersectBox([2, 2, 2], [0, 2 - 3e-6, 0], across, null).length, 1, 'chord 4.2e-6');
+});
+
 test('box: a ray lying in a face plane is a hit (closed solids, D20)', () => {
   assert.deepEqual(span(intersectBox([4, 6, 8], [-100, 3, 0], X, null)), [[98, 102]]);
   assert.deepEqual(span(intersectBox([4, 6, 8], [-100, 0, -4], X, null)), [[98, 102]]);
@@ -70,6 +77,13 @@ test('cylinder: a slanted ray enters through the side and leaves through a cap',
   assert.deepEqual(hit.out.normal, [0, 0, 1]);
   assert.ok(Math.abs((-10 + hit.in.t * direction[0]) + 5) < 1e-12, 'enters at x = -5');
   assert.ok(Math.abs((-5 + hit.out.t * direction[2]) - 5) < 1e-12, 'leaves at z = 5');
+});
+
+test('cylinder: a chord of length ≤ ε across the rim is dropped; a longer one is kept', () => {
+  // In the y = 0 plane, the line x + z = 10 - δ cuts the rim at (5, 5) with a chord of length δ·√2.
+  const across = normalize([1, 0, -1]);
+  assert.deepEqual(intersectCylinder(5, 10, [0, 0, 10 - 3e-7], across, null), [], 'chord 4.2e-7');
+  assert.equal(intersectCylinder(5, 10, [0, 0, 10 - 3e-6], across, null).length, 1, 'chord 4.2e-6');
 });
 
 test('cylinder: a ray along the side line or in a cap plane is a hit (closed solids, D20)', () => {
