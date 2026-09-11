@@ -13,7 +13,7 @@ Owner decisions in this change:
   editor, on-request help for the modeling language, and point lights.
 
 The writer's defaults, where DESIGN is silent, are recorded as DESIGN §12
-D22 for the owner's review:
+D22, which the owner accepted after Critic round 1:
 - `direction` and `color` are required;
 - the fifth `light` and the second `material` are reported at their keyword;
 - a `light` or `material` inside a body is an error, and does not count
@@ -39,7 +39,7 @@ D22 for the owner's review:
 | Goldens cover the default light, a declared light, two lights, and a non-default material color | Default light: `sphere` and `bored-cube` (M1, M4). Declared: `lit-one`. Two lights: `lit-two`. Material: `lit-material`. All three new goldens are 64×48, on the bored cube, in `test/core/lighting-golden.test.js` | Pass |
 | Evidence: captures of the same model under two lighting setups | `bored-cube.png` and `lit-custom.png` above | Pass |
 | Full gate in the working tree | `npm run check < /dev/null` on the final tree, after the strengthened material test | Pass: exit 0; `node --test` 269/269; Playwright 69/69 |
-| Full gate from a fresh checkout | Pending at time of writing | Pending |
+| Full gate from a fresh checkout | `git clone --branch m5-lighting-and-material` at `54a73a1`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null` | Pass: exit 0; `node --test` 269/269; Playwright 69/69 |
 | Manual Safari smoke check | See below | Pass |
 | Separate Critic review returns `[APPROVED]` | Pending | Pending |
 
@@ -88,6 +88,46 @@ The baseline was 66/66 passing, and each file was restored after its run.
 | L6: a misplaced light counted | 1/66: `a light inside a body is an error…`. I reordered that test so the misplaced light comes first; in the original order, this mutant could not change the result |
 | L7: the underflow check removed | 2/66: `an up vector too small to measure…` and `light validation: a missing, zero, too large, or too small direction` |
 | L8: the shared reader uses a fixed keyword in its messages | 2/66: `light validation: unknown, duplicate, and mistyped properties…` and `material validation…` |
+
+## Critic round 1: `[REJECTED]`, and fixes
+
+The Critic reviewed `54a73a1` and ran the gates itself (269/269, 69/69). It
+found the implementation correct:
+- **Shading:** its own camera rays, hits, and formula matched every pixel
+  of a 48×36 render with four lights and a material color (0 of 5,184
+  channels differ).
+- **Camera refactor:** no behavior changed.
+- **Mutants:** L4 and L6 reproduce.
+- **Specs and D22:** the MODIFIED blocks are ready to archive, and D22 does
+  not contradict DESIGN.
+
+It rejected the milestone for four test gaps: in each case, a plausible bug
+in the new placement and count code passed all 269 tests.
+
+| Finding | Fix |
+| --- | --- |
+| B1: an invalid light was not tested as counting toward the limit of four | `an invalid light still counts toward the limit of four (B1)` |
+| B2: an invalid material was not tested as taking the single slot | `an invalid material still takes the single material slot (B2)` |
+| B3: a misplaced material was not tested as staying out of the count (the material form of L6) | `a misplaced material does not take the material slot (B3)`, with the misplaced block first |
+| B4: "shading uses all four" was checked only as a count | `shading uses all four declared lights (B4)`: four lights render differently from the first three |
+| I1: the fresh-checkout row was pending | Recorded above for `54a73a1`; the head after these fixes is re-cloned too |
+| I2: D22 was marked resolved while "open to the owner's review", and cited an unrelated D14 | The owner accepted D22; it now says so, and the D14 reference is gone |
+| I3: the several-lights test allowed ±1 per channel, though the spec says "equals" | Exact equality; the fixture is exact |
+| I4: stale Purpose lines in the main specs | Refreshed at archive (task 7.5) |
+
+Seen to fail, in a scratch copy of the working tree with the new tests. Each
+run listed `lighting`, `lighting-golden`, `camera`, and `language`
+explicitly, with a baseline of 66/66.
+
+| Break | Tests that failed |
+| --- | --- |
+| M1: only valid lights count toward the limit | 1/66: `an invalid light still counts toward the limit of four (B1)` |
+| M2: only a valid material takes the slot | 1/66: `an invalid material still takes the single material slot (B2)` |
+| M3: a misplaced material takes the slot | 1/66: `a misplaced material does not take the material slot (B3)` |
+| M4: only the first three lights shade | 1/66: `shading uses all four declared lights (B4)` |
+
+Gate after the fixes: `npm run check < /dev/null` in the working tree exits
+0, with `node --test` at 273/273 and Playwright at 69/69.
 
 ## Implementation notes
 

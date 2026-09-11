@@ -73,3 +73,10 @@
   - the manual Safari smoke check (performed by the owner)
 - [ ] 7.4 A separate Critic review (`project-critic`) of `main..m5-lighting-and-material`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.5 Merge into `main`, mark M5 complete in ROADMAP, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose lines of the main `lighting-and-shading` and `modeling-language` specs
+
+## 8. Critic round 1 fixes
+
+- [x] 8.1 B1–B4: tests that an invalid light counts toward the limit, that an invalid material takes the slot, that a misplaced material does not, and that all four lights shade. Each was seen to fail under its mutant
+- [x] 8.2 I2 (owner: accept D22): DESIGN D22 records the owner's acceptance, and the unrelated D14 reference is removed
+- [x] 8.3 I3: the several-lights test compares exactly
+- [ ] 8.4 The full gate and a fresh clone at the new head; the README Critic round 1 section

@@ -54,7 +54,7 @@ test('several lights add their contributions: two lights at 0.5 equal one at 1',
   const body = 'difference { cube(20); cylinder(6, 22); }\n';
   const one = renderSource(SIDE + body + 'light { direction: [1, 2, -3]; }', 32, 32).rgba;
   const two = renderSource(SIDE + body + 'light { direction: [1, 2, -3]; intensity: 0.5; }\nlight { direction: [1, 2, -3]; intensity: 0.5; }', 32, 32).rgba;
-  for (let i = 0; i < one.length; i++) assert.ok(Math.abs(one[i] - two[i]) <= 1, `channel ${i}: ${one[i]} vs ${two[i]}`);
+  assert.deepEqual(two, one);
 });
 
 // Light validation
@@ -158,4 +158,40 @@ test('with no light block, shading uses exactly the default key light at intensi
   // The center hit is (0, -10, 0): N and V are both [0, -1, 0].
   const expected = shade([0, -1, 0], [0, -1, 0], [keyLight(cameraBasis(scene.camera))], DEFAULT_COLOR).map(encode);
   assert.deepEqual([...renderSource(source, 1, 1).rgba], [...expected, 255]);
+});
+
+// Critic round 1: the placement and count rules with invalid and misplaced blocks.
+
+test('an invalid light still counts toward the limit of four (B1)', () => {
+  const valid = 'light { direction: [0, 0, -1]; }\n';
+  assert.deepEqual(diagnosticsOf(SIDE + 'light { direction: [0, 0, 0]; }\n' + valid.repeat(4)), [
+    [2, 9, 'direction must be nonzero'],
+    [6, 1, 'at most 4 light blocks are allowed'],
+  ]);
+});
+
+test('an invalid material still takes the single material slot (B2)', () => {
+  assert.deepEqual(diagnosticsOf(SIDE + 'material { color: [2, 0, 0]; }\nmaterial { color: [1, 0, 0]; }'), [
+    [2, 12, 'each color component must be between 0 and 1'],
+    [3, 1, 'at most one material block is allowed'],
+  ]);
+});
+
+test('a misplaced material does not take the material slot (B3)', () => {
+  // The misplaced material comes first: if it took the slot, the top-level one would be "a second".
+  const source = 'translate([0, 0, 0]) { material { color: [1, 0, 0]; } sphere(1); }\nmaterial { color: [0, 1, 0]; }';
+  assert.deepEqual(diagnosticsOf(SIDE + source).map(([, , m]) => m), ['the material block must be at the top level']);
+});
+
+test('shading uses all four declared lights (B4)', () => {
+  const lights = [
+    'light { direction: [0, 1, -1]; intensity: 0.3; }\n',
+    'light { direction: [1, 1, 0]; intensity: 0.3; }\n',
+    'light { direction: [-1, 1, 0]; intensity: 0.3; }\n',
+    'light { direction: [0, 1, 0]; intensity: 0.3; }\n',
+  ];
+  const four = renderSource(SIDE + 'sphere(10);\n' + lights.join(''), 32, 32);
+  const three = renderSource(SIDE + 'sphere(10);\n' + lights.slice(0, 3).join(''), 32, 32);
+  assert.deepEqual(four.diagnostics, []);
+  assert.notDeepEqual(four.rgba, three.rgba, 'the fourth light changes the image');
 });
