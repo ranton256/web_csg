@@ -49,6 +49,17 @@ for (const factor of ['0.001', '100000']) {
   });
 }
 
+// A point light's position scales with the scene. With no falloff (D25), the
+// render is unchanged too (lighting-and-shading "Declared lights").
+const withPointLight = (k) => `${scaledBoredCube(k)}light { position: [40, -50, 50] * k; }\n`;
+
+for (const factor of ['0.001', '100000']) {
+  test(`the bored cube with a point light, scaled ×${factor}, matches the unscaled render within 1 per channel`, () => {
+    const difference = maxDifference(render(withPointLight(factor)), render(withPointLight('1')));
+    assert.ok(difference <= 1, `largest channel difference is ${difference}`);
+  });
+}
+
 // Outside the guarantee: ε is absolute, so a feature thinner than the supported
 // scale can change with scaling (the scope recorded in DESIGN §5 and D7).
 test('a floor plate thinner than the supported scale is dropped at ×1 but kept at ×100000', () => {

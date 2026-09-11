@@ -9,7 +9,7 @@ import { renderSource } from '../../src/core/render.js';
 import { expectMatchesGolden } from '../support/golden.js';
 import { SCENES } from '../support/scenes.js';
 
-for (const name of ['lit-one', 'lit-two', 'lit-material']) {
+for (const name of ['lit-one', 'lit-two', 'lit-material', 'lit-point']) {
   test(`scene "${name}" matches its golden image`, () => {
     const { diagnostics, rgba } = renderSource(SCENES[name], 64, 48);
     assert.deepEqual(diagnostics, []);

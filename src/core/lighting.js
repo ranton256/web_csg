@@ -6,17 +6,25 @@ import { LIGHT_DEFAULTS } from './constants.js';
 import { lengthProblem, missing, readProperties } from './properties.js';
 import { negate, normalize } from './vec3.js';
 
-const LIGHT_KINDS = { direction: 'vector', intensity: 'number' };
+const LIGHT_KINDS = { direction: 'vector', position: 'vector', intensity: 'number' };
 const MATERIAL_KINDS = { color: 'vector' };
 
-// Returns { toLight, intensity }, or null after reporting every problem.
-// direction is the direction the light travels, so the unit vector toward the
-// light is its negation, normalized.
+// Returns a directional light { kind, toLight, intensity } or a point light
+// { kind, position, intensity }, or null after reporting every problem. A block
+// has exactly one of direction and position (D25). direction is the direction
+// the light travels, so the unit vector toward the light is its negation,
+// normalized. Any finite position is valid.
 export function validateLight(block, evaluate, report) {
   const { given, usable, locs, valid: propertiesValid } = readProperties(block, LIGHT_KINDS, evaluate, report);
   let valid = propertiesValid;
-  if (!given.has('direction')) {
-    missing(block, 'direction', report);
+  if (!given.has('direction') && !given.has('position')) {
+    missing(block, ['direction', 'position'], report);
+    valid = false;
+  }
+  if (given.has('direction') && given.has('position')) {
+    const names = block.properties.map((property) => property.name);
+    const second = names.indexOf('direction') > names.indexOf('position') ? 'direction' : 'position';
+    report(locs[second], 'light block cannot have both `direction` and `position`');
     valid = false;
   }
   if (usable.direction !== undefined) {
@@ -32,7 +40,9 @@ export function validateLight(block, evaluate, report) {
   }
   if (!valid) return null;
   const intensity = given.has('intensity') ? usable.intensity : LIGHT_DEFAULTS.intensity;
-  return { toLight: normalize(negate(usable.direction)), intensity };
+  return given.has('direction')
+    ? { kind: 'directional', toLight: normalize(negate(usable.direction)), intensity }
+    : { kind: 'point', position: usable.position, intensity };
 }
 
 // Returns the model color, or null after reporting every problem.

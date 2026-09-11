@@ -68,8 +68,8 @@ export const HELP_SECTIONS = [
   {
     title: 'light',
     body: [
-      'Up to four `light` blocks, at the top level. Each is a white light shining in one direction: `direction` is the way the light travels (required, nonzero), and `intensity` defaults to 1 and must be at least 0. With no `light` block, a default key light follows the camera.',
-      { code: 'light { direction: [0, 0, -1]; intensity: 0.8; }' },
+      'Up to four `light` blocks, at the top level. Each is a white light with exactly one of `direction` or `position`, not both. With `direction`, it shines the same way everywhere: `direction` is the way the light travels, and must be nonzero. With `position`, it shines out from that point, equally bright at any distance. Lights cast no shadows, so a solid never blocks one. `intensity` defaults to 1 and must be at least 0. With no `light` block, a default key light follows the camera.',
+      { code: 'light { direction: [0, 0, -1]; intensity: 0.8; }\nlight { position: [40, -50, 60]; }' },
     ],
   },
   {

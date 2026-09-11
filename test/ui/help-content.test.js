@@ -26,7 +26,8 @@ test('each topic of the language-help spec has a section', () => {
   const text = helpText();
   assert.match(text, /first about X, then Y, then Z/, 'the rotation convention');
   assert.match(text, /first child minus all the others/, 'multi-child difference');
-  for (const fact of ['`up` defaults to `[0, 0, 1]`', 'defaults to 45', '`intensity` defaults to 1', '`[0.8, 0.8, 0.8]`', 'Up to four']) {
+  for (const fact of ['`up` defaults to `[0, 0, 1]`', 'defaults to 45', '`intensity` defaults to 1', '`[0.8, 0.8, 0.8]`', 'Up to four',
+    'exactly one of `direction` or `position`, not both', 'equally bright at any distance', 'cast no shadows']) {
     assert.ok(text.includes(fact), fact);
   }
 });

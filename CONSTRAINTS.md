@@ -109,8 +109,10 @@ src/ui/
     leaf below it at evaluation.
 
   `sceneIntervals(scene, ray)` returns the tree's world-space intervals.
-- `scene.lights` lists the declared lights `{ toLight, intensity }` in world
-  space; an empty list means the default key light. `scene.color` is the model
+- `scene.lights` lists the declared lights in world space, directional
+  `{ kind: 'directional', toLight, intensity }` or point
+  `{ kind: 'point', position, intensity }` (D25); an empty list means the
+  default key light. `scene.color` is the model
   color, the `material` color or the default (M5).
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.

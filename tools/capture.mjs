@@ -37,6 +37,7 @@ const SHOTS = [
   { name: 'primitives', prepare: (page) => showSource(page, SCENES.arrangement) },
   { name: 'bored-cube', prepare: (page) => showSource(page, VISION_EXAMPLE) },
   { name: 'lit-custom', prepare: (page) => showSource(page, SCENES['lit-custom']) },
+  { name: 'lit-point', prepare: (page) => showSource(page, SCENES['lit-point']) },
   {
     // The Help dialog open over the app (backlog-closeout).
     name: 'help',

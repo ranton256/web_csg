@@ -45,9 +45,11 @@ export function readProperties(block, kinds, evaluate, report) {
   return { given, usable, locs, valid };
 }
 
-// Reports a required property that did not appear, at the block.
-export function missing(block, name, report) {
-  report(block.loc, `${block.keyword} block is missing \`${name}\``);
+// Reports a required property that did not appear, at the block. names is one
+// name, or a list of names of which one is required ("`a` or `b`").
+export function missing(block, names, report) {
+  const list = [names].flat().map((name) => `\`${name}\``).join(' or ');
+  report(block.loc, `${block.keyword} block is missing ${list}`);
 }
 
 // Why a direction-like vector cannot be used, or null when it can:

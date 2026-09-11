@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { cameraBasis } from '../../src/core/camera.js';
-import { BACKGROUND, DEFAULT_COLOR, KEY_LIGHT, SHADING } from '../../src/core/constants.js';
-import { encode, keyLight, shade } from '../../src/core/shade.js';
-import { normalize } from '../../src/core/vec3.js';
+import { BACKGROUND, DEFAULT_COLOR, EPSILON, KEY_LIGHT, SHADING } from '../../src/core/constants.js';
+import { encode, keyLight, lightsAt, shade } from '../../src/core/shade.js';
+import { length, normalize } from '../../src/core/vec3.js';
 
 const close = (actual, expected, tolerance = 1e-12) =>
   actual.forEach((value, i) => assert.ok(Math.abs(value - expected[i]) <= tolerance, `${actual} ≉ ${expected}`));
@@ -49,6 +49,38 @@ test('the key light sits above-left, behind the viewer', () => {
   const light = keyLight(basis);
   close(light.toLight, normalize([-0.5, -1, 1]));
   assert.equal(light.intensity, 1);
+  assert.equal(light.kind, 'directional');
+});
+
+// lightsAt: the lights as seen from one shaded point (D25).
+
+const pointAt = (position) => lightsAt([{ kind: 'point', position, intensity: 1 }], [0, 0, 0]);
+
+test('lightsAt: a point light at most ε from the point contributes nothing; just beyond ε it does', () => {
+  assert.equal(length([EPSILON, 0, 0]), EPSILON, 'the boundary distance is exactly ε');
+  assert.deepEqual(pointAt([EPSILON, 0, 0]), []);
+  assert.deepEqual(pointAt([0, 0, 0]), []);
+  const [beyond] = pointAt([EPSILON * 1.001, 0, 0]);
+  close(beyond.toLight, [1, 0, 0]);
+  assert.equal(beyond.intensity, 1);
+});
+
+test('lightsAt: a distance too large to compute drops the light', () => {
+  assert.deepEqual(lightsAt([{ kind: 'point', position: [1e308, 0, 0], intensity: 1 }], [-1e308, 0, 0]), []);
+  assert.deepEqual(pointAt([1e200, 1e200, 0]), [], 'the difference is finite, but its length overflows');
+});
+
+test('lightsAt: a point light\'s toLight is the unit vector toward its position', () => {
+  const [light] = lightsAt([{ kind: 'point', position: [3, 4, 12], intensity: 0.5 }], [0, 0, 0]);
+  close(light.toLight, [3 / 13, 4 / 13, 12 / 13]);
+  assert.equal(light.intensity, 0.5);
+});
+
+test('lightsAt: directional lights pass through unchanged', () => {
+  const light = { kind: 'directional', toLight: [0, 0, 1], intensity: 0.5 };
+  const result = lightsAt([light], [3, 4, 5]);
+  assert.equal(result.length, 1);
+  assert.equal(result[0], light);
 });
 
 test('encoding: round(255 · clamp(c)), so unlit default color is 31 and the background is [31, 31, 36]', () => {

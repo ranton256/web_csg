@@ -70,9 +70,9 @@ spec-driven development that students read, rebuild, and extend.
   preview panel. The preview fills the rest of the window, and a draggable
   divider sets the split between editor and preview (agreed 2026-09-10).
 - Perspective camera; surfaces shaded with a Blinn-Phong model from
-  directional white lights declared in the source (or a default camera key
-  light); one model color set by an optional `material` block; solid dark
-  neutral background; no shadows (D8). Constants in §5.
+  directional or point white lights declared in the source (or a default
+  camera key light); one model color set by an optional `material` block;
+  solid dark neutral background; no shadows (D8, D25). Constants in §5.
 - A visible indicator when the preview shows the last valid model rather than
   the current source.
 - A "Help" button in the page header opens a dialog with a reference for the
@@ -116,8 +116,8 @@ strictly greater than 0.
 | Rotation units | degrees | Applies to `rotate` and camera `fov` |
 | Rotation order | `rotate([rx, ry, rz])` = about X by `rx`, then Y by `ry`, then Z by `rz`, about fixed parent axes; matrix `R = Rz·Ry·Rx` | Right-handed: positive angle is counter-clockwise looking down the axis toward the origin. Matches OpenSCAD (D4). |
 | Transform nesting | Inner blocks apply first; composition proceeds outward | Source: `vision.md` |
-| Max `light` blocks | 4 | 0–4 allowed, top level only (D8) |
-| Light `intensity` default | `1` | Must be ≥ 0 |
+| Max `light` blocks | 4 | 0–4 allowed, directional and point together, top level only (D8, D25) |
+| Light `intensity` default | `1` | Must be ≥ 0. A point light's contribution does not fall off with distance (D25) |
 | Default key light | direction toward light = `normalize(1·up − 0.5·right + 1·back)`, intensity `1` | Used only when no `light` block exists. `back` = unit vector from `lookAt` toward `position`; `right` = `normalize(forward × up)`; `up` here is the camera up re-orthogonalized against `forward` (D8) |
 | Default model color | `[0.8, 0.8, 0.8]` | `material` color components each in `[0, 1]` |
 | Ambient coefficient | `0.15` | Multiplies model color; independent of lights |
@@ -222,8 +222,10 @@ Agreed in D9 (2026-09-10). Rules:
   an empty body is an error. Bodies may also contain `let` statements.
 - **Camera:** `camera { position: e; lookAt: e; up: e; fov: e; }` — top level
   only, exactly one (see Camera definition below).
-- **Light:** `light { direction: e; intensity: e; }` — top level only, 0 to 4
-  blocks; see Lighting and shading below (D8).
+- **Light:** `light { direction: e; intensity: e; }` (directional) or
+  `light { position: e; intensity: e; }` (point), with exactly one of
+  `direction` and `position` — top level only, 0 to 4 blocks of either kind;
+  see Lighting and shading below (D8, D25).
 - **Material:** `material { color: e; }` — top level only, at most one (D8).
 - **Property blocks** (`camera`, `light`, `material`) use `name: expr;`
   entries; each property at most once; unknown properties are errors.
@@ -379,16 +381,25 @@ Scenario: Resizing preserves vertical field of view
 
 ### Feature: Lighting and shading
 
-Agreed in D8 (2026-09-10). Constants in §5. For a hit with unit surface normal
-`N` (after any difference-boundary reversal), unit vector toward the viewer
-`V`, model color `C`, and lights `i` with unit vector toward the light `Lᵢ`
-(the negated, normalized `direction`) and intensity `Iᵢ`:
+Agreed in D8 (2026-09-10); point lights added in D25 (2026-09-11). Constants
+in §5. For a hit with unit surface normal `N` (after any difference-boundary
+reversal), unit vector toward the viewer `V`, model color `C`, and lights `i`
+with unit vector toward the light `Lᵢ` and intensity `Iᵢ`, where `Lᵢ` is the
+negated, normalized `direction` of a directional light, or the unit vector
+from the hit point toward the `position` of a point light:
 
 `c = 0.15·C + Σᵢ Iᵢ · (0.75 · max(0, N·Lᵢ) · C + sᵢ)`, where
 `sᵢ = 0.3 · max(0, N·Hᵢ)^32` if `N·Lᵢ > 0` and `sᵢ = 0` otherwise, and
 `Hᵢ = normalize(Lᵢ + V)`; each channel of `c` is then clamped to `[0, 1]`.
 (The specular gate was added at readback confirmation, 2026-09-10, so unlit
 sides get no highlight.)
+
+A point light has no falloff: `Iᵢ` does not depend on its distance. It
+contributes nothing at a hit point within `ε` of its position, or at a
+distance too large to compute (best effort, D16). No light is occluded,
+because there are no shadows: a light contributes wherever `N·Lᵢ > 0`, even
+when a solid lies between the hit and the light, or the light is inside a
+solid (D25).
 
 ```gherkin
 Scenario: Default key light when no light is declared
@@ -411,8 +422,29 @@ Scenario: Intensity scales the direct contribution
   When the scene is rendered
   Then every solid pixel equals 0.15 × the model color
 
+Scenario: A point light shines from its position
+  Given a single light with position [0, 0, 10]
+  When it shades the points [0, 0, 0] and [10, 0, 0], both facing +Z
+  Then the unit vector toward the light is [0, 0, 1] at the first and normalize([-10, 0, 10]) at the second
+
+Scenario: A point light has no falloff
+  Given a point light moved from [0, 0, 10] to [0, 0, 1000]
+  When it shades the point [0, 0, 0] facing +Z
+  Then the color is unchanged
+
+Scenario: Lights are not occluded
+  Given a sphere with a point light at its center, seen from outside
+  When the scene is rendered
+  Then the sphere shows only ambient light, because its outside faces away from the light
+  And a cube placed between a sphere and a light changes none of the sphere's pixels
+
 Scenario: Light validation
   Given a light with direction [0, 0, 0], or a negative intensity, or five light blocks, or a light inside a union block
+  When the source is evaluated
+  Then a diagnostic reports the violated rule
+
+Scenario: Point light validation
+  Given a light with both direction and position, or with neither, or a position that is not a vector
   When the source is evaluated
   Then a diagnostic reports the violated rule
 
@@ -748,7 +780,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D5~~ | **Resolved 2026-09-10:** camera comes only from the source `camera` block; no interactive camera controls in the first release (Live 3D viewport stays parked). | — | — |
 | ~~D6~~ | **Resolved 2026-09-10:** localStorage autosave of the current source; Save downloads / Open loads a `.csg` text file; three built-in examples (bored cube, primitives, Boolean operations). | — | — |
 | ~~D7~~ | **Resolved 2026-09-10:** interval and tolerance rules in [Ray–solid intervals and tolerance](#feature-raysolid-intervals-and-tolerance). `ε = 1e-6` and scale range `[1e-3, 1e5]` stay **provisional** until the scaled-render scenario passes; "marching limits" dropped (analytic tracing does not march). **Finalized 2026-09-10 in M4 (owner decision on the range):** the scaled-render scenario passed. At 64×48, the bored cube scaled ×1e-3 and ×1e5 renders byte-identical to the unscaled image (0 of 12,288 channels differ). `ε = 1e-6` is final. The supported scale is revised to `[1e-3, 3e7]` for nonzero magnitudes, with zero components exact. That covers every magnitude the ×1e5 check exercises: coordinates up to 1.6e7, and distances from the camera to the model up to 2.75e7. This is the owner's decision after M4 Critic round 2; round 1 had set 2e7 from the camera coordinate alone. **Scope (owner, after M4 Critic rounds 1 and 2):** the scaled-render guarantee is the measured 64×48 scenario, not a general invariance claim. `ε` is absolute, so a ray that crosses a solid over a length near `ε` can change with scale. For example, a wall 5e-7 thick is dropped at ×1 but kept at ×1e5, and at 640×480 two silhouette pixels of the bored cube change at ×1e-3. | — | — |
-| ~~D8~~ | **Resolved 2026-09-10:** 0–4 top-level directional white `light` blocks (default camera key light when none), optional `material { color; }`, fixed Blinn-Phong constants and background; no shadows. See §5 and [Lighting and shading](#feature-lighting-and-shading). | — | — |
+| ~~D8~~ | **Resolved 2026-09-10:** 0–4 top-level directional white `light` blocks (default camera key light when none), optional `material { color; }`, fixed Blinn-Phong constants and background; no shadows. See §5 and [Lighting and shading](#feature-lighting-and-shading). Point lights added in D25 (2026-09-11). | — | — |
 | ~~D9~~ | **Resolved 2026-09-10:** language rules as written in [§8 Modeling language](#feature-modeling-language). Model color syntax is part of D8. | — | — |
 | ~~D10~~ | **Resolved 2026-09-10:** 300 ms debounced rebuild; progressive, cancelable main-thread rendering; 1 ray per CSS pixel; bored cube on first launch; confirm before replacing edited text; `<textarea>` editor. | — | — |
 | ~~D11~~ | **Resolved 2026-09-10:** current stable desktop Chrome, Firefox, Safari; no mobile/touch. | — | — |
@@ -764,6 +796,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D22~~ | **Resolved 2026-09-11 (accepted by the owner after M5 Critic round 1; the writer's defaults in M5, consistent with D8 and D16):** DESIGN gives a default only for `intensity`, so a `light` requires `direction` and a `material` requires `color`. The fifth or later `light` block, and the second or later `material` block, are reported at their keyword. A `light` or `material` inside a body is reported at its keyword, as `camera` is, and a misplaced block does not count toward the limits. Every block's contents are still checked. Recorded in the `lighting-and-shading` spec. | — | — |
 | ~~D23~~ | **Resolved 2026-09-11 (the owner's decisions, `backlog-closeout`):** (a) the backlog close-out covers the dev server's dot-paths and symlinked entry-point check, Tab indentation, and on-request help; CI waits for a git remote, and point lights stay parked. (b) Tab inserts two spaces, or indents each touched line by two spaces; Shift+Tab removes up to two; Esc then Tab, or Shift+Tab, moves focus out of the editor (WCAG 2.1.2), and a modifier key pressed on its own does not cancel the escape. (c) A "Help" button in the page header opens a modal dialog with the language reference and an example; Esc or Close returns focus. (d) Undo treats an indentation edit exactly like typing the same characters. WebKit groups consecutive typing, including indentation, into one undo step (the owner's decision, after the implementation showed it). See §4 and §8 Editor indentation and help. | — | — |
 | ~~D24~~ | **Resolved 2026-09-11 (owner):** the project does not need CI, so the backlog's CI item is dropped. This supersedes D23 (a)'s "CI waits for a git remote". The gate stays a process step: the pre-commit hook runs `npm test`, and the full `npm run check` runs before every merge, archive, and milestone (CONSTRAINTS §4). | — | — |
+| ~~D25~~ | **Resolved 2026-09-11 (`point-lights`; point lights un-parked from D8 at the owner's request).** The owner's decisions: (a) a `light` block has exactly one of `direction` (a directional light) or `position` (a point light); both kinds share the limit of 4, and there is no new reserved word. (b) No falloff: a point light contributes its `intensity` at any distance, so a scene scaled together with its lights renders the same (measured byte-identical at ×1e-3 and ×1e5, 64×48). **The writer's rules, pending the owner's acceptance:** (c) no occlusion, because shadows stay parked: a light contributes wherever `N·L > 0`, so a light inside a closed solid leaves its outside with ambient light only; (d) a point light contributes nothing at a hit point within `ε` of its position, or at a distance too large to compute (best effort, D16); (e) a block with both is reported at the second of the two, as "light block cannot have both `direction` and `position`", and a block with neither as "light block is missing `direction` or `position`", which replaces "missing `direction`". Recorded in §8 Lighting and shading and the `lighting-and-shading` spec. | — | — |
 | D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
 ## Optional features (parked)
 
@@ -779,8 +812,6 @@ optional improvements").
   highlight its source.
 - **Orthographic camera** option.
 - **Richer materials:** surface material control beyond a single color.
-- **Point lights:** `light { position: …; }` with defined falloff (or none)
-  and defined behavior for lights inside solids. *(Parked in D8.)*
 - **Colored lights:** optional `color: [r, g, b]` on `light`, multiplied per
   channel. *(Parked in D8.)*
 - **Shadows:** secondary rays toward each light; requires a self-intersection

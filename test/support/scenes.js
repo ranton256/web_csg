@@ -39,4 +39,7 @@ translate([50, 0, 0]) { difference { cube(28); sphere(18); } }
   'lit-two': `${VISION_EXAMPLE}\n${TWO_LIGHTS}`,
   'lit-material': `${VISION_EXAMPLE}\n${WARM}`,
   'lit-custom': `${VISION_EXAMPLE}\n${TWO_LIGHTS}${WARM}`,
+  // A point light outside the three visible faces (x > 30, y < -30, z > 30),
+  // close enough that the shading varies across each face (D25).
+  'lit-point': `${VISION_EXAMPLE}\nlight { position: [40, -50, 50]; }\n`,
 };

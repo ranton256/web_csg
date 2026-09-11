@@ -1,7 +1,7 @@
 // Blinn-Phong shading and 8-bit encoding (DESIGN §8 Lighting and shading).
 
-import { KEY_LIGHT, SHADING } from './constants.js';
-import { add, dot, length, normalize, scale } from './vec3.js';
+import { EPSILON, KEY_LIGHT, SHADING } from './constants.js';
+import { add, dot, length, normalize, scale, sub } from './vec3.js';
 
 // The default key light, fixed relative to the camera frame from cameraBasis.
 export function keyLight(basis) {
@@ -9,7 +9,27 @@ export function keyLight(basis) {
     add(scale(basis.up, KEY_LIGHT.up), scale(basis.right, KEY_LIGHT.right)),
     scale(basis.forward, -KEY_LIGHT.back),
   ));
-  return { toLight, intensity: KEY_LIGHT.intensity };
+  return { kind: 'directional', toLight, intensity: KEY_LIGHT.intensity };
+}
+
+// The lights as seen from one shaded point, for shade(). A directional light
+// is unchanged. A point light becomes { toLight, intensity }, with toLight the
+// unit vector from the point toward its position, and no falloff. Within ε of
+// its position, or at a distance too large to compute, a point light
+// contributes nothing (D25).
+export function lightsAt(lights, point) {
+  const result = [];
+  for (const light of lights) {
+    if (light.kind !== 'point') {
+      result.push(light);
+      continue;
+    }
+    const toPosition = sub(light.position, point);
+    const distance = length(toPosition);
+    if (!(distance > EPSILON) || !Number.isFinite(distance)) continue;
+    result.push({ toLight: scale(toPosition, 1 / distance), intensity: light.intensity });
+  }
+  return result;
 }
 
 // c = ambient·C + Σ I·(diffuse·max(0, N·L)·C + s), where the specular term

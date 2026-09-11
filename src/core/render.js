@@ -9,10 +9,10 @@ import { evaluate } from './evaluate.js';
 import { facingNormal, intersect, subtract, union, visibleHit } from './intervals.js';
 import { SourceError, tokenize } from './lexer.js';
 import { parse } from './parser.js';
-import { encode, keyLight, shade } from './shade.js';
+import { encode, keyLight, lightsAt, shade } from './shade.js';
 import { intersectSphere } from './sphere.js';
 import { normalToWorld, toLocal } from './transform.js';
-import { negate } from './vec3.js';
+import { add, negate, scale } from './vec3.js';
 
 // Returns { diagnostics, scene }; scene is null when there are diagnostics.
 // Diagnostics are { line, column, message } with 1-based positions.
@@ -108,6 +108,8 @@ export function renderRows(scene, width, height, y0, y1, rgba) {
   const basis = cameraBasis(scene.camera);
   // Declared lights replace the default key light (DESIGN §8 Lighting and shading).
   const lights = scene.lights.length > 0 ? scene.lights : [keyLight(basis)];
+  // Only point lights need the hit point, so directional-only scenes skip it.
+  const hasPointLight = lights.some((light) => light.kind === 'point');
   const background = BACKGROUND.map(encode);
 
   for (let y = y0; y < y1; y++) {
@@ -122,7 +124,9 @@ export function renderRows(scene, width, height, y0, y1, rgba) {
         rgba[i + 2] = background[2];
       } else {
         const toViewer = negate(ray.direction);
-        const color = shade(facingNormal(hit.normal, toViewer), toViewer, lights, scene.color);
+        // The camera ray's direction is unit length, so t is a world distance.
+        const lit = hasPointLight ? lightsAt(lights, add(ray.origin, scale(ray.direction, hit.t))) : lights;
+        const color = shade(facingNormal(hit.normal, toViewer), toViewer, lit, scene.color);
         rgba[i] = encode(color[0]);
         rgba[i + 1] = encode(color[1]);
         rgba[i + 2] = encode(color[2]);
