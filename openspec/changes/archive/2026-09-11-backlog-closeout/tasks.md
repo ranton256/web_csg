@@ -80,7 +80,7 @@
   - the seen-to-fail records
   - the manual Safari smoke check (performed by the owner)
 - [x] 7.4 A separate Critic review (`project-critic`) of `main..backlog-closeout`. Fix findings and re-review until `[APPROVED]`
-- [ ] 7.5 Merge into `main`, and archive with `/opsx:archive` (syncing the specs, including the new `language-help` capability)
+- [x] 7.5 Merge into `main`, and archive with `/opsx:archive` (syncing the specs, including the new `language-help` capability)
 
 ## 8. Critic round 1 fixes
 
