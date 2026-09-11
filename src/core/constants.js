@@ -31,3 +31,8 @@ export const BACKGROUND = Object.freeze([0.12, 0.12, 0.14]);
 // Default key light: direction toward the light is
 // normalize(up·1 + right·(−0.5) + back·1), in the camera's frame.
 export const KEY_LIGHT = Object.freeze({ up: 1, right: -0.5, back: 1, intensity: 1 });
+
+// Declared lights: at most 4 top-level `light` blocks; intensity defaults to 1
+// (D8).
+export const MAX_LIGHTS = 4;
+export const LIGHT_DEFAULTS = Object.freeze({ intensity: 1 });

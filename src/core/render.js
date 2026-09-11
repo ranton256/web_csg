@@ -3,7 +3,7 @@
 
 import { intersectBox } from './box.js';
 import { cameraBasis, primaryRay } from './camera.js';
-import { BACKGROUND, DEFAULT_COLOR } from './constants.js';
+import { BACKGROUND } from './constants.js';
 import { intersectCylinder } from './cylinder.js';
 import { evaluate } from './evaluate.js';
 import { facingNormal, intersect, subtract, union, visibleHit } from './intervals.js';
@@ -106,7 +106,8 @@ export function renderRows(scene, width, height, y0, y1, rgba) {
   }
 
   const basis = cameraBasis(scene.camera);
-  const lights = [keyLight(basis)];
+  // Declared lights replace the default key light (DESIGN §8 Lighting and shading).
+  const lights = scene.lights.length > 0 ? scene.lights : [keyLight(basis)];
   const background = BACKGROUND.map(encode);
 
   for (let y = y0; y < y1; y++) {
@@ -121,7 +122,7 @@ export function renderRows(scene, width, height, y0, y1, rgba) {
         rgba[i + 2] = background[2];
       } else {
         const toViewer = negate(ray.direction);
-        const color = shade(facingNormal(hit.normal, toViewer), toViewer, lights, DEFAULT_COLOR);
+        const color = shade(facingNormal(hit.normal, toViewer), toViewer, lights, scene.color);
         rgba[i] = encode(color[0]);
         rgba[i + 1] = encode(color[1]);
         rgba[i + 2] = encode(color[2]);

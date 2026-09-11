@@ -2,6 +2,7 @@
 // the mapping from pixels to rays (vertical field of view, pixel centers).
 
 import { CAMERA_DEFAULTS, EPSILON, PARALLEL_TOLERANCE } from './constants.js';
+import { lengthProblem, missing, readProperties } from './properties.js';
 import { add, cross, length, normalize, scale, sub } from './vec3.js';
 
 const KINDS = { position: 'vector', lookAt: 'vector', up: 'vector', fov: 'number' };
@@ -10,41 +11,12 @@ const REQUIRED = ['position', 'lookAt'];
 // Returns { position, lookAt, up, fov }, or null after reporting diagnostics.
 // evaluate(node) returns a number, a 3-array, or null (already reported).
 export function validateCamera(node, evaluate, report) {
-  const given = new Set();
-  const usable = {}; // properties whose value has the right kind
-  const locs = {};
-  let valid = true;
-
-  for (const property of node.properties) {
-    const value = evaluate(property.value);
-    if (!Object.hasOwn(KINDS, property.name)) {
-      report(property.loc, `unknown camera property \`${property.name}\``);
-      valid = false;
-      continue;
-    }
-    if (given.has(property.name)) {
-      report(property.loc, `camera property \`${property.name}\` is given more than once`);
-      valid = false;
-      continue;
-    }
-    given.add(property.name);
-    locs[property.name] = property.loc;
-    if (value === null) {
-      valid = false;
-      continue;
-    }
-    const kind = KINDS[property.name];
-    if (kind === 'vector' ? !Array.isArray(value) : typeof value !== 'number') {
-      report(property.loc, `camera property \`${property.name}\` must be a ${kind}`);
-      valid = false;
-      continue;
-    }
-    usable[property.name] = value;
-  }
-
+  // The shared property-block rules (unknown, duplicate, and mistyped properties).
+  const { given, usable, locs, valid: propertiesValid } = readProperties(node, KINDS, evaluate, report);
+  let valid = propertiesValid;
   for (const name of REQUIRED) {
     if (!given.has(name)) {
-      report(node.loc, `camera block is missing \`${name}\``);
+      missing(node, name, report);
       valid = false;
     }
   }
@@ -76,12 +48,11 @@ export function validateCamera(node, evaluate, report) {
     }
   }
   if (camera.up !== undefined) {
-    if (length(camera.up) === 0) {
-      report(locs.up ?? node.loc, 'up must be nonzero');
-      valid = false;
-    } else if (!Number.isFinite(length(camera.up))) {
-      // As for the view distance (D16): an overflow is reported as such.
-      report(locs.up ?? node.loc, 'up is too large');
+    // Zero, or too small or too large to measure (D16): reported as such,
+    // never as parallel.
+    const problem = lengthProblem(camera.up);
+    if (problem !== null) {
+      report(locs.up ?? node.loc, `up ${problem}`);
       valid = false;
     } else if (viewValid) {
       const view = normalize(sub(camera.lookAt, camera.position));

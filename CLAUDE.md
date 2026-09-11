@@ -43,7 +43,7 @@ test/
   support/                  # PPM + golden helpers (never run as tests)
   golden/                   # Reference renders (binary PPM)
 e2e/
-  *.spec.js                 # Playwright tests (npm run test:e2e)
+  **/*.spec.js              # Playwright tests (npm run test:e2e)
 tools/
   serve.mjs                 # Zero-dependency static dev server
   capture.mjs               # Milestone screenshots

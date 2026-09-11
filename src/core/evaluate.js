@@ -8,6 +8,8 @@
 // diagnostic is represented as null, so one mistake does not cascade.
 
 import { validateCamera } from './camera.js';
+import { DEFAULT_COLOR, MAX_LIGHTS } from './constants.js';
+import { validateLight, validateMaterial } from './lighting.js';
 import { IDENTITY, compose, rotation, scaling, translation } from './transform.js';
 
 // Parameters in positional order, with their kind (DESIGN §5 primitive table).
@@ -47,7 +49,7 @@ class Scope {
 export function evaluate(program) {
   const diagnostics = [];
   const report = (loc, message) => diagnostics.push({ line: loc.line, column: loc.column, message });
-  const state = { cameraNode: null, camera: null };
+  const state = { cameraNode: null, camera: null, lightBlocks: 0, lights: [], materialNode: null, color: null };
   const root = { kind: 'union', children: [] };
 
   evaluateStatements(program.statements, new Scope(null), {
@@ -57,7 +59,10 @@ export function evaluate(program) {
 
   diagnostics.sort((a, b) => a.line - b.line || a.column - b.column);
   if (diagnostics.length > 0) return { diagnostics, scene: null };
-  return { diagnostics, scene: { camera: state.camera, root } };
+  return {
+    diagnostics,
+    scene: { camera: state.camera, root, lights: state.lights, color: state.color ?? DEFAULT_COLOR },
+  };
 }
 
 // Evaluates a statement list in scope; returns how many solids it contains.
@@ -118,12 +123,33 @@ function evaluateBody(block, scope, context) {
   if (solids === 0) context.report(block.loc, `the \`${block.keyword}\` block contains no solids`);
 }
 
+// Each block is validated first, so a misplaced or extra block still has all
+// of its errors reported; then its placement and count are checked. Only
+// valid, correctly placed blocks contribute to the scene.
 function evaluatePropertyBlock(block, evaluateIn, context) {
   const { report, state } = context;
-  if (block.keyword !== 'camera') {
-    // light and material arrive in M5; their expressions are still checked.
-    report(block.loc, `\`${block.keyword}\` is not supported yet`);
-    for (const property of block.properties) evaluateIn(property.value);
+  if (block.keyword === 'light') {
+    const light = validateLight(block, evaluateIn, report);
+    if (!context.topLevel) {
+      report(block.loc, 'the light block must be at the top level');
+    } else if (state.lightBlocks >= MAX_LIGHTS) {
+      report(block.loc, `at most ${MAX_LIGHTS} light blocks are allowed`);
+    } else {
+      state.lightBlocks++;
+      if (light !== null) state.lights.push(light);
+    }
+    return;
+  }
+  if (block.keyword === 'material') {
+    const color = validateMaterial(block, evaluateIn, report);
+    if (!context.topLevel) {
+      report(block.loc, 'the material block must be at the top level');
+    } else if (state.materialNode !== null) {
+      report(block.loc, 'at most one material block is allowed');
+    } else {
+      state.materialNode = block;
+      state.color = color;
+    }
     return;
   }
   // Every camera block is validated, so all of its errors are reported; only

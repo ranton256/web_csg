@@ -36,6 +36,7 @@ const SHOTS = [
   },
   { name: 'primitives', prepare: (page) => showSource(page, SCENES.arrangement) },
   { name: 'bored-cube', prepare: (page) => showSource(page, VISION_EXAMPLE) },
+  { name: 'lit-custom', prepare: (page) => showSource(page, SCENES['lit-custom']) },
 ];
 const VIEWPORT = { width: 1280, height: 800 };
 

@@ -132,3 +132,10 @@ test('an up vector too large to measure is reported as such, not as parallel (D1
   const diagnostics = compile(source).diagnostics.map((d) => [d.line, d.column, d.message]);
   assert.deepEqual(diagnostics, [[1, source.indexOf('up:') + 1, 'up is too large']]);
 });
+
+test('an up vector too small to measure is reported as such, not as zero (D16)', () => {
+  const tiny = '0.' + '0'.repeat(199) + '1';
+  const source = `camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; up: [0, ${tiny}, ${tiny}]; }\n`;
+  const diagnostics = compile(source).diagnostics.map((d) => [d.line, d.column, d.message]);
+  assert.deepEqual(diagnostics, [[1, source.indexOf('up:') + 1, 'up is too small']]);
+});

@@ -97,11 +97,9 @@ test('shadowing inside a block is an error', () => {
   ]);
 });
 
-test('the contents of unsupported constructs are still checked', () => {
+test('errors inside light and material blocks are reported, with no "not supported" diagnostic', () => {
   assert.deepEqual(diagnosticsOf('light { direction: [0, 0, q]; }\nmaterial { color: 1 + [1, 2, 3]; }\n' + CAMERA), [
-    [1, 1, '`light` is not supported yet'],
     [1, 27, '`q` is undeclared'],
-    [2, 1, '`material` is not supported yet'],
     [2, 21, 'invalid operands for `+`: number and vector'],
   ]);
 });
@@ -112,14 +110,8 @@ test('errors inside a Boolean are reported, with no "not supported" diagnostic',
   assert.deepEqual(diagnosticsOf('intersection { sphere(1); }\n' + CAMERA), []);
 });
 
-test('light and material are reported as not supported yet, at their keyword', () => {
-  const cases = {
-    light: 'light { direction: [0, 0, 1]; }',
-    material: 'material { color: [1, 0, 0]; }',
-  };
-  for (const [keyword, source] of Object.entries(cases)) {
-    assert.deepEqual(diagnosticsOf(`\n\n\n\n${source}\n` + CAMERA), [[5, 1, `\`${keyword}\` is not supported yet`]], keyword);
-  }
+test('valid light and material blocks produce no diagnostics: no construct is "not supported yet"', () => {
+  assert.deepEqual(diagnosticsOf('\n\n\n\nlight { direction: [0, 0, 1]; }\nmaterial { color: [1, 0, 0]; }\n' + CAMERA), []);
 });
 
 // The placed primitives of a scene tree, in source order.

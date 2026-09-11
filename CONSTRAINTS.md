@@ -68,6 +68,8 @@ src/core/
   parser.js      # parse(tokens) → syntax tree with locations; throws at the first syntax error
   evaluate.js    # evaluate(program) → { diagnostics, scene }; reports every semantic error
   camera.js      # validateCamera, cameraBasis, primaryRay
+  properties.js  # readProperties, missing, lengthProblem: the property-block rules shared by camera, light, and material
+  lighting.js    # validateLight, validateMaterial
   transform.js   # placements { s, R, t }: translation, rotation (exact right angles), scaling, compose, toLocal, normalToWorld
   sphere.js      # intersectSphere → interval list (general quadratic: local directions need not be unit)
   box.js         # intersectBox (slabs; cube = box with equal sides)
@@ -105,6 +107,9 @@ src/ui/
     leaf below it at evaluation.
 
   `sceneIntervals(scene, ray)` returns the tree's world-space intervals.
+- `scene.lights` lists the declared lights `{ toLight, intensity }` in world
+  space; an empty list means the default key light. `scene.color` is the model
+  color, the `material` color or the default (M5).
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.
 - The pure `src/ui/` helpers (`text-position`, `debounce`, `render-job`,

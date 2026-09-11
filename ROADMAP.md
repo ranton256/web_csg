@@ -30,7 +30,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Complete (2026-09-10; `m2-language-and-feedback`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M2/`) |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Complete (2026-09-10; `m3-primitives-and-transforms`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M3/`) |
 | **M4** | CSG | Boolean operations; the bored cube renders | Complete (2026-09-10; `m4-csg`, Critic round 3 `[APPROVED]`; evidence in `docs/progress/M4/`) |
-| **M5** | Lighting & material | Lights and model color come from the source | Planned |
+| **M5** | Lighting & material | Lights and model color come from the source | In progress (`m5-lighting-and-material`) |
 | **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | Planned |
 
 ---
@@ -228,7 +228,7 @@ strike it through with a reason.
 | ☐ | Add CI (full gate on push) once a git remote exists | CONSTRAINTS §4, D13 |
 | ☐ | Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths | `m0-foundations` Critic round 2 (informational) |
 | ☐ | `serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well | `m0-foundations` Critic round 6 (informational) |
-| ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
+| ☑ | ~~CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`)~~ Delivered in `m5-lighting-and-material` | `m0-foundations` Critic round 6 (informational) |
 | ☑ | ~~Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`)~~ Delivered in `m2-language-and-feedback` | `m1-first-pixels` Critic round 2 (low) |
 | ☑ | ~~Add a D14 parallel-check test with a non-unit `up` vector~~ Delivered in `m2-language-and-feedback` (`test/core/camera.test.js`) | `m1-first-pixels` Critic round 2 (informational) |
 | ☑ | ~~Editor-preview spec: say what happens when the window is too narrow for both 240 px minimums (`clampEditorWidth` keeps the editor's minimum, per design D-8)~~ Delivered in `m3-primitives-and-transforms` (spec wording; e2e at 400 px in `e2e/editor-preview.spec.js`) | `m2-language-and-feedback` Critic round 2 (low) |
@@ -236,9 +236,12 @@ strike it through with a reason.
 | ☑ | ~~Add an e2e test for a resize that arrives while a render is in progress (same cancel path as the tested newer-model case)~~ Delivered in `m3-primitives-and-transforms` (`e2e/live-rebuild.spec.js`) | `m2-language-and-feedback` Critic round 2 (informational) |
 | ☑ | ~~Add a scene test for a top-level union of mixed primitive types (DESIGN §8 "Several top-level solids are unioned" names a sphere and a cube). The union code is already covered by transform-body tests and the `arrangement` golden~~ Delivered in `m4-csg` (`test/core/scene.test.js`) | `m3-primitives-and-transforms` Critic round 6 (informational) |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
-| ☐ | An `up` vector whose components underflow (for example `[0, t, t]` with `t` a `0.` followed by 199 zeros and a `1`) is nonzero, but reports "up must be nonzero". This mirrors the D16 overflow messages. It is best effort under D16; consider a clearer message | `m4-csg` Critic round 2 (informational) |
+| ☑ | ~~An `up` vector whose components underflow (for example `[0, t, t]` with `t` a `0.` followed by 199 zeros and a `1`) is nonzero, but reports "up must be nonzero". This mirrors the D16 overflow messages. It is best effort under D16; consider a clearer message~~ Delivered in `m5-lighting-and-material`: it now reports "up is too small" (`test/core/camera.test.js`) | `m4-csg` Critic round 2 (informational) |
 | ☑ | ~~Finalize `ε` and supported scene scale~~ Delivered in `m4-csg`. The scaled-render check passed with byte-identical renders, so `ε = 1e-6` is final and the scale is `[1e-3, 3e7]` | DESIGN §5, D7 |
 | ☑ | ~~D20 in-face rays under rotations that are not multiples of 90°: the local direction carries a rounding residue of about `1e-16`, so a ray lying exactly in a face is decided by rounding. Revisit with `ε`, for example with a "within `ε` over the shared length" check for near-parallel slabs and the cylinder side~~ Closed in `m4-csg` by the owner: the narrowed D20 rule stays, because the effect is below what a render shows | `m3-primitives-and-transforms` Critic round 3 (medium; D20 narrowed by the owner) |
+| ☐ | Editor: Tab inserts indentation in the source box instead of moving focus out of it. Keep an escape so keyboard users are never trapped, for example Esc then Tab moves on (WCAG 2.1.2, "No Keyboard Trap") | Owner request, 2026-09-11 |
+| ☐ | Help text for the modeling language that can be opened on request: statements, primitives, transforms, Booleans, and the `camera`, `light`, and `material` blocks, with a short example | Owner request, 2026-09-11 |
+| ☐ | Point lights alongside the directional ones, for example `light { position: …; }`. Needs a falloff decision (none, or a defined law) and validation rules. DESIGN lists this as a parked optional feature, so it needs its own proposal | Owner request, 2026-09-11 (DESIGN — Optional features) |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |
 
 ---
