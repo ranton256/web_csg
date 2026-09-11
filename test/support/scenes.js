@@ -17,4 +17,14 @@ translate([0, 45, 0]) { rotate([0, 0, 30]) { cube(30); } }
 translate([45, 0, 0]) { rotate([90, 0, 0]) { cylinder(radius: 15, height: 40); } }
 translate([0, -45, 0]) { scale(1.5) { box([30, 15, 10]); } }
 `,
+  booleans: `// A union, an intersection, and a difference, side by side.
+camera {
+  position: [70, -150, 80];
+  lookAt: [0, 0, 0];
+}
+
+translate([-50, 0, 0]) { union { cube(24); sphere(16); } }
+intersection { cube(28); sphere(18); }
+translate([50, 0, 0]) { difference { cube(28); sphere(18); } }
+`,
 };

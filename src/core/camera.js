@@ -61,10 +61,18 @@ export function validateCamera(node, evaluate, report) {
 
   let viewValid = false;
   if (camera.position !== undefined && camera.lookAt !== undefined) {
-    viewValid = length(sub(camera.lookAt, camera.position)) > EPSILON;
-    if (!viewValid) {
-      report(locs.lookAt, 'position and lookAt must differ');
+    const distance = length(sub(camera.lookAt, camera.position));
+    if (!Number.isFinite(distance)) {
+      // Beyond the supported scale the math is best effort (D16); an overflow
+      // is reported as such, not as a misleading up-vector error.
+      report(locs.lookAt, 'position and lookAt are too far apart');
       valid = false;
+    } else {
+      viewValid = distance > EPSILON;
+      if (!viewValid) {
+        report(locs.lookAt, 'position and lookAt must differ');
+        valid = false;
+      }
     }
   }
   if (camera.up !== undefined) {

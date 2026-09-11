@@ -114,3 +114,14 @@ test('ray directions are unit vectors', () => {
     assert.ok(Math.abs(length(primaryRay(basis, 64, 48, x, y).direction) - 1) < 1e-12);
   }
 });
+
+test('a camera too far away is reported as such, not as an up-vector error (D16)', () => {
+  const far = '1' + '0'.repeat(200);
+  const source = `camera { position: [${far}, 0, 0]; lookAt: [0, 0, 0]; }\n`;
+  const diagnostics = compile(source).diagnostics.map((d) => [d.line, d.column, d.message]);
+  assert.deepEqual(diagnostics, [[1, source.indexOf('lookAt') + 1, 'position and lookAt are too far apart']]);
+});
+
+test('a large but finite camera is accepted (D16: no range check)', () => {
+  assert.deepEqual(cameraOf('position: [16000000, 0, 0]; lookAt: [0, 0, 0];').diagnostics, []);
+});

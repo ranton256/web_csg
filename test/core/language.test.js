@@ -87,41 +87,34 @@ test('empty bodies are errors at the block keyword', () => {
 
 test('let is scoped to its block', () => {
   assert.deepEqual(diagnosticsOf('union { let r = 5; sphere(r); }\nsphere(r);\n' + CAMERA), [
-    [1, 1, '`union` is not supported yet'],
     [2, 8, '`r` is undeclared'],
   ]);
 });
 
 test('shadowing inside a block is an error', () => {
   assert.deepEqual(diagnosticsOf('let r = 5; union { let r = 6; sphere(r); }\n' + CAMERA), [
-    [1, 12, '`union` is not supported yet'],
     [1, 24, '`r` is already declared'],
   ]);
 });
 
 test('the contents of unsupported constructs are still checked', () => {
-  assert.deepEqual(diagnosticsOf('union { sphere(q); }\nmaterial { color: 1 + [1, 2, 3]; }\n' + CAMERA), [
-    [1, 1, '`union` is not supported yet'],
-    [1, 16, '`q` is undeclared'],
+  assert.deepEqual(diagnosticsOf('light { direction: [0, 0, q]; }\nmaterial { color: 1 + [1, 2, 3]; }\n' + CAMERA), [
+    [1, 1, '`light` is not supported yet'],
+    [1, 27, '`q` is undeclared'],
     [2, 1, '`material` is not supported yet'],
     [2, 21, 'invalid operands for `+`: number and vector'],
   ]);
-  assert.deepEqual(diagnosticsOf('union { sphere(0); }\n' + CAMERA), [
-    [1, 1, '`union` is not supported yet'],
-    [1, 16, 'the radius must be greater than 0'],
-  ]);
-  assert.deepEqual(diagnosticsOf('light { direction: [0, 0, q]; }\n' + CAMERA), [
-    [1, 1, '`light` is not supported yet'],
-    [1, 27, '`q` is undeclared'],
-  ]);
 });
 
-test('every later construct is reported as not supported yet, at its keyword', () => {
+test('errors inside a Boolean are reported, with no "not supported" diagnostic', () => {
+  assert.deepEqual(diagnosticsOf('union { sphere(q); }\n' + CAMERA), [[1, 16, '`q` is undeclared']]);
+  assert.deepEqual(diagnosticsOf('difference { sphere(0); }\n' + CAMERA), [[1, 21, 'the radius must be greater than 0']]);
+  assert.deepEqual(diagnosticsOf('intersection { sphere(1); }\n' + CAMERA), []);
+});
+
+test('light and material are reported as not supported yet, at their keyword', () => {
   const cases = {
-    union: 'union { sphere(1); }',
-    intersection: 'intersection { sphere(1); }',
-    difference: 'difference { sphere(1); }',
-    light: 'light { direction: [0, 0, -1]; }',
+    light: 'light { direction: [0, 0, 1]; }',
     material: 'material { color: [1, 0, 0]; }',
   };
   for (const [keyword, source] of Object.entries(cases)) {
@@ -129,15 +122,26 @@ test('every later construct is reported as not supported yet, at its keyword', (
   }
 });
 
-test('the vision example reports only constructs that are not supported yet', () => {
-  const diagnostics = compile(VISION_EXAMPLE).diagnostics;
-  assert.ok(diagnostics.length > 0);
-  const keywords = new Set(diagnostics.map((d) => {
-    const match = /^`(\w+)` is not supported yet$/.exec(d.message);
-    assert.ok(match, `unexpected diagnostic ${JSON.stringify(d)}`);
-    return match[1];
-  }));
-  assert.deepEqual([...keywords].sort(), ['difference', 'union']);
+// The placed primitives of a scene tree, in source order.
+function leaves(node) {
+  return node.kind === 'primitive' ? [node] : node.children.flatMap(leaves);
+}
+
+test('the vision example has no diagnostics: a cube minus the union of three cylinders', () => {
+  const { diagnostics, scene } = compile(VISION_EXAMPLE);
+  assert.deepEqual(diagnostics, []);
+  assert.equal(scene.root.children.length, 1);
+  const [model] = scene.root.children;
+  assert.equal(model.kind, 'difference');
+  assert.equal(model.children.length, 2);
+  const [cube, cutters] = model.children;
+  assert.deepEqual([cube.kind, cube.type, cube.size], ['primitive', 'cube', 60]);
+  assert.equal(cutters.kind, 'union');
+  assert.deepEqual(leaves(cutters).map(({ type, radius, height }) => [type, radius, height]), [
+    ['cylinder', 12, 62],
+    ['cylinder', 12, 62],
+    ['cylinder', 12, 62],
+  ]);
 });
 
 test('primitive dimensions must be positive, of the right kind', () => {
@@ -161,7 +165,7 @@ test('cylinder argument errors (DESIGN §8 examples)', () => {
 });
 
 test('cylinder arguments in any order when named', () => {
-  const solids = (source) => compile(source + '\n' + CAMERA).scene.solids.map(({ type, radius, height }) => ({ type, radius, height }));
+  const solids = (source) => compile(source + '\n' + CAMERA).scene.root.children.map(({ type, radius, height }) => ({ type, radius, height }));
   assert.deepEqual(solids('cylinder(12, 62);'), solids('cylinder(height: 62, radius: 12);'));
   assert.deepEqual(solids('cylinder(12, 62);'), [{ type: 'cylinder', radius: 12, height: 62 }]);
 });
@@ -188,9 +192,8 @@ test('an invalid transform still has its body checked', () => {
   ]);
 });
 
-test('primitives inside an unsupported Boolean are still checked, but not rendered', () => {
+test('primitives inside a Boolean are checked', () => {
   assert.deepEqual(diagnosticsOf('union { translate([1, 0, 0]) { cube(0); } }\n' + CAMERA), [
-    [1, 1, '`union` is not supported yet'],
     [1, 37, 'the size must be greater than 0'],
   ]);
 });
@@ -198,7 +201,6 @@ test('primitives inside an unsupported Boolean are still checked, but not render
 test('a camera block inside a body is an error, and is still checked', () => {
   const diagnostics = diagnosticsOf(CAMERA + 'union { camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; } sphere(1); }');
   assert.deepEqual(diagnostics, [
-    [2, 1, '`union` is not supported yet'],
     [2, 9, 'the camera block must be at the top level'],
   ]);
   const checked = diagnosticsOf(CAMERA + 'union { camera { zoom: 1; } sphere(1); }');
@@ -208,5 +210,5 @@ test('a camera block inside a body is an error, and is still checked', () => {
 test('the default example still compiles to one sphere', () => {
   const { diagnostics, scene } = compile('let r = 40;\n' + CAMERA + 'sphere(radius: r / 2 + 20);');
   assert.deepEqual(diagnostics, []);
-  assert.equal(scene.solids[0].radius, 40);
+  assert.equal(scene.root.children[0].radius, 40);
 });

@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
 import { SCENES } from '../test/support/scenes.js';
+import { VISION_EXAMPLE } from '../test/support/vision-example.js';
 import { REPO_ROOT, startServer } from './serve.mjs';
 
 // Waits until no render is in progress (a cancelled render never finishes,
@@ -34,6 +35,7 @@ const SHOTS = [
     },
   },
   { name: 'primitives', prepare: (page) => showSource(page, SCENES.arrangement) },
+  { name: 'bored-cube', prepare: (page) => showSource(page, VISION_EXAMPLE) },
 ];
 const VIEWPORT = { width: 1280, height: 800 };
 

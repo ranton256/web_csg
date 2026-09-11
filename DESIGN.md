@@ -3,7 +3,7 @@
 > **Status: Agreed** in the planning interview (readback confirmed
 > 2026-09-10), derived from [`vision.md`](vision.md). Implementation progress
 > is tracked in [ROADMAP.md](ROADMAP.md). `ε` and the supported scene scale in
-> §5 are provisional until M4.
+> §5 were finalized in M4 (D7).
 > Record new spec gaps in [§12](#12-open-decisions).
 
 ## How to read this document
@@ -130,11 +130,11 @@ strictly greater than 0.
 | Render time slice | A slice starts no new row once `12` ms have elapsed, then yields to the browser; it therefore runs at most one row past 12 ms | (D18, wording amended after Critic review) |
 | Divider | The editor starts `420` px wide; the editor and preview are each at least `240` px wide; the arrow keys move the focused divider `16` px | (D18) |
 | Numeric type | IEEE-754 double (JS `number`) throughout | (D7) |
-| Tolerance `ε` | `1e-6` world units | **Provisional** until the scaled-render check passes (D7) |
+| Tolerance `ε` | `1e-6` world units | **Final** (M4): the scaled-render check passed at ×1e-3 and ×1e5 (D7) |
 | Camera point equality | `position` and `lookAt` are equal when their distance is ≤ `ε` | (D14) |
 | Camera up parallel tolerance | `up` is parallel to the view direction when `‖f̂ × û‖ ≤ 1e-6` (f̂, û unit vectors) | Dimensionless, independent of scene scale (D14) |
 | Maximum nesting depth | `100` levels (each unary minus, vector bracket, parenthesis, and transform or Boolean body is a level) | Deeper input is a syntax error at the token that exceeds it (D15; parentheses and bodies added by D18) |
-| Supported scene scale | Dimensions and coordinates with magnitude in `[1e-3, 1e5]` world units | **Provisional** until the scaled-render check passes (D7) |
+| Supported scene scale | Dimensions and coordinates with magnitude in `[1e-3, 2e7]` world units | **Final** (M4). This is the range the scaled-render check exercises, from the 0.001 overhang at ×1e-3 to the 1.6e7 camera coordinate at ×1e5 (D7). Outside it, rendering is best effort (D16) |
 | Right-angle rotations | Angles that are exact multiples of 90° use exact sin/cos values (`0`, `±1`) | Keeps flush cuts exact (D7) |
 
 ## 6. Technical constraints
@@ -713,7 +713,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D4~~ | **Resolved 2026-09-10:** degrees; X, then Y, then Z about fixed parent axes (`R = Rz·Ry·Rx`); right-handed (OpenSCAD convention). | — | — |
 | ~~D5~~ | **Resolved 2026-09-10:** camera comes only from the source `camera` block; no interactive camera controls in the first release (Live 3D viewport stays parked). | — | — |
 | ~~D6~~ | **Resolved 2026-09-10:** localStorage autosave of the current source; Save downloads / Open loads a `.csg` text file; three built-in examples (bored cube, primitives, Boolean operations). | — | — |
-| ~~D7~~ | **Resolved 2026-09-10:** interval and tolerance rules in [Ray–solid intervals and tolerance](#feature-raysolid-intervals-and-tolerance). `ε = 1e-6` and scale range `[1e-3, 1e5]` stay **provisional** until the scaled-render scenario passes; "marching limits" dropped (analytic tracing does not march). | — | — |
+| ~~D7~~ | **Resolved 2026-09-10:** interval and tolerance rules in [Ray–solid intervals and tolerance](#feature-raysolid-intervals-and-tolerance). `ε = 1e-6` and scale range `[1e-3, 1e5]` stay **provisional** until the scaled-render scenario passes; "marching limits" dropped (analytic tracing does not march). **Finalized 2026-09-10 in M4 (owner decision on the range):** the scaled-render scenario passed. At 64×48, the bored cube scaled ×1e-3 and ×1e5 renders byte-identical to the unscaled image (0 of 12,288 channels differ). `ε = 1e-6` is final. The supported scale is revised to `[1e-3, 2e7]`, because the ×1e5 render's largest magnitude is its camera coordinate at 1.6e7. | — | — |
 | ~~D8~~ | **Resolved 2026-09-10:** 0–4 top-level directional white `light` blocks (default camera key light when none), optional `material { color; }`, fixed Blinn-Phong constants and background; no shadows. See §5 and [Lighting and shading](#feature-lighting-and-shading). | — | — |
 | ~~D9~~ | **Resolved 2026-09-10:** language rules as written in [§8 Modeling language](#feature-modeling-language). Model color syntax is part of D8. | — | — |
 | ~~D10~~ | **Resolved 2026-09-10:** 300 ms debounced rebuild; progressive, cancelable main-thread rendering; 1 ray per CSS pixel; bored cube on first launch; confirm before replacing edited text; `<textarea>` editor. | — | — |
@@ -725,9 +725,8 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D18~~ | **Resolved 2026-09-10 (accepted by the owner; may be tuned later):** recorded in §5 (render time slice, divider, nesting depth). The slice rule was amended the same day, with the owner's agreement, after Critic review: a slice starts no new row once 12 ms have elapsed (at most one row past 12 ms), because a loop that checks the clock after each row cannot promise a strict maximum. Original proposal: (a) progressive rendering yields after at most **12 ms** of rendering per slice; (b) the divider keeps the editor and the preview each at least **240 px** wide, the editor starts **420 px** wide, and the arrow keys move the focused divider **16 px**; (c) the D15 cap of 100 levels also counts **parentheses and block bodies** (`{ … }` of transforms and Booleans), so the new grammar cannot overflow the stack. | — | — |
 | ~~D19~~ | **Resolved 2026-09-10 (owner):** transforms take exactly one positional argument (`translate(vector)`, `rotate(vector)`, `scale(number)`). Named arguments on transforms, or a different argument count, are errors. DESIGN had defined named arguments only for primitives. Recorded in §8. | — | — |
 | ~~D20~~ | **Resolved 2026-09-10 (chosen by the owner, after the M3 Critic review):** solids are closed, so their surfaces belong to them. A ray lying in a box face plane, along a cylinder side line, or in a cylinder cap plane is a hit over the length it shares with the solid. Only a zero-length touch (an interval of length ≤ `ε`, such as a sphere tangent or an edge graze) is a miss. **Amended the same day (owner, after M3 Critic round 2):** the in-face check allows `ε` in world units (`ε·|d|` in a primitive's local space), because the rounding of a placement can move a face by a last-place error and would otherwise turn an in-face ray into a miss. **Narrowed the same day (owner, after M3 Critic round 3):** the guarantee covers placements built from `translate`, `scale`, and rotations by multiples of 90°, which are exact (D4, D7), so an in-face ray stays exactly parallel to the face in local space. Under other rotations, a local direction component that should be 0 carries a rounding residue of about `1e-16`. A ray lying exactly in such a face is then a boundary case decided by rounding, like a ray through an exact edge, and the effect is below what a render shows. Rays clearly inside or outside a face behave normally at any rotation. Revisit when `ε` is finalized in M4 (ROADMAP backlog). Flush cuts in M4 are governed by the separate difference rule in §8 Ray–solid intervals, not by this one. | — | — |
+| ~~D16~~ | **Resolved 2026-09-10 (owner, M4): best effort outside the supported scene scale.** There is no range check on inputs: the range states where accuracy is promised, and zero coordinates or small offsets are legitimate. Non-finite values stay errors. A `position`–`lookAt` distance that overflows to a non-finite value is reported as "position and lookAt are too far apart", instead of the misleading "up must not be parallel". Recorded in the `camera-definition` and `ray-intervals` specs. | — | — |
 | D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
-| D16 | Behavior for values far outside the supported scene scale. For example, a camera 1e200 away overflows the vector math to Infinity and is misreported as "up must not be parallel". Literals that overflow to Infinity are already rejected. | Not M1 (inputs are outside the provisional `[1e-3, 1e5]` scale) | Decide in M4, when the scale range is finalized: reject values outside the supported scale, or specify a best-effort behavior |
-
 ## Optional features (parked)
 
 Out of scope until specifically requested (source: `vision.md` "Later,

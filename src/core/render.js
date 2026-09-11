@@ -6,7 +6,7 @@ import { cameraBasis, primaryRay } from './camera.js';
 import { BACKGROUND, DEFAULT_COLOR } from './constants.js';
 import { intersectCylinder } from './cylinder.js';
 import { evaluate } from './evaluate.js';
-import { facingNormal, union, visibleHit } from './intervals.js';
+import { facingNormal, intersect, subtract, union, visibleHit } from './intervals.js';
 import { SourceError, tokenize } from './lexer.js';
 import { parse } from './parser.js';
 import { encode, keyLight, shade } from './shade.js';
@@ -55,12 +55,42 @@ function intersectSolid(solid, ray) {
   }));
 }
 
-// The scene's intervals along a world ray: several solids form their union
-// (DESIGN §8 Implicit union).
+// A scene node's intervals along a world ray (DESIGN §8 Boolean operations).
+// A leaf is a placed primitive; a union joins its children, an intersection
+// keeps what they all share, and a difference is its first child minus the
+// union of the rest. Transform blocks are unions whose placement is already
+// composed into their leaves.
+function nodeIntervals(node, ray) {
+  const { children } = node;
+  switch (node.kind) {
+    case 'primitive':
+      return intersectSolid(node, ray);
+    case 'union': {
+      let intervals = [];
+      for (const child of children) intervals = union(intervals, nodeIntervals(child, ray));
+      return intervals;
+    }
+    case 'intersection': {
+      let intervals = nodeIntervals(children[0], ray);
+      for (let i = 1; i < children.length && intervals.length > 0; i++) {
+        intervals = intersect(intervals, nodeIntervals(children[i], ray));
+      }
+      return intervals;
+    }
+    case 'difference': {
+      let cutters = [];
+      for (let i = 1; i < children.length; i++) cutters = union(cutters, nodeIntervals(children[i], ray));
+      return subtract(nodeIntervals(children[0], ray), cutters);
+    }
+    default:
+      throw new Error(`unknown scene node ${node.kind}`);
+  }
+}
+
+// The scene's intervals along a world ray. The root is the implicit union of
+// the top-level solids (DESIGN §8 Implicit union).
 export function sceneIntervals(scene, ray) {
-  let intervals = [];
-  for (const solid of scene.solids) intervals = union(intervals, intersectSolid(solid, ray));
-  return intervals;
+  return nodeIntervals(scene.root, ray);
 }
 
 // Renders rows [y0, y1) of a width × height image of scene into rgba, a

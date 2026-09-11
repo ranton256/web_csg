@@ -72,7 +72,7 @@ src/core/
   sphere.js      # intersectSphere → interval list (general quadratic: local directions need not be unit)
   box.js         # intersectBox (slabs; cube = box with equal sides)
   cylinder.js    # intersectCylinder (side quadratic ∩ cap slab)
-  intervals.js   # union, visibleHit, facingNormal
+  intervals.js   # union, intersect, subtract (reversed cutter normals), visibleHit, facingNormal
   shade.js       # keyLight, shade, encode
   render.js      # compile, renderRows, renderSource (the public entry points)
 src/ui/
@@ -95,10 +95,16 @@ src/ui/
   Any split into bands equals one full render; the shell uses this for
   progressive rendering from M2.
 - Diagnostics are `{ line, column, message }`, with 1-based positions.
-- `scene.solids` lists placed primitives `{ type, <parameters>, placement, loc }`.
-  Transform blocks are folded into each primitive's `placement` at
-  evaluation. `sceneIntervals(scene, ray)` returns their merged world-space
-  intervals.
+- `scene.root` is a tree (M4).
+  - A leaf is a placed primitive
+    `{ kind: 'primitive', type, <parameters>, placement, loc }`.
+  - An interior node is
+    `{ kind: 'union' | 'intersection' | 'difference', children }`.
+  - The root is the union of the top-level solids.
+  - A transform block is a union node. Its placement is folded into every
+    leaf below it at evaluation.
+
+  `sceneIntervals(scene, ray)` returns the tree's world-space intervals.
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.
 - The pure `src/ui/` helpers (`text-position`, `debounce`, `render-job`,

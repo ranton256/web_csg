@@ -39,25 +39,30 @@ class Scope {
 }
 
 // Returns { diagnostics, scene }. scene is null whenever any diagnostic exists.
-// scene.solids lists placed primitives: { type, <parameters>, placement, loc }.
+// scene.root is a tree (DESIGN §8 Boolean operations, Implicit union): the
+// union of the top-level solids. A node is a leaf,
+// { kind: 'primitive', type, <parameters>, placement, loc }, or
+// { kind: 'union' | 'intersection' | 'difference', children }. A transform
+// block is a union node; its placement is composed into every leaf below it.
 export function evaluate(program) {
   const diagnostics = [];
   const report = (loc, message) => diagnostics.push({ line: loc.line, column: loc.column, message });
-  const state = { cameraNode: null, camera: null, solids: [] };
+  const state = { cameraNode: null, camera: null };
+  const root = { kind: 'union', children: [] };
 
   evaluateStatements(program.statements, new Scope(null), {
-    topLevel: true, rendered: true, placement: IDENTITY, report, state,
+    topLevel: true, placement: IDENTITY, sink: root.children, report, state,
   });
   if (state.cameraNode === null) report({ line: 1, column: 1 }, 'exactly one camera block is required');
 
   diagnostics.sort((a, b) => a.line - b.line || a.column - b.column);
   if (diagnostics.length > 0) return { diagnostics, scene: null };
-  return { diagnostics, scene: { camera: state.camera, solids: state.solids } };
+  return { diagnostics, scene: { camera: state.camera, root } };
 }
 
 // Evaluates a statement list in scope; returns how many solids it contains.
 // context.placement is the composed placement of the enclosing transforms;
-// context.rendered is false inside constructs that are not supported yet.
+// context.sink is the child list of the node being built.
 function evaluateStatements(statements, scope, context) {
   const { report } = context;
   const evaluateIn = (node) => evaluateExpression(node, scope, report);
@@ -81,22 +86,25 @@ function evaluateStatements(statements, scope, context) {
       case 'Call': {
         solids++;
         const solid = evaluatePrimitive(statement, evaluateIn, report);
-        if (solid !== null && context.rendered) context.state.solids.push({ ...solid, placement: context.placement });
+        if (solid !== null) context.sink.push({ kind: 'primitive', ...solid, placement: context.placement });
         break;
       }
       case 'Transform': {
         solids++;
         // An invalid transform still has its body checked, in place.
         const placement = evaluateTransform(statement, evaluateIn, context);
-        evaluateBody(statement, scope, { ...context, placement: placement ?? context.placement });
+        const node = { kind: 'union', children: [] };
+        evaluateBody(statement, scope, { ...context, placement: placement ?? context.placement, sink: node.children });
+        context.sink.push(node);
         break;
       }
-      case 'Boolean':
-        // Parsed now; semantics arrive in M4. Its contents are still checked.
+      case 'Boolean': {
         solids++;
-        report(statement.loc, `\`${statement.keyword}\` is not supported yet`);
-        evaluateBody(statement, scope, { ...context, rendered: false });
+        const node = { kind: statement.keyword, children: [] };
+        evaluateBody(statement, scope, { ...context, sink: node.children });
+        context.sink.push(node);
         break;
+      }
       default:
         throw new Error(`unknown statement type ${statement.type}`);
     }

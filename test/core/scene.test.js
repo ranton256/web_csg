@@ -132,10 +132,17 @@ test('a cube renders exactly as the box with equal sides', () => {
 
 test('top-level primitives are placed at the world origin (identity placement)', () => {
   const scene = sceneOf('sphere(1);\ncube(2);\nbox([1, 2, 3]);\ncylinder(1, 2);');
-  assert.deepEqual(scene.solids.map((solid) => [solid.type, solid.placement.s, solid.placement.t]), [
+  assert.deepEqual(scene.root.children.map((solid) => [solid.type, solid.placement.s, solid.placement.t]), [
     ['sphere', 1, [0, 0, 0]],
     ['cube', 1, [0, 0, 0]],
     ['box', 1, [0, 0, 0]],
     ['cylinder', 1, [0, 0, 0]],
   ]);
+});
+
+test('several top-level solids of different types are unioned', () => {
+  // Neither solid alone gives both spans: the sphere sets the extent along X, the box along Z.
+  const scene = sceneOf('sphere(5);\nbox([4, 4, 20]);');
+  assert.deepEqual(spans(scene, ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
+  assert.deepEqual(spans(scene, ray([0, 0, -100], [0, 0, 1])), [[90, 110]]);
 });

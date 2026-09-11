@@ -5,10 +5,14 @@ import { compile } from '../../src/core/render.js';
 const CAMERA = 'camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; }\n';
 
 const diagnosticsOf = (source) => compile(source).diagnostics.map((d) => [d.line, d.column, d.message]);
+// The placed primitives of a scene tree, in source order.
+function leaves(node) {
+  return node.kind === 'primitive' ? [node] : node.children.flatMap(leaves);
+}
 const solidsOf = (source) => {
   const { diagnostics, scene } = compile(source);
   assert.deepEqual(diagnostics, []);
-  return scene.solids.map(({ type, radius }) => ({ type, radius }));
+  return leaves(scene.root).map(({ type, radius }) => ({ type, radius }));
 };
 
 test('unary minus negates numbers and each vector component', () => {
@@ -77,7 +81,7 @@ test('all semantic errors are reported, ordered by position', () => {
 test('a camera-only source is a valid empty scene', () => {
   const { diagnostics, scene } = compile(CAMERA);
   assert.deepEqual(diagnostics, []);
-  assert.deepEqual(scene.solids, []);
+  assert.deepEqual(scene.root, { kind: 'union', children: [] });
 });
 
 test('comments do not change the scene', () => {
