@@ -27,7 +27,7 @@ export const HELP_SECTIONS = [
     title: 'Statements and comments',
     body: [
       'A source is a list of statements. Statements end with `;`, and blocks end with `}`. Comments run from `//` to the end of the line, or between `/*` and `*/`.',
-      'Numbers are decimals such as `12` or `1.5` (no exponents). Vectors are `[x, y, z]`. Arithmetic uses `+ - * /` and parentheses; a vector can be added to a vector or multiplied by a number. Z is up.',
+      'Numbers are decimals such as `12` or `1.5` (no exponents). Vectors are `[x, y, z]`. Arithmetic uses `+ - * /` and parentheses: numbers combine with numbers, vectors add to and subtract from vectors, and a vector can be multiplied by a number (either way round) or divided by one. Z is up.',
     ],
   },
   {

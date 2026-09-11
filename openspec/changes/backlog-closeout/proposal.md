@@ -66,7 +66,8 @@ edges in the editor it ships.
   - `tools/serve.mjs`: the dot-path check and the real-path comparison;
   - `src/ui/indent.js` (new): pure indentation logic;
   - `src/ui/main.js`: key handling, and the Help dialog wiring;
-  - `index.html`: the Help button, the `<dialog>`, and its reference text.
+  - `index.html`: the Help button and the `<dialog>`;
+  - `src/ui/help-content.js` (new): the reference text, as plain data.
 - **Tests:**
   - dev-server tests for dot-paths and the preserved-symlink start;
   - unit tests for the indentation logic;
@@ -75,7 +76,7 @@ edges in the editor it ships.
 - **Documents:**
   - DESIGN §4 (the Help button), §8 (Tab and Help behavior), and §12 (D23,
     the owner's decisions);
-  - CONSTRAINTS §2 (the `indent.js` module);
+  - CONSTRAINTS §2 (the `indent.js` and `help-content.js` modules);
   - the ROADMAP backlog.
 - **Evidence:** a `docs/progress/backlog-closeout/` README with captures of
   the Help dialog and of indented source, plus the owner's Safari smoke

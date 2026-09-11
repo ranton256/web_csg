@@ -75,8 +75,11 @@ Shift+Tab only when no other modifier is held.
   browser's undo treats it exactly like typed text, which the owner accepted:
   Chromium and Firefox undo it in one step, and WebKit groups it with
   adjacent typing, as it does typed characters.
-- **Fallback:** if `execCommand` returns `false`, it uses `setRangeText`
-  plus a synthetic `input` event. Undo is then best effort, and the risk is
+- **Removing a whole range:** when the edit's replacement is empty (Shift+Tab
+  on a line of only spaces), it uses `execCommand('delete')` instead, so undo
+  still treats it like the same deletion typed by hand (Critic round 1).
+- **Fallback:** if the command returns `false`, it uses `setRangeText` plus a
+  synthetic `input` event. Undo is then best effort, and the risk is
   recorded below.
 - **The Esc escape:** Esc sets an `escapeArmed` flag. The next Tab or
   Shift+Tab is not intercepted, so the browser moves focus, and the flag
@@ -168,8 +171,9 @@ browser APIs, so a Node test can:
 - **[Esc means "close" inside the dialog but "arm the escape" in the
   editor]** → They never apply together: while the dialog is open, the
   editor is inert. An e2e test covers each.
-- **[Browsers restore focus differently after `dialog.close()`]** → The
-  refocus is explicit, and an e2e test on all three engines covers it.
+- **[Browsers restore focus differently after `dialog.close()`]** → All
+  three engines return focus from a closed modal `<dialog>`. An e2e test on
+  each engine checks it, so a browser that stops doing so is detected.
 - **[A dot-path rule could hide a future app asset]** → None exists, and
   CONSTRAINTS §2 keeps app files under `src/` and `index.html`. The
   `dev-server` spec makes the rule explicit.

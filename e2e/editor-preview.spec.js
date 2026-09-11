@@ -153,6 +153,56 @@ test.describe('Tab indentation', () => {
     if (browserName !== 'webkit') expect(afterTab).toBe(DEFAULT_SOURCE + 'x');
   });
 
+  test('undo after Shift+Tab on a line of only spaces matches undo after deleting them by hand', async ({ page, browserName }) => {
+    // Built by real typing: "x", a new line, then two spaces, with the caret at the end.
+    async function spacesLine() {
+      await page.reload();
+      await waitForIdle(page);
+      await page.locator('#source').click();
+      await page.keyboard.press('ControlOrMeta+End');
+      await page.keyboard.type('x');
+      await page.keyboard.press('Enter');
+      await page.keyboard.type('  ');
+    }
+    await spacesLine();
+    await page.keyboard.press('Shift+Tab');
+    const afterShiftTab = await page.locator('#source').inputValue();
+    await page.keyboard.press('ControlOrMeta+z');
+    const undoShiftTab = await page.locator('#source').inputValue();
+
+    await spacesLine();
+    await page.keyboard.press('Backspace');
+    await page.keyboard.press('Backspace');
+    const afterBackspace = await page.locator('#source').inputValue();
+    await page.keyboard.press('ControlOrMeta+z');
+    const undoBackspace = await page.locator('#source').inputValue();
+
+    expect(afterShiftTab).toBe(afterBackspace);
+    expect(undoShiftTab).toBe(undoBackspace);
+    // Chromium and Firefox undo just the removal; WebKit groups it with the typing before it.
+    if (browserName !== 'webkit') expect(undoShiftTab).toBe(DEFAULT_SOURCE + 'x\n  ');
+  });
+
+  test('another key after Esc cancels the escape, so Tab indents again', async ({ page }) => {
+    await setSource(page, 'ab', 2);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#source')).toHaveValue('a  b');
+    expect(await focusedId(page)).toBe('source');
+  });
+
+  test('leaving the editor after Esc cancels the escape, so Tab indents on return', async ({ page }) => {
+    await setSource(page, 'ab', 2);
+    await page.keyboard.press('Escape');
+    await page.locator('#help-button').focus();
+    await page.locator('#source').focus();
+    await page.locator('#source').evaluate((el) => el.setSelectionRange(2, 2));
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#source')).toHaveValue('ab  ');
+    expect(await focusedId(page)).toBe('source');
+  });
+
   test('the header has a keyboard-focusable Help button', async ({ page }) => {
     const button = page.locator('header #help-button');
     await expect(button).toBeVisible();

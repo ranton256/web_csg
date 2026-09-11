@@ -136,13 +136,17 @@ source.addEventListener('scroll', () => {
 let escapeArmed = false;
 const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
 
-// Applies an indentation edit as one native undo step. insertText also fires
-// the input event, so the gutter and the rebuild follow as for typing.
+// Applies an indentation edit through the browser's own editing commands, so
+// undo treats it like typing (D23). Both commands fire the input event, so the
+// gutter and the rebuild follow as for typing. An edit that removes the whole
+// range (Shift+Tab on a line of only spaces) is a delete, not an empty insert.
 function applyIndent(edit) {
   if (source.value.slice(edit.from, edit.to) !== edit.insert) {
     source.setSelectionRange(edit.from, edit.to);
-    const inserted = edit.insert !== '' && document.execCommand('insertText', false, edit.insert);
-    if (!inserted) {
+    const applied = edit.insert === ''
+      ? document.execCommand('delete', false)
+      : document.execCommand('insertText', false, edit.insert);
+    if (!applied) {
       source.setRangeText(edit.insert, edit.from, edit.to);
       source.dispatchEvent(new Event('input', { bubbles: true }));
     }

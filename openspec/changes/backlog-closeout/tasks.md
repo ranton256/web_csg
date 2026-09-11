@@ -30,8 +30,7 @@
 - [x] 4.3 `index.html`: a header row with the Help button, and a `<dialog id="help">` with a title and a Close button
 - [x] 4.4 `src/ui/main.js`:
   - render the sections into the dialog
-  - open it with `showModal()`, recording the active element
-  - on close, refocus that element
+  - open it with `showModal()`; the modal `<dialog>` returns focus on close (an explicit refocus was planned, then removed as redundant after seen-to-fail run E3)
 
 ## 5. End-to-end tests (Chromium, Firefox, WebKit)
 
@@ -82,3 +81,11 @@
   - the manual Safari smoke check (performed by the owner)
 - [ ] 7.4 A separate Critic review (`project-critic`) of `main..backlog-closeout`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.5 Merge into `main`, and archive with `/opsx:archive` (syncing the specs, including the new `language-help` capability)
+
+## 8. Critic round 1 fixes
+
+- [x] 8.1 Defect: an indentation edit that removes the whole range (Shift+Tab on a line of only spaces) goes through `execCommand('delete')`, so undo treats it like deleting those spaces
+- [x] 8.2 e2e: Shift+Tab followed by undo matches two Backspaces followed by undo, on all three engines, and is exactly one step in Chromium and Firefox
+- [x] 8.3 e2e: the Esc escape is cancelled by another key (Esc, ArrowLeft, Tab indents) and by leaving the editor (Esc, blur, refocus, Tab indents)
+- [x] 8.4 Document drift: tasks 4.4, the design risks, the proposal's help-content and CONSTRAINTS lines, and the README's fresh-checkout row. The help text now states the full arithmetic rule
+- [ ] 8.5 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section

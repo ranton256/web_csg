@@ -44,7 +44,7 @@ factor 1):
 | --- | --- |
 | `npm run check < /dev/null` in the working tree | On the final tree, after removing the redundant refocus: exit 0, `node --test` 286/286, Playwright 96/96 |
 | `openspec validate backlog-closeout --strict` | Valid |
-| Full gate from a fresh checkout | Pending at time of writing |
+| Full gate from a fresh checkout | `git clone --branch backlog-closeout` at `9570010`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 286/286, Playwright 96/96 |
 | Manual Safari smoke check | Pass (see below) |
 | Separate Critic review returns `[APPROVED]` | Pending |
 
@@ -106,6 +106,35 @@ baseline was 31/31, and each file was restored after its run.
 | E1: the Esc escape is never armed | 3/54: `Esc, then Tab, leaves the editor with the text unchanged`, on each engine |
 | E2: the Tab handler does not intercept Tab | 10/54: the Tab, multi-line Tab, and Shift+Tab tests on each engine, and the undo test in Chromium |
 | E3: no explicit refocus after the dialog closes | 0/54, so the mutant survived. All three engines return focus from a closed `<dialog>` by themselves, which made the explicit refocus dead code. It was removed from `main.js` (design D-4 updated), and `e2e/help.spec.js` now checks the browsers' own focus return |
+
+## Critic round 1: `[REJECTED]`, and fixes
+
+The Critic reviewed `9570010` and ran the gates itself, including a fresh
+clone: 286/286 and 96/96. It verified the dot-path handling across
+encodings, the indentation edge cases, the dialog's accessibility, and the
+accuracy of the help text. It rejected the change for one defect and one
+test gap.
+
+| Finding | Fix |
+| --- | --- |
+| Defect: Shift+Tab on a line of only spaces empties the range, and the code then always took the `setRangeText` fallback, which is not in the undo history. Undo after that Shift+Tab did not match undo after deleting the spaces by hand (D23 d), on all three engines | An edit whose replacement is empty now goes through `execCommand('delete')`. New e2e test: `undo after Shift+Tab on a line of only spaces matches undo after deleting them by hand`, on all three engines, with an exact one-step undo in Chromium and Firefox. Design D-3 is updated |
+| Test gap: the Esc escape's resets were untested. Removing the other-key reset, or the `blur` reset, passed the whole gate | New e2e tests: `another key after Esc cancels the escape, so Tab indents again`, and `leaving the editor after Esc cancels the escape, so Tab indents on return` |
+| Low: drift in this change's own documents (tasks 4.4, the design risks, two proposal lines, and this README's fresh-checkout row) | Corrected |
+| Informational: the help text understated the arithmetic rule | The help now states the full rule from DESIGN §8 |
+| Informational: Esc, then Ctrl+Tab, leaves the escape armed; IME composition is not handled; the Esc-then-Tab test only checks that focus left the editor; a multi-line Tab indents blank lines | Recorded, and not changed: each is within the spec or cannot be verified in headless browsers |
+
+Seen to fail, in a scratch copy of the working tree with the fixes, and
+`node_modules` linked in. Each run covered `e2e/editor-preview.spec.js` on
+Chromium, Firefox, and WebKit, with a baseline of 54/54.
+
+| Break | Tests that failed |
+| --- | --- |
+| R1: an empty edit takes the non-undoable fallback again (the round 1 defect) | 3/54: `undo after Shift+Tab on a line of only spaces matches undo after deleting them by hand`, on each engine |
+| R2: another key no longer cancels the escape | 3/54: `another key after Esc cancels the escape, so Tab indents again`, on each engine |
+| R3: leaving the editor no longer cancels the escape | 3/54: `leaving the editor after Esc cancels the escape, so Tab indents on return`, on each engine |
+
+Gate after the fixes: `npm run check < /dev/null` in the working tree exits
+0, with `node --test` at 286/286 and Playwright at 105/105.
 
 ## Manual Safari smoke check
 
