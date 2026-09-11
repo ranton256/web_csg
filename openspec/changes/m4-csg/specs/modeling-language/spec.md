@@ -54,6 +54,35 @@ except blocks, which end with `}`.
 - **WHEN** the bored-cube source from `vision.md` is compiled
 - **THEN** there are no diagnostics, and the model is a cube of size 60 minus the union of three cylinders of radius 12 and height 62
 
+### Requirement: Immutable let bindings with lexical scope
+Source: DESIGN §8 Modeling language.
+
+`let name = expression;` SHALL bind an immutable number or vector. The name is
+visible from after its declaration to the end of the enclosing block; at the
+top level, that is the rest of the file. Using a name that is not visible, or
+declaring a name that is already visible (shadowing), SHALL be an error.
+These rules apply inside transform and Boolean bodies.
+
+#### Scenario: A name is visible only after its declaration
+- **WHEN** the top level contains `sphere(r); let r = 5;`
+- **THEN** a diagnostic at the use of `r` says `r` is undeclared
+
+#### Scenario: Redeclaration is an error
+- **WHEN** the source contains `let r = 5;` and later `let r = 6;`
+- **THEN** a diagnostic at the second `r` says `r` is already declared
+
+#### Scenario: Reserved words are not names
+- **WHEN** the source contains `let camera = 1;`
+- **THEN** a syntax error is reported at `camera`
+
+#### Scenario: let is scoped to its block
+- **WHEN** the source contains `union { let r = 5; sphere(r); } sphere(r);`
+- **THEN** a diagnostic at the second use of `r` says `r` is undeclared, and there is none at the first
+
+#### Scenario: Shadowing inside a block is an error
+- **WHEN** the source contains `let r = 5; union { let r = 6; sphere(r); }`
+- **THEN** a diagnostic at the inner `r` says `r` is already declared
+
 ## REMOVED Requirements
 
 ### Requirement: Booleans, lights, and materials are not supported yet

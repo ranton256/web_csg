@@ -112,3 +112,25 @@ test('a bore wall seen from inside the bore: the reversed normal already faces t
   const { rgba } = renderSource(source, 1, 1);
   assert.notDeepEqual([...rgba], BACKGROUND);
 });
+
+test('a multi-child transform body inside a Boolean is one child (the union of its body)', () => {
+  // The first child is cube(10) ∪ sphere(8) = [-8, 8]; minus cube(4) = [-2, 2].
+  const scene = sceneOf('difference { translate([0, 0, 0]) { cube(10); sphere(8); } cube(4); }');
+  assert.deepEqual(spans(scene, ray([-100, 0, 0], X)), [[92, 98], [102, 108]]);
+});
+
+test('an intersection of three children keeps what all of them share', () => {
+  // cube(10) is [-5, 5], sphere(8) is [-8, 8], and the translated cube is [-2, 8]: all three share [-2, 5].
+  const scene = sceneOf('intersection { cube(10); sphere(8); translate([3, 0, 0]) { cube(10); } }');
+  assert.deepEqual(spans(scene, ray([-100, 0, 0], X)), [[98, 105]]);
+});
+
+test('a cutter that stops just short of the base leaves its face (DESIGN D21)', () => {
+  // The cutter starts 5e-7 above the cube's top face: a gap ≤ ε, but no overlap.
+  const [hit, ...rest] = sceneIntervals(sceneOf('difference { cube(10); translate([0, 0, 10.0000005]) { cube(10); } }'), ray([0, 0, 100], DOWN));
+  assert.deepEqual(rest, []);
+  assert.deepEqual([hit.in.t, hit.out.t], [95, 105]);
+  assert.deepEqual(clean(hit.in.normal), [0, 0, 1]);
+  assert.equal(hit.in.primitive.size, 10);
+  assert.equal(hit.in.primitive.placement.t[2], 0, 'the entry is the base cube\'s own top face');
+});

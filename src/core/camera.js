@@ -79,6 +79,10 @@ export function validateCamera(node, evaluate, report) {
     if (length(camera.up) === 0) {
       report(locs.up ?? node.loc, 'up must be nonzero');
       valid = false;
+    } else if (!Number.isFinite(length(camera.up))) {
+      // As for the view distance (D16): an overflow is reported as such.
+      report(locs.up ?? node.loc, 'up is too large');
+      valid = false;
     } else if (viewValid) {
       const view = normalize(sub(camera.lookAt, camera.position));
       if (length(cross(view, normalize(camera.up))) <= PARALLEL_TOLERANCE) {

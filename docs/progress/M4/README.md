@@ -105,6 +105,44 @@ Notes:
   applies its own `ε` drop. So the 5e-7 sliver still disappears at scene
   level under N5, and only the interval-level test fails.
 
+## Critic round 1: `[REJECTED]`, and fixes
+
+The Critic reviewed `a3d91be` and ran the gates itself (244/244, 69/69). Its
+independent reference was a membership sampler, with its own rotation math,
+over 1,400 random CSG trees and 35,000 rays. It found:
+- 0 membership mismatches with `sceneIntervals`;
+- 0 slivers or gaps ≤ `ε`;
+- 0 endpoints off their primitive's surface;
+- 0 normal-orientation errors in about 81,000 endpoints.
+
+It rejected the milestone on three blocking findings.
+
+| Finding | Fix |
+| --- | --- |
+| B1, spec defect. The scaled-render requirement promised invariance for any in-range scene. `ε` is absolute, so a derived feature can flip sides of it with scaling. In `difference { cube(2k); translate([0, 0, 1.0000005k]) { box([4, 4, 4] * k); } }`, a 5e-7 floor plate is dropped at ×1 but kept at ×1e5 (102 channels differ, by up to 136) | Owner decision: scope the guarantee to scenes whose dimensions, coordinates, and derived feature sizes stay in the supported scale, before and after scaling. The requirement, DESIGN §5, the D7 note, and design D-6 say so. A test (`a floor plate thinner than the supported scale…`) and a spec scenario record the plate case as outside the guarantee |
+| B2, test gap. A transform body pushing its leaves straight into a Boolean's children passed 244/244 | `a multi-child transform body inside a Boolean is one child` (`[92, 98]`, `[102, 108]`), plus a `boolean-operations` scenario |
+| B3, test gap. Intersections of three or more children were untested | `an intersection of three children keeps what all of them share` (`[98, 105]`), plus a scenario |
+| I1: design.md said the goldens cover reversed normals through a union | Reworded. The analytic tests cover it; two-sided shading hides a normal's sign in the images |
+| I2: the difference rule was ambiguous when a cutter stops just short of the base | Owner decision: the base face stays. DESIGN §8, a new D21, the `ray-intervals` spec and scenario, and a test (`a cutter that stops just short of the base leaves its face`) |
+| I3: an overflowing `up` still got "up must not be parallel" | Owner decision: fix it in M4. It now reports "up is too large" at `up`, with a spec scenario, a test, and a D16 note |
+| I4: a stale let-scope clause about "bodies of constructs that are not supported yet" | A MODIFIED "Immutable let bindings with lexical scope" in the `modeling-language` delta drops the clause |
+| I5: the D16 row was out of order in §12 | Moved after D15 |
+
+Seen to fail, in a scratch copy of the working tree with the round 1 changes.
+Each run listed seven files explicitly: `boolean`, `scaled-render`, `camera`,
+`intervals`, `scene`, `language`, and `csg-golden`. The baseline was 97/97.
+
+| Break | Tests that failed |
+| --- | --- |
+| R1: a transform body pushes its leaves into the parent's children (the pre-M4 flattening) | 2/97: `a multi-child transform body inside a Boolean is one child…` and `an intersection of three children…` |
+| R2: an intersection uses only its first two children | 1/97: `an intersection of three children keeps what all of them share` |
+| R3: a near-miss cutter within `ε` opens the base face | 2/97: `a cutter that stops just short of the base leaves its face (DESIGN D21)` and `a cutter that only touches the base changes nothing` |
+| R4: no finiteness check on `up` | 1/97: `an up vector too large to measure is reported as such…` |
+| R5: `ε = 0` | 10/97, including `a floor plate thinner than the supported scale…` |
+
+Gate after the fixes: `npm test` passed 249/249, and
+`openspec validate m4-csg --strict` is valid.
+
 ## Implementation notes
 
 - **Scene tree:** the scene is now `{ camera, root }`. The M3 tests that

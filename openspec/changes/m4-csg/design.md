@@ -76,6 +76,9 @@ two normalized lists:
   base boundary leaves a remainder of length ≤ `ε`, which is dropped,
   removing that base boundary.
 - The union gap-merge rule is unchanged.
+- A cutter that stops short of the base (a gap ≤ `ε`) does not touch it, so
+  the base boundary stays (DESIGN D21, the owner's decision after Critic
+  round 1).
 
 **The difference node** evaluates as
 `subtract(first, children.slice(1).reduce(union, []))`, per the "A minus the
@@ -116,6 +119,8 @@ In `validateCamera`, compute `distance = length(lookAt − position)` once.
   `lookAt`, and skip the up checks, since they depend on the normalized
   view direction.
 - Otherwise the existing checks run.
+- An `up` whose length is not finite reports "up is too large" at `up`, and
+  the parallel check is skipped (added after Critic round 1, per the owner).
 
 Non-finite arithmetic is already an error ("the result is too large"), and
 there is no range check anywhere (D16, best effort).
@@ -134,6 +139,12 @@ largest of 1.6e7 (the camera).
 
 **If either fails,** the implementation stops and the owner decides the
 revision, recording the measured failure. `ε` is not tuned silently.
+
+**Scope (the owner's decision after Critic round 1):** the guarantee covers
+scenes whose dimensions, coordinates, and derived feature sizes stay in the
+supported scale, before and after scaling. `ε` is absolute, so a thinner
+feature can change with scaling. A test records one such case: a floor plate
+that is a sliver at ×1 and real at ×1e5.
 
 ### D-7: Goldens, capture, and tests
 - **Goldens (64×48):**
@@ -188,7 +199,9 @@ revision, recording the measured failure. `ε` is not tuned silently.
 - **[A reversed cutter normal is exposed where a later union re-adds
   material]** → Union keeps the endpoint objects of the boundaries that
   survive, so whichever surface is actually outermost supplies the normal.
-  This is covered by the bored-cube golden, where cutters form a union.
+  The analytic tests check reversed normals directly. The goldens cannot
+  show a normal's sign, because two-sided shading hides it (Critic round 1
+  showed both goldens pass with no reversal at all).
 
 ## Migration Plan
 

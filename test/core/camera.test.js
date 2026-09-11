@@ -125,3 +125,10 @@ test('a camera too far away is reported as such, not as an up-vector error (D16)
 test('a large but finite camera is accepted (D16: no range check)', () => {
   assert.deepEqual(cameraOf('position: [16000000, 0, 0]; lookAt: [0, 0, 0];').diagnostics, []);
 });
+
+test('an up vector too large to measure is reported as such, not as parallel (D16)', () => {
+  const huge = '1' + '0'.repeat(200);
+  const source = `camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; up: [0, ${huge}, ${huge}]; }\n`;
+  const diagnostics = compile(source).diagnostics.map((d) => [d.line, d.column, d.message]);
+  assert.deepEqual(diagnostics, [[1, source.indexOf('up:') + 1, 'up is too large']]);
+});

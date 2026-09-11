@@ -24,6 +24,10 @@ enclosing transforms place it as a whole.
 - **WHEN** the scene is `translate([20, 0, 0]) { intersection { sphere(5); cube(8); } }` and a ray travels along +X from x = -100
 - **THEN** the ray has exactly one interval, `[116, 124]`
 
+#### Scenario: A multi-child transform body is one child
+- **WHEN** the scene is `difference { translate([0, 0, 0]) { cube(10); sphere(8); } cube(4); }` and a ray travels along +X from x = -100
+- **THEN** the ray's intervals are `[92, 98]` and `[102, 108]`: the union of the transform body minus the small cube
+
 ### Requirement: Interval combination
 Source: DESIGN §8 Boolean operations ("Interval combination along a ray").
 
@@ -47,6 +51,10 @@ operation.
 #### Scenario: An intersection keeps what all children share
 - **WHEN** the scene is `intersection { sphere(5); cube(8); }` and a ray travels along +X from x = -100
 - **THEN** the ray has exactly one interval, `[96, 104]`
+
+#### Scenario: An intersection of three children
+- **WHEN** the scene is `intersection { cube(10); sphere(8); translate([3, 0, 0]) { cube(10); } }` and a ray travels along +X from x = -100
+- **THEN** the ray has exactly one interval, `[98, 105]`, which all three children share
 
 ### Requirement: Difference subtracts the union of the later children
 Source: DESIGN §8 Boolean operations ("Multi-child difference", "Self-difference is empty").

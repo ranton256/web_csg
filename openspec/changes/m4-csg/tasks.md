@@ -92,3 +92,13 @@
   - the manual Safari smoke check (performed by the owner)
 - [ ] 7.4 A separate Critic review (`project-critic`) of `main..m4-csg`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.5 Merge into `main`, mark M4 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+
+## 8. Critic round 1 fixes
+
+- [x] 8.1 B1 (owner: scope to derived features): the `ray-intervals` "Scaled scenes render identically" requirement, DESIGN §5, and D7 cover scenes whose dimensions, coordinates, and derived feature sizes stay within the supported scale; a test records the thin-plate case outside it
+- [x] 8.2 B2: a multi-child transform body inside a Boolean is one child (spec scenario and test)
+- [x] 8.3 B3: an intersection of three children (spec scenario and test)
+- [x] 8.4 I2 (owner: the base face stays): DESIGN §8 and the `ray-intervals` spec say a cutter that stops short of the base leaves its boundary; DESIGN D21; a test
+- [x] 8.5 I3 (owner: fix in M4): an `up` whose length overflows reports "up is too large" (`camera.js`, spec scenario, test, D16 note)
+- [x] 8.6 I1, I4, I5: the design.md risk wording; the stale let-scope clause (MODIFIED in the `modeling-language` delta); the D16 row in order in DESIGN §12
+- [ ] 8.7 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
