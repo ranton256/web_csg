@@ -22,8 +22,8 @@ Boolean blocks, take part in the union.
 - **THEN** the ray has exactly one interval, `[90, 110]`
 
 #### Scenario: Order of top-level solids does not matter
-- **WHEN** the default example's sphere is preceded by `sphere(5);`, which lies entirely inside it
-- **THEN** the rendered image is byte-identical to the example without `sphere(5);`
+- **WHEN** a source with a camera and `sphere(radius: 40);` has `sphere(5);`, which lies entirely inside that sphere, added before it
+- **THEN** the rendered image is byte-identical to the source without `sphere(5);`
 
 #### Scenario: Camera inside nested spheres sees the outer exit
 - **WHEN** the camera is at the origin inside both `sphere(5)` and `sphere(10)`, looking at `[1, 0, 0]`

@@ -75,7 +75,7 @@
 - [x] 7.3 `npm run capture -- M6` (the `app` shot on first launch, and one shot per example), then write `docs/progress/M6/README.md`: the ROADMAP "done when" criteria, the gates, test coverage per scenario, the seen-to-fail records, the e2e timings, and the captures
 - [x] 7.4 The owner's full manual pass of DESIGN §8 in Safari, recorded in the README as a checklist (a ROADMAP "done when" criterion)
 - [x] 7.5 A separate Critic review (`project-critic`) of `main..m6-persistence-and-examples`. Fix findings and re-review until `[APPROVED]`
-- [ ] 7.6 Merge into `main`, mark M6 complete in ROADMAP (the first release), and archive with `/opsx:archive`: sync the specs (the new `save-load-and-examples`, and the `editor-preview`, `modeling-language`, `implicit-union`, and `stale-preview` deltas), and refresh any stale Purpose lines
+- [x] 7.6 Merge into `main`, mark M6 complete in ROADMAP (the first release), and archive with `/opsx:archive`: sync the specs (the new `save-load-and-examples`, and the `editor-preview`, `modeling-language`, `implicit-union`, and `stale-preview` deltas), and refresh any stale Purpose lines
 
 ## 8. Critic round 1 fixes
 
