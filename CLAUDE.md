@@ -77,7 +77,7 @@ Verified in M0. Exact rules live in [CONSTRAINTS §1 and §4](CONSTRAINTS.md).
 | Environment / dependencies | Node.js ≥ 22. `npm install && npx playwright install && npm run hooks:install`. Dev dependency: `@playwright/test` only, pinned exactly at `1.63.0`. |
 | Run the app | `npm start` (serves the repo over HTTP; ES modules do not load from `file://`) |
 | Gate | `npm run check` — unit + golden-image tests (`npm test`) then Playwright e2e on Chromium, Firefox, WebKit (`npm run test:e2e`). Must be green before work is done. |
-| Gate enforcement | Pre-commit hook runs `npm test`. The full gate is run by process before every merge, archive, and milestone (no CI until a remote exists). |
+| Gate enforcement | Pre-commit hook runs `npm test`. The full gate is run by process before every merge, archive, and milestone (the project has no CI, by the owner's decision D24). |
 | Focused tests | `node --test path/to/file.test.js` — does not replace the full gate |
 | Verification evidence | `npm run capture -- <milestone>` → `docs/progress/<milestone>/` (add shots to the list in `tools/capture.mjs`), plus a README recording the criteria checked, gate result, and manual Safari smoke check |
 | Golden images | `npm run golden:update` — deliberate use only; review the image diff in the same change |

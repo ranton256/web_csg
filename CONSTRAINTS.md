@@ -143,13 +143,13 @@ src/ui/
   and links these documents and must be kept consistent with them. It does
   not override them.
 - **Git** (D13, agreed 2026-09-10):
-  - The default branch is `main`. No remote exists yet, so there is no CI or
-    pull requests.
+  - The default branch is `main`. No remote exists yet, so there are no pull
+    requests. The project has no CI, by the owner's decision (DESIGN §12 D24).
   - One branch per OpenSpec change, merged into `main` only after the full gate
     (§5) passes and the Critic returns `[APPROVED]` (§6).
   - A committed pre-commit hook (`tools/hooks/pre-commit`, installed by
     `npm run hooks:install`) runs `npm test`. The e2e suite is enforced by
-    this process before merge/archive, not by the hook, until CI exists.
+    this process before merge/archive, not by the hook.
   - Stage specific files; never `git add -A` or `git add .`. Do not commit
     broken or untested code.
 - **Golden images:** reference renders live in `test/golden/` as binary PPM
