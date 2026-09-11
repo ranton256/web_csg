@@ -3,7 +3,7 @@
 
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createStore, needsConfirm, saveFileName } from '../../src/ui/persistence.js';
+import { createStore, needsConfirm, normalizeLineBreaks, saveFileName } from '../../src/ui/persistence.js';
 
 function fakeStorage() {
   const items = new Map();
@@ -25,6 +25,12 @@ test('saveFileName: the last opened file or example name, else model.csg', () =>
   assert.equal(saveFileName(null), 'model.csg');
   assert.equal(saveFileName('part.csg'), 'part.csg');
   assert.equal(saveFileName('primitives.csg'), 'primitives.csg');
+});
+
+test('normalizeLineBreaks: \\r\\n and a lone \\r become \\n; nothing else changes (D28)', () => {
+  assert.equal(normalizeLineBreaks('a\r\nb\rc\nd'), 'a\nb\nc\nd');
+  assert.equal(normalizeLineBreaks('a\r\r\nb'), 'a\n\nb');
+  assert.equal(normalizeLineBreaks('\tsphere(1); // café\n'), '\tsphere(1); // café\n');
 });
 
 test('createStore: the source and baseline are saved exactly, under their keys', () => {

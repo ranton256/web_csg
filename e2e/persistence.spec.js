@@ -94,6 +94,20 @@ test.describe('autosave and first launch', () => {
     await expect(page.locator('#source')).toHaveValue(SPHERE_SOURCE);
   });
 
+  test('an opened file and a chosen example are autosaved: a reload shows them', async ({ page }) => {
+    const prompts = await start(page);
+    await waitForIdle(page);
+    await openFile(page, 'sphere.csg', SPHERE_SOURCE);
+    await reload(page);
+    await waitForIdle(page);
+    await expect(page.locator('#source')).toHaveValue(SPHERE_SOURCE);
+    await chooseExample(page, PRIMITIVES.id);
+    await reload(page);
+    await waitForIdle(page);
+    await expect(page.locator('#source')).toHaveValue(PRIMITIVES.source);
+    expect(prompts.messages).toEqual([]);
+  });
+
   test('an invalid source is restored exactly, with its diagnostics and no stale indicator (D27)', async ({ page }) => {
     await start(page);
     await waitForIdle(page);
@@ -155,7 +169,7 @@ test.describe('Save', () => {
     expect(prompts.messages).toEqual([]);
   });
 
-  test('the save file name: model.csg, then the last example, then the last opened file', async ({ page }) => {
+  test('the save file name: model.csg, then the last example, then the last opened file, and model.csg after a reload', async ({ page }) => {
     const prompts = await start(page);
     await waitForIdle(page);
     expect((await save(page)).name).toBe('model.csg');
@@ -163,6 +177,22 @@ test.describe('Save', () => {
     expect((await save(page)).name).toBe('primitives.csg');
     await openFile(page, 'part.csg', SPHERE_SOURCE);
     expect((await save(page)).name).toBe('part.csg');
+    // The name lasts for the page session only (D26 a).
+    await reload(page);
+    await waitForIdle(page);
+    expect((await save(page)).name).toBe('model.csg');
+    expect(prompts.messages).toEqual([]);
+  });
+
+  test('a Save is remembered across a reload: an example then replaces without a prompt', async ({ page }) => {
+    const prompts = await start(page);
+    await waitForIdle(page);
+    await editAndSettle(page, SPHERE_SOURCE);
+    await save(page);
+    await reload(page);
+    await waitForIdle(page);
+    await chooseExample(page, PRIMITIVES.id);
+    await expect(page.locator('#source')).toHaveValue(PRIMITIVES.source);
     expect(prompts.messages).toEqual([]);
   });
 
@@ -184,6 +214,8 @@ test.describe('Open', () => {
     await openFile(page, 'sphere.csg', SPHERE_SOURCE);
     await expect(page.locator('#source')).toHaveValue(SPHERE_SOURCE);
     await expect(page.locator('#diagnostics li')).toHaveCount(0);
+    // The file input is emptied after each Open, so the same file can be chosen again.
+    await expect(page.locator('#open-file')).toHaveValue('');
     await waitForIdle(page);
     const stats = await imageStats(page);
     expect(await pixelAt(page, Math.floor(stats.width / 2), Math.floor(stats.height / 2))).not.toEqual([...BACKGROUND, 255]);
@@ -193,6 +225,24 @@ test.describe('Open', () => {
     await expect(page.locator('#diagnostics button')).toHaveText([INVALID_DIAGNOSTIC]);
     expect(prompts.messages).toEqual([]);
     expect(page.errors).toEqual([]);
+  });
+
+  test('a file with \\r\\n or lone \\r line breaks opens with \\n line breaks, and then replaces and saves as loaded (D28)', async ({ page }) => {
+    const prompts = await start(page);
+    await waitForIdle(page);
+    for (const [name, text] of [['windows.csg', SPHERE_SOURCE.replace(/\n/g, '\r\n')], ['old-mac.csg', SPHERE_SOURCE.replace(/\n/g, '\r')]]) {
+      await openFile(page, name, text);
+      await expect(page.locator('#source')).toHaveValue(SPHERE_SOURCE);
+      await expect(page.locator('#diagnostics li')).toHaveCount(0);
+      // Unedited since the Open: an example replaces it without a prompt.
+      await chooseExample(page, PRIMITIVES.id);
+      expect(prompts.messages).toEqual([]);
+      // Open again, then Save: the file comes back with \n line breaks.
+      await openFile(page, name, text);
+      const saved = await save(page);
+      expect(saved.bytes.equals(Buffer.from(SPHERE_SOURCE, 'utf8'))).toBe(true);
+    }
+    expect(prompts.messages).toEqual([]);
   });
 
   test('a file that begins with a byte-order mark opens and evaluates with no diagnostics', async ({ page }) => {

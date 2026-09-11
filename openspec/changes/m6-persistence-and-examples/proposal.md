@@ -20,7 +20,8 @@ records it.
 - **Save:** downloads a `.csg` file that contains exactly the editor text,
   valid or not.
 - **Open:** loads a chosen `.csg` file into the editor, which evaluates and
-  renders it as if it had been typed.
+  renders it as if it had been typed. Line breaks become `\n`, as a text area
+  stores them (D28, the owner's decision after Critic round 1).
 - **Examples:** an "Examples…" dropdown lists exactly three examples: Bored
   cube, Primitives, and Boolean operations. Choosing one loads its source.
   - Every example evaluates with no diagnostics, and has a golden image.

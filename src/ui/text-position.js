@@ -12,9 +12,10 @@ const isHighSurrogate = (code) => code >= 0xd800 && code <= 0xdbff;
 const isLowSurrogate = (code) => code >= 0xdc00 && code <= 0xdfff;
 
 // The offset of (line, column), clamped to the end of that line (or of the
-// text, for a line past the end).
+// text, for a line past the end). A byte-order mark at the very start takes no
+// column, as in the lexer (D17), so column 1 of line 1 follows it.
 export function lineColumnToOffset(text, line, column) {
-  let offset = 0;
+  let offset = text.charCodeAt(0) === 0xfeff ? 1 : 0;
   for (let current = 1; current < line; current++) {
     const newline = text.indexOf('\n', offset);
     if (newline === -1) return text.length;

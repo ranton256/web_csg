@@ -13,6 +13,10 @@ export const needsConfirm = (text, baseline) => text !== baseline;
 // The name Save downloads under: the last opened file's or example's name.
 export const saveFileName = (lastName) => lastName ?? 'model.csg';
 
+// Line breaks as the editor's text area stores them: each "\r\n", or lone
+// "\r", becomes "\n" (D28).
+export const normalizeLineBreaks = (text) => text.replace(/\r\n?/g, '\n');
+
 // getStorage returns a Storage-like object ({ getItem, setItem }), or throws
 // when storage is unavailable. Every access is guarded: on any failure, load()
 // returns null and the writes do nothing, so the app runs without autosave.

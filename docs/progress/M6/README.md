@@ -21,12 +21,15 @@ Decisions (DESIGN §12):
   - no autosave without storage.
 - **D27 (the owner, during apply):** the stale indicator stays hidden while
   no valid model exists yet.
+- **D28 (the owner, after Critic round 1):** Open normalizes line breaks to
+  `\n`, as a text area stores them, and that text becomes the last loaded
+  text. Save writes `\n`.
 
 ## ROADMAP "done when"
 
 | Criterion | Evidence | Result |
 | --- | --- | --- |
-| All Save, load, and examples scenarios pass as e2e tests on all three engines | `e2e/persistence.spec.js` (20 tests) and `e2e/editor-preview.spec.js` on Chromium, Firefox, and WebKit; see [Test coverage](#test-coverage) | Pass |
+| All Save, load, and examples scenarios pass as e2e tests on all three engines | `e2e/persistence.spec.js` (23 tests) and `e2e/editor-preview.spec.js` on Chromium, Firefox, and WebKit; see [Test coverage](#test-coverage) | Pass |
 | Every built-in example evaluates with no diagnostics and has a golden image | `test/ui/examples.test.js`: the goldens `example-bored-cube`, `example-primitives`, and `example-boolean-operations` (64×48), reviewed as images | Pass |
 | A full manual pass of DESIGN §8 in Safari is recorded | [Manual Safari pass](#manual-safari-pass-of-design-8) | Pass |
 | Evidence: captures of each built-in example | [Captures](#captures) | Pass |
@@ -49,12 +52,12 @@ shot starts in a fresh page, so it is a first launch.
 
 | Gate | Result |
 | --- | --- |
-| `npm run check < /dev/null` in the working tree | Before the first commit: exit 0 in 70 s, `node --test` 321/321, Playwright 171/171 |
+| `npm run check < /dev/null` in the working tree | Before the first commit: exit 0 in 70 s, `node --test` 321/321, Playwright 171/171. After the Critic round 1 fixes: exit 0 in 70 s, `node --test` 323/323, Playwright 180/180 |
 | `openspec validate m6-persistence-and-examples --strict` | Valid |
 | Every existing golden unchanged | `npm test` before any golden update: only the three new example goldens were missing |
 | Full gate from a fresh checkout | `git clone --branch m6-persistence-and-examples` at `2fc4b26`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 321/321, Playwright 171/171 |
 | Manual Safari pass of DESIGN §8 | Pass, by the owner on 2026-09-11 (see below) |
-| Separate Critic review returns `[APPROVED]` | Pending |
+| Separate Critic review returns `[APPROVED]` | [Round 1](#critic-round-1-rejected-and-the-fixes) at `22c03fe`: rejected (F1, F2). Round 2 pending |
 
 ### e2e run time (design risks, task 5.5)
 
@@ -62,9 +65,11 @@ shot starts in a fresh page, so it is a first launch.
 | --- | --- | --- |
 | `main` (`a2e4731`, the `point-lights` archive) | 108 | 58.7 s |
 | This branch | 171 | 1.2 m in the gate (the whole gate took 70 s); the first full e2e run took 83 s |
+| This branch, after the Critic round 1 fixes | 180 | 1.2 m in the gate (the whole gate took 70 s) |
 
-The 63 new tests are 20 in `persistence.spec.js` and 1 in
-`editor-preview.spec.js`, on three engines. The first launch now renders the
+The 72 new tests are 23 in `persistence.spec.js` and 1 in
+`editor-preview.spec.js`, on three engines (63 before the Critic round 1
+fixes). The first launch now renders the
 bored cube instead of the small M1 sphere.
 
 ## Test coverage
@@ -89,6 +94,12 @@ bored cube instead of the small M1 sphere.
 | First launch text replaces without a prompt | `persistence.spec.js` (the same test) |
 | The confirmation rule survives a reload | `persistence.spec.js`: after a reload, an unedited example still replaces without a prompt, and edited text still asks |
 | An example rebuilds at once (D26 d) | `persistence.spec.js`: on a paused fake clock, the rebuild count rises with no time passing |
+| A loaded file or example is autosaved (Critic round 1, F3) | `persistence.spec.js`: open a file and reload, then choose an example and reload; the editor shows the loaded text each time |
+| A Save is remembered across a reload (F3) | `persistence.spec.js`: edit, Save, reload, then choose an example, with no prompt |
+| The save file name after a reload (F4, D26 a) | `persistence.spec.js`: after `part.csg` and a reload, Save offers `model.csg` |
+| A file with Windows line breaks (F1, D28) | `persistence.spec.js`: `\r\n` and lone-`\r` files open with `\n` line breaks, an example then replaces them without a prompt, and a Save straight after an Open downloads `\n` line breaks. `persistence.test.js`: `normalizeLineBreaks` |
+| The same file can be opened again (F3, the Critic's mutant C) | `persistence.spec.js`: the file input is empty after an Open |
+| Clicking a diagnostic after a leading BOM (F2, D17) | `test/ui/text-position.test.js`: the caret offset skips the mark on line 1, as the lexer's columns do |
 | **`editor-preview`**: the file and example controls | `editor-preview.spec.js`: Open… and Save are visible, labeled, and focusable; the picker shows "Examples…" and is focusable |
 | **`modeling-language`**: Lexical structure (D17) | `test/core/lexer.test.js`: a leading BOM gives the same tokens and positions; a second BOM, or a later one, is named at its position; `é`; a non-breaking space and an em space; U+0007 and U+2061 with no name; comments with any character; all 14 names checked against their code points. The emoji message now includes `(U+1F600)` |
 | **`implicit-union`**: order of top-level solids | `test/core/render.test.js`, on `SPHERE_SOURCE` |
@@ -128,6 +139,37 @@ on all three engines:
 | M9: Open confirms before the file chooser | cancelling the chooser asks nothing; opening over edited text (the chooser never opens after a decline) | Killed |
 | M14: the stale indicator shows when no valid model exists | the invalid restore (D27) | Killed |
 | M15: a load waits for the 300 ms debounce | an example rebuilds at once, on a paused fake clock | Killed |
+
+## Critic round 1: `[REJECTED]`, and the fixes
+
+The Critic reviewed `main..m6-persistence-and-examples` at `22c03fe`, in its
+own fresh clone. `npm test` passed 321/321, `npm run check < /dev/null`
+exited 0 with Playwright at 171/171, and `openspec validate --strict` was
+valid. It rejected the change on its own probes:
+
+| Finding | What the Critic showed | Fix |
+| --- | --- | --- |
+| **F1, blocking (medium):** an opened CRLF file is changed | A text area stores `\r\n` as `\n`, but `load()` kept the raw text as the baseline and the autosave. So the editor never held the file text, choosing an example straight after the Open raised a false "changes will be lost" prompt, and Open then Save turned `\r\n` into `\n`. Its probe failed on all three engines | The owner chose D28: line breaks become `\n`. `load()` normalizes with `normalizeLineBreaks`, and makes the text the editor holds the baseline and the autosaved source. The spec, DESIGN §8, and D28 record it |
+| **F2, blocking (low):** a diagnostic click after a leading BOM lands one character early | The lexer gives the character after a leading BOM column 1, but `lineColumnToOffset` still counted the mark. Its Node pin returned 7 where 8 was expected | `lineColumnToOffset` skips a leading BOM, as the lexer does |
+| **F3, non-blocking (medium):** two behaviors had no test that could fail | Its mutant A (a load does not autosave) and mutant B (Save does not save the baseline) both passed the suite, 20/20 | Two new e2e tests: an opened file and a chosen example survive a reload, and a Save survives a reload. Its informational mutant C (the file input is not emptied) is caught by a new check in the Open test |
+| **F4, non-blocking (low):** the spec omitted D26 (a)'s "for the page session only" | After a reload, Save offers `model.csg`, which the spec did not say | The spec says so, with a scenario, and the file-name e2e test checks it. The DESIGN §4 asset inventory now marks the examples done |
+
+**Seen to fail for the fixes**, in isolated copies with a passing baseline:
+
+| Mutant | Failing tests | Result |
+| --- | --- | --- |
+| R5: `lineColumnToOffset` does not skip a leading BOM (F2) | the leading-BOM caret test (unit baseline 11/11) | Killed |
+| R6: `normalizeLineBreaks` leaves the text unchanged (F1) | the `normalizeLineBreaks` test | Killed |
+
+The e2e mutants ran against `persistence.spec.js` on Chromium, Firefox, and
+WebKit. The baseline was 69 pass, 0 fail, and the run took 294 s:
+
+| Mutant | Failing tests (each on all three engines) | Result |
+| --- | --- | --- |
+| R1: a load does not autosave the source (the Critic's A) | an opened file and a chosen example are autosaved | Killed |
+| R2: Save does not save the baseline (the Critic's B) | a Save is remembered across a reload | Killed |
+| R3: the file input is not emptied after an Open (the Critic's C) | Open loads a .csg file (the emptied-input check) | Killed |
+| R4: the baseline is the raw file text (F1) | the `\r\n` and lone-`\r` file test (D28) | Killed |
 
 ## What the implementation surfaced
 

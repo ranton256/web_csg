@@ -23,6 +23,18 @@ test('an emoji before the column counts as one column but two code units', () =>
   assert.equal(text[offset], '0');
 });
 
+test('a leading byte-order mark takes no column, as in the lexer (D17)', () => {
+  const bom = String.fromCodePoint(0xfeff);
+  const text = `${bom}sphere(0);\ncube(1);`;
+  // The lexer reports sphere(0)'s radius at 1:8, which is offset 8 here.
+  assert.equal(lineColumnToOffset(text, 1, 8), 8);
+  assert.equal(text[lineColumnToOffset(text, 1, 8)], '0');
+  assert.equal(lineColumnToOffset(text, 1, 1), 1);
+  // The mark (offset 0), sphere(0); (1 to 10), and the line feed (11): line 2 starts at 12.
+  assert.equal(lineColumnToOffset(text, 2, 1), 12, 'later lines are unaffected');
+  assert.equal(lineColumnToOffset(`a${bom}b`, 1, 3), 2, 'a mark that is not first is a character');
+});
+
 test('positions past the end are clamped', () => {
   assert.equal(lineColumnToOffset('ab\ncd', 1, 99), 2);
   assert.equal(lineColumnToOffset('ab\ncd', 9, 1), 5);

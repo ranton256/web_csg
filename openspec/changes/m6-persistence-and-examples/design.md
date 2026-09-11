@@ -101,10 +101,13 @@ browser.
   `store.saveSource(source.value)`. It is synchronous and cheap, so a reload
   right after typing keeps the edit.
 - **`load(text, name)`,** for an Open or an example:
-  1. set `source.value`, and put the caret and scroll at the start;
+  1. set `source.value` to the text with each `\r\n`, or lone `\r`,
+     normalized to `\n` (D28, the owner's decision after Critic round 1),
+     and put the caret and scroll at the start;
   2. cancel any pending debounced rebuild, then update the gutter and
      rebuild at once;
-  3. set the baseline to `text`, and `lastName` to `name`;
+  3. set the baseline to the text the editor now holds (`source.value`),
+     and `lastName` to `name`;
   4. save both the source and the baseline.
 - **Open:**
   - The toolbar button clicks a hidden

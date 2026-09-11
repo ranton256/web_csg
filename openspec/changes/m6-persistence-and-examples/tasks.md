@@ -76,3 +76,12 @@
 - [x] 7.4 The owner's full manual pass of DESIGN §8 in Safari, recorded in the README as a checklist (a ROADMAP "done when" criterion)
 - [ ] 7.5 A separate Critic review (`project-critic`) of `main..m6-persistence-and-examples`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.6 Merge into `main`, mark M6 complete in ROADMAP (the first release), and archive with `/opsx:archive`: sync the specs (the new `save-load-and-examples`, and the `editor-preview`, `modeling-language`, `implicit-union`, and `stale-preview` deltas), and refresh any stale Purpose lines
+
+## 8. Critic round 1 fixes
+
+- [x] 8.1 F1 (blocking; the owner chose D28): Open normalizes line breaks to `\n` (`normalizeLineBreaks` in `persistence.js`), and `load()` makes the text the editor holds the baseline and the autosaved source, so a CRLF file gives no false prompt. The spec, DESIGN §8, and D28 record it. Tests: `persistence.test.js`, and an e2e test with `\r\n` and lone `\r` files (open, then an example with no prompt; open, then Save gives `\n`)
+- [x] 8.2 F2 (blocking): `lineColumnToOffset` skips a leading byte-order mark, as the lexer does (D17), so clicking a diagnostic on line 1 lands on its column. Test: `test/ui/text-position.test.js`
+- [x] 8.3 F3: e2e tests that an opened file and a chosen example are autosaved (a reload shows them), and that a Save is remembered across a reload; the Open test checks the file input is emptied (the Critic's mutant C)
+- [x] 8.4 F4: the spec says the save file name lasts for the page session (D26 a), with a scenario; the file-name e2e test checks `model.csg` after a reload. DESIGN §4 asset inventory: the examples are done
+- [x] 8.5 Seen to fail: the Critic's mutants A (no autosave on a load), B (Save does not save the baseline), and C (the file input is not emptied); a raw-text baseline in `load()` (F1); and no BOM skip in `lineColumnToOffset` (F2)
+- [ ] 8.6 The full gate and a fresh clone at the new head; the README Critic round 1 section; a new Critic review

@@ -7,7 +7,7 @@ import { attachDivider, clampEditorWidth } from './divider.js';
 import { EXAMPLES, FIRST_LAUNCH_SOURCE } from './examples.js';
 import { HELP_SECTIONS } from './help-content.js';
 import { indentEdit } from './indent.js';
-import { createStore, needsConfirm, saveFileName } from './persistence.js';
+import { createStore, needsConfirm, normalizeLineBreaks, saveFileName } from './persistence.js';
 import { startRenderJob } from './render-job.js';
 import { SETTINGS } from './settings.js';
 import { lineColumnToOffset, lineCount } from './text-position.js';
@@ -235,18 +235,21 @@ const CONFIRM_REPLACE = 'Replace the editor text? Changes since the last Open, S
 const mayReplace = () => !needsConfirm(source.value, baseline) || window.confirm(CONFIRM_REPLACE);
 
 // Shows text as a new document, rebuilt at once, and makes it the last loaded
-// text. Setting the value starts a new undo history.
+// text. Line breaks become "\n", as the text area stores them (D28), so the
+// baseline is exactly the text the editor holds. Setting the value starts a
+// new undo history.
 function load(text, name) {
-  source.value = text;
+  source.value = normalizeLineBreaks(text);
+  const loaded = source.value;
   source.setSelectionRange(0, 0);
   source.scrollTop = 0;
   rebuildDebouncer.cancel();
   updateGutter();
   rebuild();
-  baseline = text;
+  baseline = loaded;
   lastName = name;
-  store.saveSource(text);
-  store.saveBaseline(text);
+  store.saveSource(loaded);
+  store.saveBaseline(loaded);
 }
 
 // Open asks only once a file is chosen, so cancelling the chooser changes

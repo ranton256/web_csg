@@ -83,9 +83,9 @@ spec-driven development that students read, rebuild, and extend.
 
 | Asset | Dimensions | Format | Status | Role |
 | ----- | ---------- | ------ | ------ | ---- |
-| Example: bored cube | N/A | Modeling-language source | CREATE | The `vision.md` example: a cube minus three orthogonal cylinders (D6) |
-| Example: primitives | N/A | Modeling-language source | CREATE | Shows `sphere`, `cube`, `box`, and `cylinder` side by side (D6) |
-| Example: Boolean operations | N/A | Modeling-language source | CREATE | Shows `union`, `intersection`, and `difference` of the same two solids (D6) |
+| Example: bored cube | N/A | Modeling-language source | Done (M6) | The `vision.md` example: a cube minus three orthogonal cylinders (D6) |
+| Example: primitives | N/A | Modeling-language source | Done (M6) | Shows `sphere`, `cube`, `box`, and `cylinder` side by side (D6) |
+| Example: Boolean operations | N/A | Modeling-language source | Done (M6) | Shows `union`, `intersection`, and `difference` of the same two solids (D6) |
 
 No image, font, or audio assets are currently required.
 
@@ -644,7 +644,7 @@ Scenario: Save downloads the source as a .csg file
 Scenario: Open loads a .csg file
   Given a .csg text file on disk
   When the user chooses Open and selects it
-  Then the editor contains exactly the file's text
+  Then the editor contains exactly the file's text, with each line break as \n (D28)
   And the source is evaluated and rendered as if it had been typed
 
 Scenario: Built-in examples
@@ -841,6 +841,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D25~~ | **Resolved 2026-09-11 (`point-lights`; point lights un-parked from D8 at the owner's request).** The owner's decisions: (a) a `light` block has exactly one of `direction` (a directional light) or `position` (a point light); both kinds share the limit of 4, and there is no new reserved word. (b) No falloff: a point light contributes its `intensity` at any distance, so a scene scaled together with its lights renders the same (measured byte-identical at ×1e-3 and ×1e5, 64×48). **The writer's rules, accepted by the owner (2026-09-11, after the Safari check):** (c) no occlusion, because shadows stay parked: a light contributes wherever `N·L > 0`, so a light inside a closed solid leaves its outside with ambient light only; (d) a point light contributes nothing at a hit point within `ε` of its position, or at a distance too large to compute (best effort, D16); (e) a block with both is reported at the second of the two, as "light block cannot have both `direction` and `position`", and a block with neither as "light block is missing `direction` or `position`", which replaces "missing `direction`". Recorded in §8 Lighting and shading and the `lighting-and-shading` spec. | — | — |
 | ~~D26~~ | **Resolved 2026-09-11 (M6; the owner chose the header toolbar and the browser's native `confirm()` prompt; the rest are the writer's defaults, accepted by the owner after the M6 Safari pass):** (a) Save names the file after the last opened file, else the last loaded example (`bored-cube.csg`, `primitives.csg`, or `boolean-operations.csg`), else `model.csg`; the name is kept for the page session only. (b) The baseline, the text of the last Open, Save, or example load, is saved with the source, so a reload does not change whether a replacement asks; on first launch it is the bored cube. (c) Open asks only after a file is chosen, so cancelling the chooser never prompts. (d) An Open or an example rebuilds at once, with no 300 ms debounce. (e) When `localStorage` cannot be used, the app runs without autosave and reports no error. Recorded in §8 Save, load, and examples and the `save-load-and-examples` spec. | — | — |
 | ~~D27~~ | **Resolved 2026-09-11 (owner, during M6):** the stale indicator says the preview shows the last valid model, so it stays hidden while no valid model exists yet: for example, when the saved source restored on reload is invalid. The preview then shows no model, and the diagnostics list the errors; the first valid rebuild renders as usual. Recorded in §8 Invalid edits keep the last valid preview and the `stale-preview` spec. | — | — |
+| ~~D28~~ | **Resolved 2026-09-11 (owner, after M6 Critic round 1):** a browser text area stores every line break as `\n`, so Open puts a file's text in the editor with each `\r\n`, or lone `\r`, as `\n`. That normalized text becomes the last loaded text, so no false confirmation follows. Save writes the editor text, so a file with Windows line breaks comes back with `\n`. The language already treats `\r\n` as one line break, so diagnostics do not change. Recorded in §8 Save, load, and examples and the `save-load-and-examples` spec. | — | — |
 | ~~D17~~ | **Resolved 2026-09-11 (owner, in the D17 interview before M6):** identifiers stay ASCII letters, digits, and `_`, and whitespace stays the ASCII space, tab, and line-break characters, so `é` and a non-breaking space remain errors. One U+FEFF at the very start of the source is skipped and takes no column; anywhere else it is an error. Comments may contain any character. An unexpected character's diagnostic names it: `'$'` for visible ASCII, `'é' (U+00E9)` for visible non-ASCII, and `U+XXXX` for an invisible character (categories Zs, Zl, Zp, Cc, Cf), plus a name for 14 common ones, for example `U+00A0 (no-break space)` and `U+FEFF (byte-order mark)`. Recorded in the `modeling-language` spec and §8 Modeling language by M6. | — | — |
 ## Optional features (parked)
 

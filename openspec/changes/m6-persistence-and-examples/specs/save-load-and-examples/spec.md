@@ -23,6 +23,10 @@ reported to the user, and no page error occurs.
 - **WHEN** the user edits the source and then reloads the page in the same browser
 - **THEN** the editor contains exactly the edited source, and once rendering finishes the preview shows it
 
+#### Scenario: A loaded file or example is autosaved
+- **WHEN** the user opens a file, or chooses an example, and then reloads the page
+- **THEN** the editor contains the loaded text
+
 #### Scenario: An invalid source is restored with its diagnostics
 - **WHEN** the edited source has an error, and the page is reloaded
 - **THEN** the editor contains exactly that source, and the diagnostics list reports the error
@@ -52,8 +56,12 @@ The file name SHALL be:
   `primitives.csg`, or `boolean-operations.csg`);
 - otherwise, `model.csg`.
 
+The name SHALL be kept for the page session only: after a reload, Save uses
+`model.csg` until a file is opened or an example is loaded (D26 a).
+
 After a Save, the saved text SHALL count as the last loaded text for the
-confirmation rule.
+confirmation rule, and it is saved with the source, so this holds after a
+reload too.
 
 #### Scenario: Save downloads exactly the editor text
 - **WHEN** the editor contains any text, valid or not, including an invalid source, and the user chooses Save
@@ -63,19 +71,34 @@ confirmation rule.
 - **WHEN** the user saves on first launch, then after choosing the Primitives example, then after opening a file named `part.csg`
 - **THEN** the downloaded files are named `model.csg`, `primitives.csg`, and `part.csg` respectively
 
+#### Scenario: The save file name after a reload
+- **WHEN** the user opens a file named `part.csg`, reloads the page, and chooses Save
+- **THEN** the downloaded file is named `model.csg`
+
+#### Scenario: A Save is remembered across a reload
+- **WHEN** the user edits the source, saves it, reloads the page, and chooses an example
+- **THEN** the example replaces the text without a confirmation prompt
+
 #### Scenario: Saved text replaces without a prompt
 - **WHEN** the user edits the source, saves it, and then chooses an example
 - **THEN** the example replaces the text without a confirmation prompt
 
 ### Requirement: Open loads a file
-Source: DESIGN §8 Save, load, and examples ("Open loads a .csg file"); §12 D6, D17, and D26.
+Source: DESIGN §8 Save, load, and examples ("Open loads a .csg file"); §12 D6, D17, D26, and D28.
 
 The "Open…" button SHALL let the user choose a file (`.csg` files are
 offered). The chosen file SHALL be read as UTF-8 text. Subject to the
-confirmation rule, the editor SHALL then contain exactly that text, which is
-evaluated and rendered at once, as if it had been typed. When the user
-cancels the file chooser, nothing SHALL change, and no confirmation SHALL be
-asked.
+confirmation rule, the editor SHALL then contain exactly that text, except
+that each line break (`\r\n`, or a lone `\r`) becomes `\n`, as a text area
+stores it (D28). That text SHALL be evaluated and rendered at once, as if it
+had been typed, and it becomes the last loaded text. When the user cancels
+the file chooser, nothing SHALL change, and no confirmation SHALL be asked.
+The same file MAY be chosen again.
+
+#### Scenario: A file with Windows line breaks
+- **WHEN** the selected file has `\r\n` line breaks
+- **THEN** the editor contains its text with `\n` line breaks, and choosing an example straight afterwards replaces it without a confirmation prompt
+- **AND** a Save straight after the Open downloads the text with `\n` line breaks
 
 #### Scenario: Open loads a .csg file
 - **WHEN** the user chooses Open and selects a `.csg` file
