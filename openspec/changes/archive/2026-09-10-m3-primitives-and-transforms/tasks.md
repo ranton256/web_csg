@@ -59,7 +59,7 @@
 - [x] 8.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
 - [x] 8.3 `npm run capture -- M3` (`app`, `stale`, `primitives`), then write `docs/progress/M3/README.md`: each M3 "done when" criterion with its evidence, scenario coverage, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
 - [x] 8.4 A separate Critic review (`project-critic`) of `main..m3-primitives-and-transforms`. Fix findings and re-review until `[APPROVED]`
-- [ ] 8.5 Merge into `main`, mark M3 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+- [x] 8.5 Merge into `main`, mark M3 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
 
 ## 9. Critic round 1 fixes
 

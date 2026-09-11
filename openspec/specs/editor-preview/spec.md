@@ -74,6 +74,8 @@ A vertical divider between the editor and the preview SHALL set their widths:
 - **Keyboard:** the divider is focusable, and ArrowLeft and ArrowRight move it
   16 px.
 - **Limits:** the editor and the preview are each kept at least 240 px wide.
+  When the window is too narrow for both minimums, the editor keeps its
+  240 px and the preview gets the remaining width.
 
 Every change of the preview's size, from the divider or the window, SHALL be
 handled by the resize rule in `live-rebuild`.
@@ -89,3 +91,7 @@ handled by the resize rule in `live-rebuild`.
 #### Scenario: Keyboard control
 - **WHEN** the divider has focus and ArrowRight is pressed twice
 - **THEN** the editor is 32 px wider
+
+#### Scenario: A window too narrow for both minimums
+- **WHEN** the window is 400 px wide
+- **THEN** the editor is 240 px wide, and the preview takes the rest of the width beside the 6 px divider

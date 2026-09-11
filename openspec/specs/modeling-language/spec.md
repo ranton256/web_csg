@@ -84,7 +84,7 @@ except blocks, which end with `}`.
 
 #### Scenario: The vision example parses
 - **WHEN** the bored-cube source from `vision.md` is compiled
-- **THEN** there is no syntax error. The only diagnostics say that `difference`, `cube`, `union`, `cylinder`, and `rotate` are not supported yet
+- **THEN** there is no syntax error. The only diagnostics say that `difference` and `union` are not supported yet
 
 ### Requirement: Expressions
 Source: DESIGN §8 Modeling language (vectors, arithmetic, precedence).
@@ -161,7 +161,8 @@ also contain `let` statements.
 Source: DESIGN §5 (maximum nesting depth; decisions D15 and D18).
 
 Expressions and block bodies SHALL nest at most 100 levels, counting each
-unary minus, each vector bracket, each parenthesis, and each transform or
+unary minus, each vector bracket, each parenthesis (including the
+parentheses around a call's or transform's arguments), and each transform or
 Boolean body. Nesting deeper than that SHALL be a syntax error at the token
 that exceeds the limit. Chains of binary operators at the same level (such as
 `1 + 1 + … + 1`) are not nesting and SHALL be accepted at any length.
@@ -187,6 +188,10 @@ rather than crash.
 #### Scenario: Long operator chains are not nesting
 - **WHEN** the source contains `let a = 1` followed by 100,000 repetitions of ` + 1` and `;`
 - **THEN** it compiles without a nesting diagnostic or a crash, and `a` is 100001
+
+#### Scenario: Argument parentheses count as a level
+- **WHEN** the source contains `sphere(` followed by 99 minus signs and `1);`, and separately `sphere(` followed by 100 minus signs and `1);`
+- **THEN** the first has no nesting diagnostic, and the second is a syntax error at the 100th `-` saying expressions are nested too deeply
 
 ### Requirement: Immutable let bindings with lexical scope
 Source: DESIGN §8 Modeling language.
@@ -242,24 +247,9 @@ A positional argument after a named one SHALL be reported at that argument.
 - **WHEN** the source contains `sphere();`, or `sphere(1, radius: 2);`, or `sphere(r: 5);`
 - **THEN** a diagnostic identifies, respectively, the missing parameter `radius`, the duplicated parameter `radius`, or the unknown parameter `r`
 
-### Requirement: Constructs not yet supported
-Source: ROADMAP milestone order (DESIGN §8 features delivered in M3–M6).
-
-The constructs `cube`, `box`, `cylinder`, `translate`, `rotate`, `scale`,
-`union`, `intersection`, `difference`, `light`, and `material` SHALL parse
-fully. The evaluator SHALL report a diagnostic at each one's keyword saying it
-is not supported yet. Their contents SHALL still be checked, so every other
-error in them is also reported: argument and property expressions (names,
-arithmetic), let scopes in bodies, and the empty-body rule. They SHALL NOT
-crash or be ignored.
-
-#### Scenario: A later primitive is rejected clearly
-- **WHEN** the source contains `cube(10);` at line 5, column 1
-- **THEN** a diagnostic at line 5, column 1 says `cube` is not supported yet
-
-#### Scenario: Contents of an unsupported construct are still checked
-- **WHEN** the source contains `union { sphere(q); }` and `cube(1 + [1, 2, 3]);`
-- **THEN** diagnostics say `union` and `cube` are not supported yet, `q` is undeclared, and `+` has invalid operand kinds
+#### Scenario: Cylinder arguments in any order when named
+- **WHEN** one source contains `cylinder(12, 62);` and another `cylinder(height: 62, radius: 12);`, otherwise identical
+- **THEN** they produce the same scene
 
 ### Requirement: Diagnostics
 Source: DESIGN §8 Modeling language (diagnostics).
@@ -288,3 +278,22 @@ with no solids.
 #### Scenario: Camera-only source is valid
 - **WHEN** a source contains only a valid camera block
 - **THEN** there are no diagnostics, and the scene has no solids
+
+### Requirement: Booleans, lights, and materials are not supported yet
+Source: ROADMAP milestone order (DESIGN §8 features delivered in M4–M5).
+
+The constructs `union`, `intersection`, `difference`, `light`, and `material`
+SHALL parse fully. The evaluator SHALL report a diagnostic at each one's
+keyword saying it is not supported yet. Their contents SHALL still be
+checked, so every other error in them is also reported: property and
+argument expressions (names, arithmetic), let scopes in bodies, the
+empty-body rule, and the primitives and transforms inside them. They SHALL
+NOT crash or be ignored.
+
+#### Scenario: A Boolean block is rejected clearly
+- **WHEN** the source contains `union { sphere(1); }` at line 5, column 1
+- **THEN** a diagnostic at line 5, column 1 says `union` is not supported yet
+
+#### Scenario: Contents of an unsupported construct are still checked
+- **WHEN** the source contains `union { sphere(q); }` and `material { color: 1 + [1, 2, 3]; }`
+- **THEN** diagnostics say `union` and `material` are not supported yet, `q` is undeclared, and `+` has invalid operand kinds
