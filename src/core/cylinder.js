@@ -2,6 +2,7 @@
 // x² + y² ≤ radius², z ∈ [-height/2, height/2] (DESIGN §8 Primitives).
 
 import { EPSILON } from './constants.js';
+import { length } from './vec3.js';
 
 // Returns [] or [{ in, out }] with local outward normals: (x, y, 0)/radius on
 // the side, (0, 0, ±1) on the caps. The direction need not be unit length;
@@ -12,6 +13,9 @@ export function intersectCylinder(radius, height, origin, direction, primitive) 
   const [ox, oy, oz] = origin;
   const [dx, dy, dz] = direction;
   const half = height / 2;
+  // A ray along the side line or in a cap plane is a hit (closed solids, D20).
+  // The check allows ε in world units, which is ε·|direction| here.
+  const tolerance = EPSILON * length(direction);
 
   // Side: (ox + t·dx)² + (oy + t·dy)² = radius²
   let sideIn = -Infinity;
@@ -19,7 +23,8 @@ export function intersectCylinder(radius, height, origin, direction, primitive) 
   const a = dx * dx + dy * dy;
   if (a === 0) {
     // Parallel to the axis: inside the side for all t, or never.
-    if (ox * ox + oy * oy > radius * radius) return [];
+    const reach = radius + tolerance;
+    if (ox * ox + oy * oy > reach * reach) return [];
   } else {
     const b = ox * dx + oy * dy;
     const c = ox * ox + oy * oy - radius * radius;
@@ -34,7 +39,7 @@ export function intersectCylinder(radius, height, origin, direction, primitive) 
   let capIn = -Infinity;
   let capOut = Infinity;
   if (dz === 0) {
-    if (oz < -half || oz > half) return [];
+    if (oz < -half - tolerance || oz > half + tolerance) return [];
   } else {
     capIn = (-half - oz) / dz;
     capOut = (half - oz) / dz;

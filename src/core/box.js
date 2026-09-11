@@ -2,6 +2,7 @@
 // the local origin (DESIGN §8 Primitives). A cube is a box with equal sides.
 
 import { EPSILON } from './constants.js';
+import { length } from './vec3.js';
 
 const axisNormal = (axis, sign) => [0, 1, 2].map((i) => (i === axis ? sign : 0));
 
@@ -9,6 +10,10 @@ const axisNormal = (axis, sign) => [0, 1, 2].map((i) => (i === axis ? sign : 0))
 // not be unit length; t is the caller's world distance. On a tie between
 // slabs (an edge or corner), the lowest axis supplies the normal.
 export function intersectBox(size, origin, direction, primitive) {
+  // A ray lying in a face plane is a hit (closed solids, D20). The check allows
+  // ε in world units, which is ε·|direction| here, so the rounding of a
+  // placement cannot turn an in-face ray into a miss.
+  const tolerance = EPSILON * length(direction);
   let tIn = -Infinity;
   let tOut = Infinity;
   let inAxis = -1;
@@ -20,7 +25,7 @@ export function intersectBox(size, origin, direction, primitive) {
     const d = direction[axis];
     if (d === 0) {
       // Parallel to this slab: inside it for all t, or never.
-      if (o < -half || o > half) return [];
+      if (o < -half - tolerance || o > half + tolerance) return [];
       continue;
     }
     let t0 = (-half - o) / d;

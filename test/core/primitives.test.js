@@ -83,6 +83,10 @@ test('cylinder: the side wins an exact tie with a cap (a rim hit)', () => {
   const [hit] = intersectCylinder(5, 10, [-10, 0, -10], [1, 0, 1], null);
   assert.equal(hit.in.t, 5);
   assert.deepEqual(clean(hit.in.normal), [-1, 0, 0]);
+  // Leaving from the center, x = 5 and z = 5 are both reached at t = 5 exactly.
+  const [exit] = intersectCylinder(5, 10, [0, 0, 0], [1, 0, 1], null);
+  assert.equal(exit.out.t, 5);
+  assert.deepEqual(clean(exit.out.normal), [1, 0, 0]);
 });
 
 test('cylinder: a non-unit local direction still yields world t', () => {

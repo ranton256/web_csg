@@ -69,3 +69,11 @@
 - [x] 9.4 `test/core/primitives.test.js`: the box corner tie takes the lowest axis (`[-1, 0, 0]` in, `[1, 0, 0]` out), and an exact rim tie gives the cylinder's side normal
 - [x] 9.5 `test/core/language.test.js`: the DESIGN §8 cylinder argument examples (positional after named, duplicate, missing)
 - [x] 9.6 Seen to fail: each new test fails against its mutant in a worktree, with the test files listed explicitly; recorded in the README
+
+## 10. Critic round 2 fixes
+
+- [x] 10.1 D20 tolerance (owner decision): the in-face checks in `src/core/box.js` and `src/core/cylinder.js` allow `ε` in world units (`ε·|d|` locally); DESIGN D20 and §8 amended; design D-3 updated
+- [x] 10.2 `test/core/scene.test.js`: in-face rays of translated solids hit (box face, cylinder cap, cylinder side line); rays beyond `ε` miss, at scale 1, 1000, and 0.001
+- [x] 10.3 The `ray-intervals` delta spec carries D20: a MODIFIED "Closed intervals with normals and the ε length rule" with in-face, translated, and beyond-`ε` scenarios
+- [x] 10.4 `test/core/primitives.test.js`: the exit-rim tie gives the side normal
+- [ ] 10.5 Seen to fail for the round 2 tests; the full gate and a fresh clone at the new head; recorded in the README

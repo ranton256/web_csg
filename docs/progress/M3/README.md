@@ -34,7 +34,7 @@ change:
 | --- | --- |
 | `primitives` | `test/core/primitives.test.js`: box at the origin with endpoint normals, top-down box, parallel rays, touching an edge misses, a ray in a face plane is a hit (D20), the corner tie takes the lowest axis, non-unit direction; cylinder cap hit and normals, side hit, above the cap, side tangent, parallel to the axis outside the radius, along the side line and in either cap plane is a hit (D20), a slanted ray from side to cap, the side wins an exact rim tie, non-unit direction; the sphere's general quadratic. `test/core/language.test.js`: dimension kinds and positivity for cube, box, and cylinder, missing and extra arguments. `test/core/scene.test.js`: a cube renders exactly as the equal-sided box |
 | `transforms` | `test/core/transform.test.js`: exact sine and cosine; the three D4 direction scenarios plus order checks (X before Y, X before Z, Y before Z); exact 90°, 180°, and −90°; composition order; the `toLocal` round trip with an unnormalized direction; normals at unit length. `test/core/scene.test.js`: translated sphere (x = 9), `scale(2) { sphere(3); }` entering at x = −6, nested translate/rotate occupying `[9, 11] × [−2, 2] × [−1, 1]`, and a translate nested inside a rotate (`[109, 111]`) or a scale (`[118, 122]`) applied first. `test/core/language.test.js`: exactly one positional argument (D19), argument kinds, scale > 0, and an invalid transform whose body is still checked |
-| `ray-intervals` | `test/core/scene.test.js`: a scaled solid reports world distances `[90, 110]`; a rotated box's world normal `[0, −1, 0]` at y = −1, unit length; a rotated cylinder capped along its new axis |
+| `ray-intervals` | `test/core/scene.test.js`: a scaled solid reports world distances `[90, 110]`; a rotated box's world normal `[0, −1, 0]` at y = −1, unit length; a rotated cylinder capped along its new axis; D20 in-face rays of translated solids are hits (box face `[99, 101]`, cylinder cap and side line `[95, 105]`); rays beyond `ε` miss at scale 1, 1000, and 0.001. `test/core/primitives.test.js`: in-face rays at the origin (box face, cylinder side line and both caps); the tangent ray misses (M1's `sphere` tests) |
 | `implicit-union` | `test/core/scene.test.js`: several children of a transform are unioned (`[95, 105]`); the transform applies to the whole union (`[115, 130]`) |
 | `modeling-language` | `test/core/language.test.js`: the vision example reports only `difference` and `union`; Booleans, `light`, and `material` rejected at the keyword with their contents checked; primitives inside an unsupported Boolean checked; cylinder positional and named equivalence; the DESIGN §8 cylinder argument errors (positional after named, duplicate `radius`, missing `height`). `test/core/parser.test.js`: argument parentheses count as a nesting level (99 pass; 100 fail at column 107) |
 | `editor-preview` | `e2e/editor-preview.spec.js`: at a 400 px window the editor keeps 240 px and the preview gets the rest |
@@ -71,7 +71,7 @@ for test gaps only. No `src` file changed in the fix.
 | Composing a `translate` as the parent (`compose(translation(value), context.placement)`) survived: no test nested a translate inside a rotate or scale | `a translate nested inside a rotate or scale is applied first` (`scene.test.js`) |
 | The rotation `Ry·Rz·Rx` survived: nothing pinned Y before Z | The Y-before-Z assertion in `rotation components apply X first, then Y, then Z`; the table above is corrected |
 | tasks.md 3.3 claimed box-face tangent tests that did not exist, and DESIGN did not settle a ray lying in a face | The owner chose closed solids (DESIGN D20, with the §8 wording clarified). New tests cover rays in a box face plane, along the cylinder side line, and in either cap plane. tasks.md 3.3 now describes the real tests |
-| The tie-breaks in design D-3 and tasks 3.2 were untested | The box corner tie (lowest axis, in and out), and an exact rim tie (direction `[1, 0, 1]` from `[-10, 0, -10]`, both bounds at t = 5 exactly) that gives the side normal |
+| The tie-breaks in design D-3 and tasks 3.2 were untested | The box corner tie (lowest axis, in and out), and an exact rim tie at entry (direction `[1, 0, 1]` from `[-10, 0, -10]`, both bounds at t = 5 exactly) that gives the side normal. Round 2 found that the exit rim tie was still untested |
 | Informational: the DESIGN §8 cylinder argument examples were untested | `cylinder argument errors (DESIGN §8 examples)` (`language.test.js`) |
 
 Seen to fail, in a scratch worktree of `a39cbc2` with the four updated test
@@ -91,6 +91,41 @@ Each mutation was reverted with `git checkout` before the next.
 
 Gate after the fixes: `npm run check < /dev/null` in the working tree exits
 0, with `node --test` at 208/208 and Playwright at 69/69.
+
+## Critic round 2: `[REJECTED]`, and fixes
+
+The Critic reviewed `21cdee4`. It confirmed every round 1 fix, and 15 of its
+own extra mutants were caught. It ran the gates, including a fresh clone at
+`21cdee4`: 208/208 and 69/69.
+
+| Finding | Fix |
+| --- | --- |
+| Medium: D20 failed for translated solids. In `translate([0, 0.3, 0]) { box([2, 0.2, 2]); }` the face is at world y = 0.4, but its local offset is `0.10000000000000003`, so an in-face ray missed. The same happened with a translated cylinder cap | The owner chose an `ε` tolerance (DESIGN D20 amended). `box.js` and `cylinder.js` allow `ε` in world units, which is `ε·\|d\|` locally, in the parallel-ray checks. New scene tests: translated box face, cylinder cap, and cylinder side line are hits; rays `1e-5` beyond miss; at scale 1000 and 0.001, `5e-7` beyond is a hit and `2e-6` beyond a miss |
+| Medium: D20 was missing from the delta specs | The `ray-intervals` delta now has a MODIFIED "Closed intervals with normals and the ε length rule", with the M1 tangent scenario kept and scenarios for box faces, the cylinder side line and caps, translated solids, and rays beyond `ε` |
+| Low: the exit rim tie was untested (mutant `sideOut < capOut` survived) | A second assertion in the rim-tie test: from the center along `[1, 0, 1]`, the exit at t = 5 has the side normal `[1, 0, 0]` |
+| Informational: the fresh-checkout row was for `0cbd591`; stale Purpose lines in the main `primitives` and `implicit-union` specs; ROADMAP backlog and task 7.2 | The fresh clone is re-run at the new head (above). The Purpose lines are refreshed at archive. ROADMAP and 7.2 are closed before the merge |
+
+Seen to fail, in a scratch worktree of `21cdee4`. Each run lists
+`scene.test.js` and `primitives.test.js` (26 tests). The baseline, with
+the new `src` and the new tests, was 64/64 across `scene`, `primitives`,
+`transform`, `language`, `primitives-golden`, and `render-golden`.
+
+| Mutant | Failed |
+| --- | --- |
+| M: the reviewed `src` at `21cdee4`, with the new tests | 2/26: `D20 holds for placed solids…`, `the D20 tolerance is ε in world units…` |
+| N1 and N2: the tolerance is `ε` in local units (box; cylinder) | 1/26 each: `the D20 tolerance is ε in world units…` |
+| O1 and O2: the tolerance is scaled the wrong way, `ε / \|d\|` (box; cylinder) | 1/26 each: the same test |
+| P1: open box faces (shrunk by the tolerance) | 3/26: the box in-face test at the origin, and both D20 scene tests |
+| P2: open cylinder caps | 3/26: the cylinder in-face test at the origin, and both D20 scene tests |
+| P3: open cylinder side line | 2/26: the cylinder in-face test at the origin, and `D20 holds for placed solids…` |
+| Q1: no tolerance on the cylinder side only | 1/26: `D20 holds for placed solids…` |
+| Q2: no tolerance on the cylinder caps only | 2/26: both D20 scene tests |
+| R: the tolerance is 100 times too large | 1/26: `the D20 tolerance is ε in world units…` |
+| I2: the cap wins the exit rim tie (`sideOut < capOut`) | 1/26: `cylinder: the side wins an exact tie with a cap (a rim hit)` |
+
+Gate after the round 2 fixes: `npm run check < /dev/null` in the working tree
+exits 0, with `node --test` at 210/210 and Playwright at 69/69.
+`openspec validate m3-primitives-and-transforms --strict` is valid.
 
 ## Implementation notes
 

@@ -56,6 +56,29 @@ test('a translate nested inside a rotate or scale is applied first', () => {
   assert.deepEqual(spans(sceneOf('scale(2) { translate([10, 0, 0]) { sphere(1); } }'), ray([-100, 0, 0], [1, 0, 0])), [[118, 122]]);
 });
 
+test('D20 holds for placed solids: in-face rays of translated solids are hits', () => {
+  // Each face sits at exactly 0.4 in world space, but in local space it comes out as 0.10000000000000003.
+  const X = [1, 0, 0];
+  assert.deepEqual(spans(sceneOf('translate([0, 0.3, 0]) { box([2, 0.2, 2]); }'), ray([-100, 0.4, 0], X)), [[99, 101]], 'box face');
+  assert.deepEqual(spans(sceneOf('translate([0, 0, 0.3]) { cylinder(5, 0.2); }'), ray([-100, 0, 0.4], X)), [[95, 105]], 'cylinder cap');
+  assert.deepEqual(spans(sceneOf('translate([0.3, 0, 0]) { cylinder(0.1, 10); }'), ray([0.4, 0, 100], [0, 0, -1])), [[95, 105]], 'cylinder side line');
+});
+
+test('the D20 tolerance is ε in world units: rays just beyond it miss, at any scale', () => {
+  const X = [1, 0, 0];
+  const count = (source, origin) => sceneIntervals(sceneOf(source), ray(origin, X)).length;
+  assert.equal(count('translate([0, 0.3, 0]) { box([2, 0.2, 2]); }', [-100, 0.4 + 1e-5, 0]), 0, 'box face');
+  assert.equal(count('translate([0, 0, 0.3]) { cylinder(5, 0.2); }', [-100, 0, 0.4 + 1e-5]), 0, 'cylinder cap');
+  assert.equal(sceneIntervals(sceneOf('translate([0.3, 0, 0]) { cylinder(0.1, 10); }'), ray([0.4 + 1e-5, 0, 100], [0, 0, -1])).length, 0, 'cylinder side line');
+  // Scaled solids: within ε (world) of the face is a hit, 2ε beyond it a miss.
+  assert.equal(count('scale(1000) { box([2, 2, 2]); }', [-5000, 1000 + 5e-7, 0]), 1);
+  assert.equal(count('scale(1000) { box([2, 2, 2]); }', [-5000, 1000 + 2e-6, 0]), 0);
+  assert.equal(count('scale(0.001) { box([2, 2, 2]); }', [-5, 0.001 + 5e-7, 0]), 1);
+  assert.equal(count('scale(0.001) { box([2, 2, 2]); }', [-5, 0.001 + 2e-6, 0]), 0);
+  assert.equal(count('scale(0.001) { cylinder(1, 2); }', [-5, 0, 0.001 + 5e-7]), 1);
+  assert.equal(count('scale(0.001) { cylinder(1, 2); }', [-5, 0, 0.001 + 2e-6]), 0);
+});
+
 test('several children of a transform block are unioned', () => {
   assert.deepEqual(spans(sceneOf('translate([0, 0, 0]) { sphere(5); cube(8); }'), ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
 });

@@ -85,9 +85,11 @@ Each routine returns `[]` or `[{ in, out }]`. Each endpoint is
   - **Interval:** the intersection of the two intervals. The normal at each
     end comes from whichever bound determined it: the side `(x, y, 0)/r`, or
     a cap `(0, 0, ±1)`. On an exact tie at the rim, the side wins.
-- **Closed solids (DESIGN D20):** the parallel-ray checks use `≤`, so a ray
-  lying in a box face plane, along the cylinder side line, or in a cap plane
-  is a hit. Only an interval of length ≤ `ε` is dropped.
+- **Closed solids (DESIGN D20):** the parallel-ray checks allow `ε` in world
+  units, which is `ε·|d|` in local units since `|d| = 1/s`. A ray lying in a
+  box face plane, along the cylinder side line, or in a cap plane is
+  therefore a hit, even when a placement's rounding moves the face by a
+  last-place error. Only an interval of length ≤ `ε` is dropped.
 
 ### D-4: Rendering
 For each placed primitive, `render.js` transforms the ray into local space
