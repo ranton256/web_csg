@@ -84,7 +84,7 @@ except blocks, which end with `}`.
 
 #### Scenario: The vision example parses
 - **WHEN** the bored-cube source from `vision.md` is compiled
-- **THEN** there is no syntax error. The only diagnostics say that `difference` and `union` are not supported yet
+- **THEN** there are no diagnostics, and the model is a cube of size 60 minus the union of three cylinders of radius 12 and height 62
 
 ### Requirement: Expressions
 Source: DESIGN §8 Modeling language (vectors, arithmetic, precedence).
@@ -200,8 +200,7 @@ Source: DESIGN §8 Modeling language.
 visible from after its declaration to the end of the enclosing block; at the
 top level, that is the rest of the file. Using a name that is not visible, or
 declaring a name that is already visible (shadowing), SHALL be an error.
-These rules apply inside transform and Boolean bodies, including bodies of
-constructs that are not supported yet.
+These rules apply inside transform and Boolean bodies.
 
 #### Scenario: A name is visible only after its declaration
 - **WHEN** the top level contains `sphere(r); let r = 5;`
@@ -279,21 +278,19 @@ with no solids.
 - **WHEN** a source contains only a valid camera block
 - **THEN** there are no diagnostics, and the scene has no solids
 
-### Requirement: Booleans, lights, and materials are not supported yet
-Source: ROADMAP milestone order (DESIGN §8 features delivered in M4–M5).
+### Requirement: Lights and materials are not supported yet
+Source: ROADMAP milestone order (DESIGN §8 Lighting and shading, delivered in M5).
 
-The constructs `union`, `intersection`, `difference`, `light`, and `material`
-SHALL parse fully. The evaluator SHALL report a diagnostic at each one's
-keyword saying it is not supported yet. Their contents SHALL still be
-checked, so every other error in them is also reported: property and
-argument expressions (names, arithmetic), let scopes in bodies, the
-empty-body rule, and the primitives and transforms inside them. They SHALL
-NOT crash or be ignored.
+The property blocks `light` and `material` SHALL parse fully. The evaluator
+SHALL report a diagnostic at each one's keyword saying it is not supported
+yet. Their property expressions SHALL still be checked, so every other error
+in them is also reported (names, arithmetic). They SHALL NOT crash or be
+ignored.
 
-#### Scenario: A Boolean block is rejected clearly
-- **WHEN** the source contains `union { sphere(1); }` at line 5, column 1
-- **THEN** a diagnostic at line 5, column 1 says `union` is not supported yet
+#### Scenario: A light or material block is rejected clearly
+- **WHEN** the source contains `light { direction: [0, 0, 1]; }` at line 5, column 1
+- **THEN** a diagnostic at line 5, column 1 says `light` is not supported yet
 
 #### Scenario: Contents of an unsupported construct are still checked
-- **WHEN** the source contains `union { sphere(q); }` and `material { color: 1 + [1, 2, 3]; }`
-- **THEN** diagnostics say `union` and `material` are not supported yet, `q` is undeclared, and `+` has invalid operand kinds
+- **WHEN** the source contains `light { direction: [0, 0, q]; }` and `material { color: 1 + [1, 2, 3]; }`
+- **THEN** diagnostics say `light` and `material` are not supported yet, `q` is undeclared, and `+` has invalid operand kinds

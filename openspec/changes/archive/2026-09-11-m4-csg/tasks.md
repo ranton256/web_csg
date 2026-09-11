@@ -91,7 +91,7 @@
   - the seen-to-fail records
   - the manual Safari smoke check (performed by the owner)
 - [x] 7.4 A separate Critic review (`project-critic`) of `main..m4-csg`. Fix findings and re-review until `[APPROVED]`
-- [ ] 7.5 Merge into `main`, mark M4 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+- [x] 7.5 Merge into `main`, mark M4 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
 
 ## 8. Critic round 1 fixes
 

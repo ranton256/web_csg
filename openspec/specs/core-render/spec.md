@@ -20,8 +20,8 @@ integer `width` and `height`, and returns the diagnostics plus either:
 It SHALL run under Node without browser APIs.
 
 #### Scenario: Core render is callable without a browser
-- **WHEN** the default sphere example and a size of 64 × 48 are rendered from a Node test
-- **THEN** there are no diagnostics, the buffer is 64 × 48 × 4 bytes, and it matches the golden image `sphere` within 1 per channel
+- **WHEN** the bored-cube source and a size of 64 × 48 are rendered from a Node test
+- **THEN** there are no diagnostics, the buffer is 64 × 48 × 4 bytes, and it matches the golden image `bored-cube` within 1 per channel
 
 #### Scenario: Invalid source returns diagnostics and no image
 - **WHEN** a source has a syntax error at line 2, column 5
