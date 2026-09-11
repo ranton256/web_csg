@@ -55,9 +55,9 @@ shot starts in a fresh page, so it is a first launch.
 | `npm run check < /dev/null` in the working tree | Before the first commit: exit 0 in 70 s, `node --test` 321/321, Playwright 171/171. After the Critic round 1 fixes: exit 0 in 70 s, `node --test` 323/323, Playwright 180/180 |
 | `openspec validate m6-persistence-and-examples --strict` | Valid |
 | Every existing golden unchanged | `npm test` before any golden update: only the three new example goldens were missing |
-| Full gate from a fresh checkout | `git clone --branch m6-persistence-and-examples` at `2fc4b26`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 321/321, Playwright 171/171 |
+| Full gate from a fresh checkout | `git clone --branch m6-persistence-and-examples` at `2fc4b26`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 321/321, Playwright 171/171. After the Critic round 1 fixes, the same steps at `e6c7a0f`: exit 0, `node --test` 323/323, Playwright 180/180 |
 | Manual Safari pass of DESIGN §8 | Pass, by the owner on 2026-09-11 (see below) |
-| Separate Critic review returns `[APPROVED]` | [Round 1](#critic-round-1-rejected-and-the-fixes) at `22c03fe`: rejected (F1, F2). Round 2 pending |
+| Separate Critic review returns `[APPROVED]` | [Round 1](#critic-round-1-rejected-and-the-fixes) at `22c03fe`: rejected (F1, F2). [Round 2](#critic-round-2-approved) at `e6c7a0f`: Pass |
 
 ### e2e run time (design risks, task 5.5)
 
@@ -170,6 +170,43 @@ WebKit. The baseline was 69 pass, 0 fail, and the run took 294 s:
 | R2: Save does not save the baseline (the Critic's B) | a Save is remembered across a reload | Killed |
 | R3: the file input is not emptied after an Open (the Critic's C) | Open loads a .csg file (the emptied-input check) | Killed |
 | R4: the baseline is the raw file text (F1) | the `\r\n` and lone-`\r` file test (D28) | Killed |
+
+## Critic round 2: `[APPROVED]`
+
+The Critic reviewed `main..m6-persistence-and-examples` at `e6c7a0f`, in its
+own fresh clone.
+- **Gates:** `npm test` passed 323/323, and `npm run check < /dev/null`
+  exited 0 with Playwright at 180/180. `openspec validate --strict` was
+  valid.
+- **Round 1 re-verified:** it re-verified F1–F4 with its own browser probes,
+  81/81 on all three engines.
+  - F1: a `\r\n` file, then an example, gives no prompt, and Open then
+    Save gives `\n` bytes.
+  - F2: after a leading BOM, a diagnostic click lands on its column.
+  - F3: its mutants A, B, and C are now killed.
+  - F4: the spec and tests say the file name lasts for the page session.
+
+Its notes:
+- **N1 (non-blocking, low): D28 is not tested across a reload.** Saving the
+  raw `\r\n` text as the stored baseline, while memory keeps the normalized
+  text, survives today's tests. A `\r\n` Open, a reload, and then an
+  example would give a false prompt. The code is correct. This is added as
+  a ROADMAP backlog line, and no test was changed after approval.
+- **N2 (non-blocking, low):** the delta scenario "Open loads a .csg file"
+  said "exactly the file's text" without the D28 line-break wording. It now
+  matches the requirement and DESIGN §8.
+- **A lone `\r` means different things.** The lexer treats a lone `\r` as a
+  space, not a line break, while the app turns it into `\n` when a file is
+  opened. This follows D28, whose "diagnostics do not change" covers `\r\n`
+  only.
+- **Redundant normalize call.** The `normalizeLineBreaks` call in `load()`
+  changes nothing in a browser, whose text area already normalizes, and the
+  `\r` handling in `lineColumnToOffset` is now unreachable from the app.
+  Both are harmless.
+- **The Safari pass predates the fixes.** It was recorded at `2fc4b26`.
+  The WebKit e2e tests cover the fixes.
+- **One Firefox timeout, not reproduced.** A single timeout under load during
+  its mutant runs did not reproduce: 45/45 on repeat.
 
 ## What the implementation surfaced
 

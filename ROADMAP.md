@@ -31,7 +31,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Complete (2026-09-10; `m3-primitives-and-transforms`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M3/`) |
 | **M4** | CSG | Boolean operations; the bored cube renders | Complete (2026-09-10; `m4-csg`, Critic round 3 `[APPROVED]`; evidence in `docs/progress/M4/`) |
 | **M5** | Lighting & material | Lights and model color come from the source | Complete (2026-09-11; `m5-lighting-and-material`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M5/`) |
-| **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | In progress (`m6-persistence-and-examples`) |
+| **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | Complete (2026-09-11; `m6-persistence-and-examples`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M6/`) |
 
 ---
 
@@ -242,6 +242,7 @@ strike it through with a reason.
 | ☑ | ~~Editor: Tab inserts indentation in the source box instead of moving focus out of it. Keep an escape so keyboard users are never trapped, for example Esc then Tab moves on (WCAG 2.1.2, "No Keyboard Trap")~~ Delivered in `backlog-closeout` (two spaces; Shift+Tab outdents; Esc then Tab leaves; D23) | Owner request, 2026-09-11 |
 | ☑ | ~~Help text for the modeling language that can be opened on request: statements, primitives, transforms, Booleans, and the `camera`, `light`, and `material` blocks, with a short example~~ Delivered in `backlog-closeout` (the Help dialog; D23) | Owner request, 2026-09-11 |
 | ☑ | ~~Point lights alongside the directional ones, for example `light { position: …; }`. Needs a falloff decision (none, or a defined law) and validation rules. DESIGN lists this as a parked optional feature, so it needs its own proposal. Kept open by `backlog-closeout` (D23)~~ Delivered in `point-lights` (no falloff; a block has exactly one of `direction` and `position`; D25) | Owner request, 2026-09-11 (DESIGN — Optional features) |
+| ☐ | Test D28 across a reload: open a file with `\r\n` line breaks, reload, then choose an example, and expect no prompt. A mutant that saves the raw text as the stored baseline survives today's tests | `m6-persistence-and-examples` Critic round 2 (N1, low) |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |
 
 ---

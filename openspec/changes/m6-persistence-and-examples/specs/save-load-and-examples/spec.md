@@ -102,7 +102,7 @@ The same file MAY be chosen again.
 
 #### Scenario: Open loads a .csg file
 - **WHEN** the user chooses Open and selects a `.csg` file
-- **THEN** the editor contains exactly the file's text, the diagnostics list matches that source, and the preview renders it
+- **THEN** the editor contains exactly the file's text, with each line break as `\n` (D28), the diagnostics list matches that source, and the preview renders it
 
 #### Scenario: A file with a byte-order mark opens cleanly
 - **WHEN** the selected file is valid UTF-8 source that begins with a byte-order mark

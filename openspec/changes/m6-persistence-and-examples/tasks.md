@@ -74,7 +74,7 @@
 - [x] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check < /dev/null`) green
 - [x] 7.3 `npm run capture -- M6` (the `app` shot on first launch, and one shot per example), then write `docs/progress/M6/README.md`: the ROADMAP "done when" criteria, the gates, test coverage per scenario, the seen-to-fail records, the e2e timings, and the captures
 - [x] 7.4 The owner's full manual pass of DESIGN §8 in Safari, recorded in the README as a checklist (a ROADMAP "done when" criterion)
-- [ ] 7.5 A separate Critic review (`project-critic`) of `main..m6-persistence-and-examples`. Fix findings and re-review until `[APPROVED]`
+- [x] 7.5 A separate Critic review (`project-critic`) of `main..m6-persistence-and-examples`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.6 Merge into `main`, mark M6 complete in ROADMAP (the first release), and archive with `/opsx:archive`: sync the specs (the new `save-load-and-examples`, and the `editor-preview`, `modeling-language`, `implicit-union`, and `stale-preview` deltas), and refresh any stale Purpose lines
 
 ## 8. Critic round 1 fixes
@@ -84,4 +84,4 @@
 - [x] 8.3 F3: e2e tests that an opened file and a chosen example are autosaved (a reload shows them), and that a Save is remembered across a reload; the Open test checks the file input is emptied (the Critic's mutant C)
 - [x] 8.4 F4: the spec says the save file name lasts for the page session (D26 a), with a scenario; the file-name e2e test checks `model.csg` after a reload. DESIGN §4 asset inventory: the examples are done
 - [x] 8.5 Seen to fail: the Critic's mutants A (no autosave on a load), B (Save does not save the baseline), and C (the file input is not emptied); a raw-text baseline in `load()` (F1); and no BOM skip in `lineColumnToOffset` (F2)
-- [ ] 8.6 The full gate and a fresh clone at the new head; the README Critic round 1 section; a new Critic review
+- [x] 8.6 The full gate and a fresh clone at the new head; the README Critic round 1 section; a new Critic review
