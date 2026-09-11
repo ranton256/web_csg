@@ -29,7 +29,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Complete (2026-09-10; `m1-first-pixels`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M1/`) |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Complete (2026-09-10; `m2-language-and-feedback`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M2/`) |
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Complete (2026-09-10; `m3-primitives-and-transforms`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M3/`) |
-| **M4** | CSG | Boolean operations; the bored cube renders | In progress (`m4-csg`) |
+| **M4** | CSG | Boolean operations; the bored cube renders | Complete (2026-09-10; `m4-csg`, Critic round 3 `[APPROVED]`; evidence in `docs/progress/M4/`) |
 | **M5** | Lighting & material | Lights and model color come from the source | Planned |
 | **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | Planned |
 

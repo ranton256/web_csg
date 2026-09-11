@@ -32,21 +32,21 @@ Owner decisions in this change:
 | The scaled-render scenario passes at ×1e-3 and ×1e5; `ε` and the scale range marked final in DESIGN §5, or revised with the measured reason | [Scaled render](#scaled-render-measurement): byte-identical renders. DESIGN §5 marks `ε = 1e-6` final and revises the range to `[1e-3, 3e7]`, with the reason in §12 D7 | Pass |
 | The bored-cube golden image is committed and passing | `test/golden/bored-cube.ppm` (64×48), in `test/core/csg-golden.test.js`. This is the core-render "callable without a browser" scenario | Pass |
 | Evidence: a capture of the bored cube | `bored-cube.png` above | Pass |
-| Full gate in the working tree | `npm run check < /dev/null` on the final tree (after the `booleans` camera change) | Pass: exit 0; `node --test` 244/244; Playwright 69/69 |
-| Full gate from a fresh checkout | `git clone --branch m4-csg` at `5465dfd`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null` | Pass: exit 0; `node --test` 244/244; Playwright 69/69 |
+| Full gate in the working tree | `npm run check < /dev/null` on the reviewed head `e714c81` | Pass: exit 0; `node --test` 250/250; Playwright 69/69 |
+| Full gate from a fresh checkout | `git clone --branch m4-csg` at `e714c81`, the reviewed head, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. Earlier clones passed at `5465dfd` (244/244) and `8a614e4` (249/249) | Pass: exit 0; `node --test` 250/250; Playwright 69/69 |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Pending | Pending |
+| Separate Critic review returns `[APPROVED]` | [Critic round 3](#critic-round-3-approved) at `e714c81`, after two rejected rounds | Pass |
 
 ## Scenario coverage
 
 | Capability (delta spec) | Tests |
 | --- | --- |
-| `boolean-operations` | `test/core/boolean.test.js` covers the union block (`[95, 113]`), a transformed intersection (`[116, 124]`), the intersection (`[96, 104]`), a disjoint intersection, the multi-child difference (`[90, 93]`, `[97, 103]`, `[107, 110]`), self-difference of a sphere and a cube (no intervals, background pixels), the single-child difference, and reversed cutter normals (`[0, 0, -1]` at 97, `[0, 0, 1]` at 103). `test/core/intervals.test.js` covers the DESIGN "Interval combination along a ray" (`[2, 8]`, `[4, 6]`, and `[2, 4]` with `[6, 8]`) |
-| `ray-intervals` | `test/core/boolean.test.js` covers the flush union (`[95, 115]`), the flush difference (no hit), a near-flush difference (a 5e-7 sliver dropped, a 5e-6 one kept), and a bore wall seen from inside (t = 3, normal `[-1, 0, 0]`, not flipped again). `test/core/scaled-render.test.js` covers the scaled renders. `test/core/intervals.test.js` covers the tie rules and sliver drops for `intersect` and `subtract` |
+| `boolean-operations` | `test/core/boolean.test.js` covers the union block (`[95, 113]`), a transformed intersection (`[116, 124]`), the intersection (`[96, 104]`), a disjoint intersection, the multi-child difference (`[90, 93]`, `[97, 103]`, `[107, 110]`), self-difference of a sphere and a cube (no intervals, background pixels), the single-child difference, and reversed cutter normals (`[0, 0, -1]` at 97, `[0, 0, 1]` at 103). `test/core/intervals.test.js` covers the DESIGN "Interval combination along a ray" (`[2, 8]`, `[4, 6]`, and `[2, 4]` with `[6, 8]`). Round 1 added a multi-child transform body as one child (`[92, 98]`, `[102, 108]`) and a three-child intersection (`[98, 105]`) |
+| `ray-intervals` | `test/core/boolean.test.js` covers the flush union (`[95, 115]`), the flush difference (no hit), a near-flush difference (a 5e-7 sliver dropped, a 5e-6 one kept), and a bore wall seen from inside (t = 3, normal `[-1, 0, 0]`, not flipped again). `test/core/scaled-render.test.js` covers the scaled renders. `test/core/intervals.test.js` covers the tie rules and sliver drops for `intersect` and `subtract`. For D21, `boolean.test.js` covers a cutter that stops just short of the base and one that only touches it: both leave the base's face. The thin-plate test in `scaled-render.test.js` records the limit of the scale guarantee |
 | `implicit-union` | `test/core/scene.test.js`: several top-level solids of different types (`[95, 105]` along X, `[90, 110]` along Z) |
 | `modeling-language` | `test/core/language.test.js` covers: the vision example has no diagnostics, and its tree is a cube minus the union of three cylinders; `light` and `material` are rejected at their keyword (line 5, column 1) and their contents are still checked; errors inside a Boolean carry no "not supported" diagnostic; `union { }` is still an empty-body error |
 | `core-render` | `test/core/csg-golden.test.js`: the bored cube has no diagnostics, a 64 × 48 × 4 buffer, and matches the `bored-cube` golden |
-| `camera-definition` | `test/core/camera.test.js`: a 1e200 camera reports only "position and lookAt are too far apart" at `lookAt`, and `position: [16000000, 0, 0]` is accepted |
+| `camera-definition` | `test/core/camera.test.js`: a 1e200 camera reports only "position and lookAt are too far apart" at `lookAt`, and `position: [16000000, 0, 0]` is accepted. An `up` whose length overflows reports only "up is too large" at `up` |
 
 ## Scaled-render measurement
 
@@ -178,6 +178,32 @@ explicitly, with a baseline of 37/37.
 
 Gate after the fixes: `npm test` passed 250/250, and
 `openspec validate m4-csg --strict` is valid.
+
+## Critic round 3: `[APPROVED]`
+
+The Critic reviewed `e714c81` and ran the gates itself: `npm test` passed
+250/250; `npm run check < /dev/null` exited 0, with 250/250 unit tests and
+Playwright at 69/69; and `openspec validate --strict` was valid. It checked
+each round 2 fix against the code and against measurements:
+- **Scale requirement:** the requirement is exactly the measured scenario,
+  and every document states the same scope. The test can fail: with `ε` set
+  to 1e-3, the ×0.001 test fails.
+- **The 3e7 bound:** it measured every 64×48 ray at ×1e5. The largest values
+  were the farthest model point at 2.7477e7, an interval endpoint at
+  2.727e7, and a visible hit at 2.4958e7. All are within 3e7, and `lookAt`
+  is covered by the zero clause.
+- **D21 wording:** it now matches `subtract` in every place it is stated.
+  Its own touching-cutter mutant failed exactly the two touching-cutter
+  tests, from a 37/37 baseline.
+- **Specs:** the delta specs are ready to archive.
+- **Fuzz:** 400,000 interval-algebra cases found no failures.
+
+Its informational notes, all closed in the approval commit:
+- stale README rows, for the working-tree gate and scenario coverage;
+- D16 wording about what the range promises, now aligned with §5;
+- the justification for the §5 lower bound, which cited a gap rather than a
+  listed quantity, now reworded. The bound itself is unchanged;
+- the open tasks.
 
 ## Implementation notes
 

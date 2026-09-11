@@ -35,8 +35,8 @@ provisional since D7.
     round 2).
   - If either fails, `ε` or the range is revised with the measured reason.
 - **D16 (owner decision): best effort outside the supported scale.**
-  - There is no range check on inputs. The range states where accuracy is
-    promised.
+  - There is no range check on inputs. The range states where results
+    were measured.
   - Non-finite values stay errors.
   - A camera whose vector math overflows now gets a clear diagnostic,
     instead of the misleading "up must not be parallel".

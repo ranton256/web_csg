@@ -90,7 +90,7 @@
   - the scaled-render measurement
   - the seen-to-fail records
   - the manual Safari smoke check (performed by the owner)
-- [ ] 7.4 A separate Critic review (`project-critic`) of `main..m4-csg`. Fix findings and re-review until `[APPROVED]`
+- [x] 7.4 A separate Critic review (`project-critic`) of `main..m4-csg`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.5 Merge into `main`, mark M4 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
 
 ## 8. Critic round 1 fixes
@@ -101,7 +101,7 @@
 - [x] 8.4 I2 (owner: the base face stays): DESIGN §8 and the `ray-intervals` spec say a cutter that stops short of the base leaves its boundary; DESIGN D21; a test
 - [x] 8.5 I3 (owner: fix in M4): an `up` whose length overflows reports "up is too large" (`camera.js`, spec scenario, test, D16 note)
 - [x] 8.6 I1, I4, I5: the design.md risk wording; the stale let-scope clause (MODIFIED in the `modeling-language` delta); the D16 row in order in DESIGN §12
-- [ ] 8.7 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
+- [x] 8.7 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
 
 ## 9. Critic round 2 fixes
 
@@ -109,4 +109,4 @@
 - [x] 9.2 Finding 2 (owner: `[1e-3, 3e7]`, zero exempt): DESIGN §5 and D7, design D-6, the proposal, ROADMAP, and the README state the range for nonzero magnitudes, covering the 2.75e7 camera-to-model distance
 - [x] 9.3 Finding 3: D21, DESIGN §8, the `ray-intervals` spec, and design D-2 say that a cutter that only touches the base leaves its boundary; a scene test and a scenario for the touching cutter
 - [x] 9.4 Informational: the README's R1 mutant description; a ROADMAP backlog line for an underflowing `up`
-- [ ] 9.5 Seen to fail for the new test; the full gate and a fresh clone; the README Critic round 2 section
+- [x] 9.5 Seen to fail for the new test; the full gate and a fresh clone; the README Critic round 2 section
