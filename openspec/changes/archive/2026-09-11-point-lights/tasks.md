@@ -59,4 +59,4 @@
 - [x] 7.3 `npm run capture -- point-lights`, then write `docs/progress/point-lights/README.md`: the criteria checked, the gates, test coverage per scenario, the seen-to-fail records, and the `lit-point` capture
 - [x] 7.4 The owner's manual Safari smoke check of a point-lit scene, recorded in the README
 - [x] 7.5 A separate Critic review (`project-critic`) of `main..point-lights`. Fix findings and re-review until `[APPROVED]`
-- [ ] 7.6 Merge into `main`, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose line of the main `lighting-and-shading` spec
+- [x] 7.6 Merge into `main`, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose line of the main `lighting-and-shading` spec
