@@ -51,14 +51,14 @@
 ## 7. Documentation
 
 - [x] 7.1 CONSTRAINTS §2: add `transform.js`, `box.js`, and `cylinder.js` to the module layout; the scene's solids carry a `placement`
-- [ ] 7.2 ROADMAP: set M3's status, and strike the three M2 backlog lines as delivered
+- [x] 7.2 ROADMAP: set M3's status, and strike the three M2 backlog lines as delivered
 
 ## 8. Verification, review, and merge
 
 - [x] 8.1 Seen to fail: in an isolated worktree, break a transform (rotation order `Rx·Ry·Rz`; renormalized local direction; non-exact 90°; missing normal transform) and a primitive (wrong cap normal sign), and watch the relevant tests and goldens fail. Record the output
 - [x] 8.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
 - [x] 8.3 `npm run capture -- M3` (`app`, `stale`, `primitives`), then write `docs/progress/M3/README.md`: each M3 "done when" criterion with its evidence, scenario coverage, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
-- [ ] 8.4 A separate Critic review (`project-critic`) of `main..m3-primitives-and-transforms`. Fix findings and re-review until `[APPROVED]`
+- [x] 8.4 A separate Critic review (`project-critic`) of `main..m3-primitives-and-transforms`. Fix findings and re-review until `[APPROVED]`
 - [ ] 8.5 Merge into `main`, mark M3 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
 
 ## 9. Critic round 1 fixes
@@ -96,4 +96,4 @@
 - [x] 13.1 `test/core/parser.test.js`: argument-list parentheses leave their nesting level; 101 sequential calls and 60 sequential transform blocks parse without a nesting error
 - [x] 13.2 `test/core/primitives.test.js`: a chord of length ≤ `ε` across a box corner or the cylinder rim is dropped, and a longer one is kept
 - [x] 13.3 `test/core/scene.test.js`: a union in a transform body that neither child alone could produce; design D-7 names the right test file
-- [ ] 13.4 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README
+- [x] 13.4 Seen to fail, the full gate, and a fresh clone at the new head (`61eebe6`: 215/215, 69/69); recorded in the README. Critic round 6: `[APPROVED]`

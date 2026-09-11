@@ -28,7 +28,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | **M0** | Foundations | The project can verify itself | Complete (2026-09-10; `m0-foundations`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M0/`) |
 | **M1** | First pixels | A sphere from source text reaches the canvas through the real pipeline | Complete (2026-09-10; `m1-first-pixels`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M1/`) |
 | **M2** | Language & feedback | Editing feels live: diagnostics, stale preview, responsive rendering | Complete (2026-09-10; `m2-language-and-feedback`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M2/`) |
-| **M3** | Primitives & transforms | All four primitives, placed and oriented | In progress (`m3-primitives-and-transforms`) |
+| **M3** | Primitives & transforms | All four primitives, placed and oriented | Complete (2026-09-10; `m3-primitives-and-transforms`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M3/`) |
 | **M4** | CSG | Boolean operations; the bored cube renders | Planned |
 | **M5** | Lighting & material | Lights and model color come from the source | Planned |
 | **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | Planned |
@@ -231,9 +231,10 @@ strike it through with a reason.
 | ☐ | CLAUDE.md layout says `e2e/*.spec.js`; align it with CONSTRAINTS/D-1 (`e2e/**/*.spec.js`) | `m0-foundations` Critic round 6 (informational) |
 | ☑ | ~~Core-purity scanner: also catch imports and re-exports written without spaces (`import{x}from'node:fs'`, `export*from'node:fs'`)~~ Delivered in `m2-language-and-feedback` | `m1-first-pixels` Critic round 2 (low) |
 | ☑ | ~~Add a D14 parallel-check test with a non-unit `up` vector~~ Delivered in `m2-language-and-feedback` (`test/core/camera.test.js`) | `m1-first-pixels` Critic round 2 (informational) |
-| ☐ | Editor-preview spec: say what happens when the window is too narrow for both 240 px minimums (`clampEditorWidth` keeps the editor's minimum, per design D-8) | `m2-language-and-feedback` Critic round 2 (low); scheduled in `m3-primitives-and-transforms` |
-| ☐ | Nesting cap wording: DESIGN §5 says "each parenthesis", but call-argument parentheses are not counted (recursion stays bounded). Either count them or reword §5 | `m2-language-and-feedback` Critic round 2 (low); scheduled in `m3-primitives-and-transforms` (count them) |
-| ☐ | Add an e2e test for a resize that arrives while a render is in progress (same cancel path as the tested newer-model case) | `m2-language-and-feedback` Critic round 2 (informational); scheduled in `m3-primitives-and-transforms` |
+| ☑ | ~~Editor-preview spec: say what happens when the window is too narrow for both 240 px minimums (`clampEditorWidth` keeps the editor's minimum, per design D-8)~~ Delivered in `m3-primitives-and-transforms` (spec wording; e2e at 400 px in `e2e/editor-preview.spec.js`) | `m2-language-and-feedback` Critic round 2 (low) |
+| ☑ | ~~Nesting cap wording: DESIGN §5 says "each parenthesis", but call-argument parentheses are not counted (recursion stays bounded). Either count them or reword §5~~ Delivered in `m3-primitives-and-transforms` (counted; `test/core/parser.test.js`) | `m2-language-and-feedback` Critic round 2 (low) |
+| ☑ | ~~Add an e2e test for a resize that arrives while a render is in progress (same cancel path as the tested newer-model case)~~ Delivered in `m3-primitives-and-transforms` (`e2e/live-rebuild.spec.js`) | `m2-language-and-feedback` Critic round 2 (informational) |
+| ☐ | Add a scene test for a top-level union of mixed primitive types (DESIGN §8 "Several top-level solids are unioned" names a sphere and a cube). The union code is already covered by transform-body tests and the `arrangement` golden | `m3-primitives-and-transforms` Critic round 6 (informational) |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
 | ☐ | D20 in-face rays under rotations that are not multiples of 90°: the local direction carries a rounding residue of about `1e-16`, so a ray lying exactly in a face is decided by rounding. Revisit with `ε`, for example with a "within `ε` over the shared length" check for near-parallel slabs and the cylinder side | `m3-primitives-and-transforms` Critic round 3 (medium; D20 narrowed by the owner); with the M4 `ε` finalization |

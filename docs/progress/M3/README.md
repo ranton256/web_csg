@@ -24,9 +24,9 @@ change:
 | All Primitives, Transforms, and Implicit union scenarios pass | [Scenario coverage](#scenario-coverage) | Pass |
 | Golden images exist for each primitive and for a rotated and translated arrangement | `test/golden/cube.ppm`, `box.ppm`, `cylinder.ppm`, and `arrangement.ppm` (64×48, from `test/support/scenes.js`), plus M1's `sphere.ppm` and `sphere-inside.ppm`. Each new image was inspected when created: each solid shows three distinct face shades under the key light, and the cylinder a bright cap with a shaded side | Pass |
 | Evidence: a capture showing all four primitives | `primitives.png` above | Pass |
-| Full gate from a fresh checkout | `git clone --branch m3-primitives-and-transforms` at `0cbd591`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null` | Pass: exit 0; `node --test` 202/202; Playwright 69/69 |
+| Full gate from a fresh checkout | `git clone --branch m3-primitives-and-transforms` at `61eebe6` (the reviewed head), then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. The same run passed at `0cbd591`, `21cdee4`, `ad4bdaa`, `da20cf8`, and `7995ba5` | Pass: exit 0; `node --test` 215/215; Playwright 69/69 |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Recorded in the merge | Pending at time of writing |
+| Separate Critic review returns `[APPROVED]` | [Critic round 6](#critic-round-6-approved) at `61eebe6`, after five rejected rounds | Pass |
 
 ## Scenario coverage
 
@@ -213,6 +213,28 @@ Seen to fail, in a scratch worktree of `7995ba5` with the new `parser`,
 
 Gate after the round 5 fixes: `npm run check < /dev/null` in the working tree
 exits 0, with `node --test` at 215/215 and Playwright at 69/69.
+
+## Critic round 6: `[APPROVED]`
+
+The Critic reviewed `61eebe6` and ran the gates itself. `npm test` passed
+215/215, and `npm run check < /dev/null` exited 0 with Playwright at 69/69,
+both in the working tree and in a fresh clone.
+`openspec validate --strict` passed.
+- **Earlier mutants:** it re-ran X1, X2, X3, Y, V, and W against a
+  baseline of 86/86 over seven test files, and each failed 1/86 as recorded.
+- **Its own mutants:** 21 of 22 were caught. The one survivor,
+  `discriminant <= 0` in the cylinder, is equivalent to the original,
+  because a zero discriminant gives a zero-length interval, which the ε rule
+  drops anyway.
+- **Scenarios:** every DESIGN §8 M3 scenario and every delta-spec scenario
+  maps to a test.
+
+Informational notes, none blocking:
+- the open items for the approval commit, closed here;
+- `context.rendered` becomes observable in M4;
+- no dedicated scene test for a mixed-type top-level union. The same union
+  code is covered by the transform-body tests and the `arrangement` golden.
+  This is tracked in the ROADMAP backlog.
 
 ## Implementation notes
 
