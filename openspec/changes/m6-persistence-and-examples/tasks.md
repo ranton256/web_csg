@@ -71,8 +71,8 @@
   - M13: the code point is not padded to four digits;
   - M14: the stale indicator shows when no valid model exists;
   - M15: a load waits for the 300 ms debounce instead of rebuilding at once (D26 d)
-- [ ] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check < /dev/null`) green
+- [x] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check < /dev/null`) green
 - [x] 7.3 `npm run capture -- M6` (the `app` shot on first launch, and one shot per example), then write `docs/progress/M6/README.md`: the ROADMAP "done when" criteria, the gates, test coverage per scenario, the seen-to-fail records, the e2e timings, and the captures
-- [ ] 7.4 The owner's full manual pass of DESIGN §8 in Safari, recorded in the README as a checklist (a ROADMAP "done when" criterion)
+- [x] 7.4 The owner's full manual pass of DESIGN §8 in Safari, recorded in the README as a checklist (a ROADMAP "done when" criterion)
 - [ ] 7.5 A separate Critic review (`project-critic`) of `main..m6-persistence-and-examples`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.6 Merge into `main`, mark M6 complete in ROADMAP (the first release), and archive with `/opsx:archive`: sync the specs (the new `save-load-and-examples`, and the `editor-preview`, `modeling-language`, `implicit-union`, and `stale-preview` deltas), and refresh any stale Purpose lines

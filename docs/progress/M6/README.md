@@ -12,8 +12,8 @@ Decisions (DESIGN §12):
   - an unexpected character's diagnostic names it, for example
     `'é' (U+00E9)` or `U+00A0 (no-break space)`.
 - **D26:** the owner chose the header toolbar and the browser's native
-  `confirm()`. The writer's defaults (a)–(e), pending the owner's
-  acceptance:
+  `confirm()`. The writer's defaults (a)–(e), accepted by the owner
+  after the Safari pass:
   - the save file name;
   - the saved baseline;
   - Open asks only after a file is chosen;
@@ -28,8 +28,8 @@ Decisions (DESIGN §12):
 | --- | --- | --- |
 | All Save, load, and examples scenarios pass as e2e tests on all three engines | `e2e/persistence.spec.js` (20 tests) and `e2e/editor-preview.spec.js` on Chromium, Firefox, and WebKit; see [Test coverage](#test-coverage) | Pass |
 | Every built-in example evaluates with no diagnostics and has a golden image | `test/ui/examples.test.js`: the goldens `example-bored-cube`, `example-primitives`, and `example-boolean-operations` (64×48), reviewed as images | Pass |
-| A full manual pass of DESIGN §8 in Safari is recorded | [Manual Safari pass](#manual-safari-pass-of-design-8) | Pending |
-| Evidence: captures of each built-in example | [Captures](#captures) | Pending |
+| A full manual pass of DESIGN §8 in Safari is recorded | [Manual Safari pass](#manual-safari-pass-of-design-8) | Pass |
+| Evidence: captures of each built-in example | [Captures](#captures) | Pass |
 
 ## Captures
 
@@ -52,8 +52,8 @@ shot starts in a fresh page, so it is a first launch.
 | `npm run check < /dev/null` in the working tree | Before the first commit: exit 0 in 70 s, `node --test` 321/321, Playwright 171/171 |
 | `openspec validate m6-persistence-and-examples --strict` | Valid |
 | Every existing golden unchanged | `npm test` before any golden update: only the three new example goldens were missing |
-| Full gate from a fresh checkout | Pending |
-| Manual Safari pass of DESIGN §8 | Pending |
+| Full gate from a fresh checkout | `git clone --branch m6-persistence-and-examples` at `2fc4b26`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 321/321, Playwright 171/171 |
+| Manual Safari pass of DESIGN §8 | Pass, by the owner on 2026-09-11 (see below) |
 | Separate Critic review returns `[APPROVED]` | Pending |
 
 ### e2e run time (design risks, task 5.5)
@@ -160,20 +160,21 @@ on all three engines:
 
 ## Manual Safari pass of DESIGN §8
 
-Pending: the owner's full pass, with `npm start` serving the branch and the
-app open in Safari. Each row lists its DESIGN §8 scenarios.
+Pass, by the owner on 2026-09-11. The pass was in Safari, with `npm start` serving the
+`m6-persistence-and-examples` working tree (the state committed as
+`2fc4b26`). Each row lists its DESIGN §8 scenarios.
 
 | Feature | Scenarios | How to check | Result |
 | --- | --- | --- | --- |
-| Save, load, and examples | Autosave and restore; Save; Open; built-in examples; first launch; replacing edited text asks; unedited text does not ask; the save file name; a file with a byte-order mark; cancelling Open; the picker resets; no storage | On first launch, the bored cube shows. Edit the text and reload: the edit remains. Save, then Open the saved file. Choose each example. Edit, then choose an example: a prompt appears. Cancel leaves the text, and OK replaces it. Cancel the Open chooser: nothing changes. "No storage" is covered by the e2e test only | Pending |
-| Modeling language | The vision example is valid; positional and named arguments; a positional argument after a named one; missing, duplicate, and unknown arguments; a non-positive dimension; `let` visibility and scope; shadowing; vector arithmetic and its errors; division by zero; an empty body; a camera-only source; parsing stops at the first syntax error; all semantic errors reported; comments ignored | Type each case into the bored cube, and read the diagnostic and its line:column. Also type a non-breaking space (Option+Space) outside a comment: it reads `U+00A0 (no-break space)` | Pending |
-| Camera definition | Defaults; missing or repeated camera; `position` and `lookAt` required; `position` equal to `lookAt`; `up` parallel; `fov` out of range; earlier bindings in camera expressions; the view depends only on source and size; resizing keeps the vertical field of view | Edit the camera block for each case. Drag the divider, and resize the window | Pending |
-| Lighting and shading | Default key light; declared lights replace it; the light direction; intensity; a point light shines from its position; no falloff; no occlusion; light and point-light validation; material color and validation; the background | The Primitives example (two lights and a material) and Boolean operations (a point light). Remove the lights to see the key light; try `intensity: 0`; move the point light | Pending |
-| Primitives | A cube is a box with equal sides; primitives are centered; a cylinder is capped and along local Z | The Primitives example | Pending |
-| Transforms | Rotation about X and about Y; the rotation order; nested transforms; uniform scale; a non-positive scale is an error | The Primitives example, edited; `scale(0)` gives a diagnostic | Pending |
-| Implicit union | Several top-level solids, and several children of a transform, are unioned | Add a second solid at the top level and in a body | Pending |
-| Ray–solid intervals | A tangent ray misses; flush union faces leave no seam; a flush difference opens the face; a camera inside a solid sees the exit; scaled scenes render identically | The bored cube (flush bores); a camera inside a sphere | Pending |
-| Boolean operations | Multi-child difference; self-difference is empty; interval combination; difference boundaries shade with reversed normals | The Boolean operations example, and the bored cube's bores | Pending |
-| Live rebuild and progressive rendering | Edits rebuild after the debounce; a newer model cancels a render; typing stays responsive; resize re-renders; clicking a diagnostic moves the caret | Type quickly while the bored cube renders; click a diagnostic | Pending |
-| Editor indentation and help | Tab indents; Shift+Tab outdents; keyboard users are not trapped; indentation is an ordinary edit; Help on request | Tab, Shift+Tab, Esc then Tab, Cmd+Z; the Help button | Pending |
-| Invalid edits keep the last valid preview | An error keeps the last valid model, marked stale; fixing it clears the mark; no valid model yet (D27) | Break and fix the source. Break it and reload: the preview is empty, and no stale mark shows | Pending |
+| Save, load, and examples | Autosave and restore; Save; Open; built-in examples; first launch; replacing edited text asks; unedited text does not ask; the save file name; a file with a byte-order mark; cancelling Open; the picker resets; no storage | On first launch, the bored cube shows. Edit the text and reload: the edit remains. Save, then Open the saved file. Choose each example. Edit, then choose an example: a prompt appears. Cancel leaves the text, and OK replaces it. Cancel the Open chooser: nothing changes. "No storage" is covered by the e2e test only | Pass |
+| Modeling language | The vision example is valid; positional and named arguments; a positional argument after a named one; missing, duplicate, and unknown arguments; a non-positive dimension; `let` visibility and scope; shadowing; vector arithmetic and its errors; division by zero; an empty body; a camera-only source; parsing stops at the first syntax error; all semantic errors reported; comments ignored | Type each case into the bored cube, and read the diagnostic and its line:column. Also type a non-breaking space (Option+Space) outside a comment: it reads `U+00A0 (no-break space)` | Pass |
+| Camera definition | Defaults; missing or repeated camera; `position` and `lookAt` required; `position` equal to `lookAt`; `up` parallel; `fov` out of range; earlier bindings in camera expressions; the view depends only on source and size; resizing keeps the vertical field of view | Edit the camera block for each case. Drag the divider, and resize the window | Pass |
+| Lighting and shading | Default key light; declared lights replace it; the light direction; intensity; a point light shines from its position; no falloff; no occlusion; light and point-light validation; material color and validation; the background | The Primitives example (two lights and a material) and Boolean operations (a point light). Remove the lights to see the key light; try `intensity: 0`; move the point light | Pass |
+| Primitives | A cube is a box with equal sides; primitives are centered; a cylinder is capped and along local Z | The Primitives example | Pass |
+| Transforms | Rotation about X and about Y; the rotation order; nested transforms; uniform scale; a non-positive scale is an error | The Primitives example, edited; `scale(0)` gives a diagnostic | Pass |
+| Implicit union | Several top-level solids, and several children of a transform, are unioned | Add a second solid at the top level and in a body | Pass |
+| Ray–solid intervals | A tangent ray misses; flush union faces leave no seam; a flush difference opens the face; a camera inside a solid sees the exit; scaled scenes render identically | The bored cube (flush bores); a camera inside a sphere | Pass |
+| Boolean operations | Multi-child difference; self-difference is empty; interval combination; difference boundaries shade with reversed normals | The Boolean operations example, and the bored cube's bores | Pass |
+| Live rebuild and progressive rendering | Edits rebuild after the debounce; a newer model cancels a render; typing stays responsive; resize re-renders; clicking a diagnostic moves the caret | Type quickly while the bored cube renders; click a diagnostic | Pass |
+| Editor indentation and help | Tab indents; Shift+Tab outdents; keyboard users are not trapped; indentation is an ordinary edit; Help on request | Tab, Shift+Tab, Esc then Tab, Cmd+Z; the Help button | Pass |
+| Invalid edits keep the last valid preview | An error keeps the last valid model, marked stale; fixing it clears the mark; no valid model yet (D27) | Break and fix the source. Break it and reload: the preview is empty, and no stale mark shows | Pass |
