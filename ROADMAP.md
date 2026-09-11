@@ -31,7 +31,7 @@ deferrals in the backlog below, and a separate Critic `[APPROVED]`.
 | **M3** | Primitives & transforms | All four primitives, placed and oriented | Complete (2026-09-10; `m3-primitives-and-transforms`, Critic round 6 `[APPROVED]`; evidence in `docs/progress/M3/`) |
 | **M4** | CSG | Boolean operations; the bored cube renders | Complete (2026-09-10; `m4-csg`, Critic round 3 `[APPROVED]`; evidence in `docs/progress/M4/`) |
 | **M5** | Lighting & material | Lights and model color come from the source | Complete (2026-09-11; `m5-lighting-and-material`, Critic round 2 `[APPROVED]`; evidence in `docs/progress/M5/`) |
-| **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | Planned |
+| **M6** | Persistence & examples | Work survives reloads and moves as files — **first release** | In progress (`m6-persistence-and-examples`) |
 
 ---
 

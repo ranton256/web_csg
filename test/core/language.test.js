@@ -199,7 +199,7 @@ test('a camera block inside a body is an error, and is still checked', () => {
   assert.ok(checked.some(([, , m]) => m === 'unknown camera property `zoom`'), JSON.stringify(checked));
 });
 
-test('the default example still compiles to one sphere', () => {
+test('the sphere example\'s binding still compiles to one sphere', () => {
   const { diagnostics, scene } = compile('let r = 40;\n' + CAMERA + 'sphere(radius: r / 2 + 20);');
   assert.deepEqual(diagnostics, []);
   assert.equal(scene.root.children[0].radius, 40);

@@ -1,0 +1,27 @@
+## MODIFIED Requirements
+
+### Requirement: Top-level solids are unioned
+Source: DESIGN §8 Implicit union (grouping), Ray–solid intervals and
+tolerance (union merge rule).
+
+When the top level contains several solids, the model SHALL be their union.
+Along each ray, their intervals SHALL be merged: intervals that overlap, or
+whose gap is ≤ `ε`, become one interval. The merged interval keeps the
+boundary normals of the endpoints it retains. Solids of any type, including
+Boolean blocks, take part in the union.
+
+#### Scenario: Overlapping spheres form one interval
+- **WHEN** the top level contains `sphere(5);` and `sphere(10);`, and a ray travels along the X axis from x = -100 toward +X
+- **THEN** the ray has exactly one interval, `[90, 110]`
+
+#### Scenario: Order of top-level solids does not matter
+- **WHEN** a source with a camera and `sphere(radius: 40);` has `sphere(5);`, which lies entirely inside that sphere, added before it
+- **THEN** the rendered image is byte-identical to the source without `sphere(5);`
+
+#### Scenario: Camera inside nested spheres sees the outer exit
+- **WHEN** the camera is at the origin inside both `sphere(5)` and `sphere(10)`, looking at `[1, 0, 0]`
+- **THEN** the center pixel's visible hit is at t = 10, the radius-10 sphere's exit
+
+#### Scenario: Several top-level solids of different types are unioned
+- **WHEN** the top level contains `sphere(5);` and `box([4, 4, 20]);`
+- **THEN** a ray along +X from x = -100 has exactly one interval, `[95, 105]` (the sphere's extent), and a ray along +Z from z = -100 has exactly one interval, `[90, 110]` (the box's extent), which neither solid gives alone

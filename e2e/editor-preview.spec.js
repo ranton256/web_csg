@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+import { FIRST_LAUNCH_SOURCE } from '../src/ui/examples.js';
 import { BACKGROUND, counter, dragDivider, dragDividerTo, editAndSettle, imageStats, openApp, pixelAt, waitForCounter, waitForIdle, widthOf } from './support.js';
 
 const CAMERA = 'camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; }';
@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('the example renders on load, one ray per CSS pixel of the panel', async ({ page }) => {
-  await expect(page.locator('#source')).toHaveValue(DEFAULT_SOURCE);
+  await expect(page.locator('#source')).toHaveValue(FIRST_LAUNCH_SOURCE);
   const panel = await page.locator('#preview-panel').evaluate((el) => [el.clientWidth, el.clientHeight]);
   const stats = await imageStats(page);
   expect([stats.width, stats.height]).toEqual(panel.map(Math.floor));
@@ -134,10 +134,14 @@ test.describe('Tab indentation', () => {
   test('a Tab edit triggers a rebuild, and undo treats it exactly like typed spaces', async ({ page, browserName }) => {
     // The same state is built by real typing each time: "x" at the end, caret before it.
     async function undoAfter(action) {
+      // Start from the first-launch source: a reload restores the autosaved one.
+      await page.evaluate(() => localStorage.clear());
       await page.reload();
       await waitForIdle(page);
-      await page.locator('#source').click();
-      await page.keyboard.press('ControlOrMeta+End');
+      // Put the caret at the very end. (A click lands mid-text in the
+      // 31-line bored cube, and macOS has no Cmd+End shortcut.)
+      await page.locator('#source').focus();
+      await page.locator('#source').evaluate((el) => el.setSelectionRange(el.value.length, el.value.length));
       await page.keyboard.type('x');
       await page.keyboard.press('ArrowLeft');
       const before = await counter(page, 'rebuilds');
@@ -150,16 +154,20 @@ test.describe('Tab indentation', () => {
     const afterSpaces = await undoAfter(() => page.keyboard.type('  '));
     expect(afterTab).toBe(afterSpaces);
     // Chromium and Firefox keep typing and the indentation as separate steps; WebKit groups them.
-    if (browserName !== 'webkit') expect(afterTab).toBe(DEFAULT_SOURCE + 'x');
+    if (browserName !== 'webkit') expect(afterTab).toBe(FIRST_LAUNCH_SOURCE + 'x');
   });
 
   test('undo after Shift+Tab on a line of only spaces matches undo after deleting them by hand', async ({ page, browserName }) => {
     // Built by real typing: "x", a new line, then two spaces, with the caret at the end.
     async function spacesLine() {
+      // Start from the first-launch source: a reload restores the autosaved one.
+      await page.evaluate(() => localStorage.clear());
       await page.reload();
       await waitForIdle(page);
-      await page.locator('#source').click();
-      await page.keyboard.press('ControlOrMeta+End');
+      // Put the caret at the very end. (A click lands mid-text in the
+      // 31-line bored cube, and macOS has no Cmd+End shortcut.)
+      await page.locator('#source').focus();
+      await page.locator('#source').evaluate((el) => el.setSelectionRange(el.value.length, el.value.length));
       await page.keyboard.type('x');
       await page.keyboard.press('Enter');
       await page.keyboard.type('  ');
@@ -180,7 +188,7 @@ test.describe('Tab indentation', () => {
     expect(afterShiftTab).toBe(afterBackspace);
     expect(undoShiftTab).toBe(undoBackspace);
     // Chromium and Firefox undo just the removal; WebKit groups it with the typing before it.
-    if (browserName !== 'webkit') expect(undoShiftTab).toBe(DEFAULT_SOURCE + 'x\n  ');
+    if (browserName !== 'webkit') expect(undoShiftTab).toBe(FIRST_LAUNCH_SOURCE + 'x\n  ');
   });
 
   test('Esc, then Shift+Tab, leaves the editor with the text unchanged', async ({ page }) => {
@@ -210,6 +218,21 @@ test.describe('Tab indentation', () => {
     await page.keyboard.press('Tab');
     await expect(page.locator('#source')).toHaveValue('ab  ');
     expect(await focusedId(page)).toBe('source');
+  });
+
+  test('the header has keyboard-focusable Open… and Save buttons and an Examples… picker', async ({ page }) => {
+    const header = page.locator('#header');
+    for (const [selector, label] of [['#open-button', 'Open…'], ['#save-button', 'Save']]) {
+      await expect(header.locator(selector)).toBeVisible();
+      await expect(header.locator(selector)).toHaveText(label);
+      await page.locator(selector).focus();
+      expect(await focusedId(page)).toBe(selector.slice(1));
+    }
+    const picker = header.locator('#examples');
+    await expect(picker).toBeVisible();
+    await expect(picker.locator('option:checked')).toHaveText('Examples…');
+    await picker.focus();
+    expect(await focusedId(page)).toBe('examples');
   });
 
   test('the header has a keyboard-focusable Help button', async ({ page }) => {

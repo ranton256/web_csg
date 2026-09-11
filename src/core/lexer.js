@@ -24,13 +24,50 @@ const isIdentifierPart = (ch) => isIdentifierStart(ch) || isDigit(ch);
 const isSpace = (ch) => ch === ' ' || ch === '\t' || ch === '\n' || ch === '\r' || ch === '\f' || ch === '\v';
 const isHighSurrogate = (ch) => ch >= '\uD800' && ch <= '\uDBFF';
 const isLowSurrogate = (ch) => ch >= '\uDC00' && ch <= '\uDFFF';
+const BYTE_ORDER_MARK = String.fromCodePoint(0xfeff);
+
+// Characters a diagnostic cannot show as a glyph (D17): spaces, line and
+// paragraph separators, controls, and format characters.
+const INVISIBLE = /[\p{Zs}\p{Zl}\p{Zp}\p{Cc}\p{Cf}]/u;
+
+// Names shown for common invisible characters (D17).
+export const CHARACTER_NAMES = new Map([
+  [0x00a0, 'no-break space'],
+  [0x00ad, 'soft hyphen'],
+  [0x2002, 'en space'],
+  [0x2003, 'em space'],
+  [0x2009, 'thin space'],
+  [0x200b, 'zero-width space'],
+  [0x200c, 'zero-width non-joiner'],
+  [0x200d, 'zero-width joiner'],
+  [0x2028, 'line separator'],
+  [0x2029, 'paragraph separator'],
+  [0x202f, 'narrow no-break space'],
+  [0x2060, 'word joiner'],
+  [0x3000, 'ideographic space'],
+  [0xfeff, 'byte-order mark'],
+]);
+
+// How a diagnostic names one character (D17): 'X' for visible ASCII,
+// 'X' (U+XXXX) for other visible characters, and U+XXXX, with a name when it
+// has one, for invisible characters.
+export function describeCharacter(character) {
+  const codePoint = character.codePointAt(0);
+  const hex = `U+${codePoint.toString(16).toUpperCase().padStart(4, '0')}`;
+  if (INVISIBLE.test(character)) {
+    const name = CHARACTER_NAMES.get(codePoint);
+    return name === undefined ? hex : `${hex} (${name})`;
+  }
+  return codePoint < 0x80 ? `'${character}'` : `'${character}' (${hex})`;
+}
 
 // Returns an array of { type, value, line, column } tokens ending with an
 // 'eof' token. Types: 'number', 'identifier', 'keyword', 'punct'.
 // Throws SourceError at the first character that cannot start a token.
 export function tokenize(source) {
   const tokens = [];
-  let i = 0;
+  // One byte-order mark at the very start is skipped, and takes no column (D17).
+  let i = source[0] === BYTE_ORDER_MARK ? 1 : 0;
   let line = 1;
   let column = 1;
 
@@ -115,7 +152,7 @@ export function tokenize(source) {
       continue;
     }
 
-    throw new SourceError(`unexpected character '${String.fromCodePoint(source.codePointAt(i))}'`, startLine, startColumn);
+    throw new SourceError(`unexpected character ${describeCharacter(String.fromCodePoint(source.codePointAt(i)))}`, startLine, startColumn);
   }
 
   tokens.push({ type: 'eof', value: null, line, column });

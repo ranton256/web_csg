@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
-import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+import { SPHERE_SOURCE } from '../test/support/sphere-source.js';
 import { counter, dragDivider, dragDividerTo, editAndSettle, imageStats, openApp, waitForCounter, waitForIdle, widthOf } from './support.js';
 
 const CAMERA = 'camera {\n  position: [120, -160, 100];\n  lookAt: [0, 0, 0];\n}\n';
-const INVALID = DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);');
+const INVALID = SPHERE_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);');
 
 // Concentric spheres make a render take long enough (about a second) to
 // interact with while it is in progress.
@@ -30,7 +30,7 @@ test.describe('on a fake clock', () => {
 
   test('edits rebuild 300 ms after the last keystroke, and not before', async ({ page }) => {
     const rebuilds = await counter(page, 'rebuilds');
-    await page.locator('#source').fill(DEFAULT_SOURCE.replace('40', '50'));
+    await page.locator('#source').fill(SPHERE_SOURCE.replace('40', '50'));
     await page.clock.runFor(299);
     expect(await counter(page, 'rebuilds')).toBe(rebuilds);
     await page.clock.runFor(1);
@@ -39,9 +39,9 @@ test.describe('on a fake clock', () => {
 
   test('each edit restarts the wait', async ({ page }) => {
     const rebuilds = await counter(page, 'rebuilds');
-    await page.locator('#source').fill(DEFAULT_SOURCE.replace('40', '50'));
+    await page.locator('#source').fill(SPHERE_SOURCE.replace('40', '50'));
     await page.clock.runFor(200);
-    await page.locator('#source').fill(DEFAULT_SOURCE.replace('40', '55'));
+    await page.locator('#source').fill(SPHERE_SOURCE.replace('40', '55'));
     await page.clock.runFor(299);
     expect(await counter(page, 'rebuilds')).toBe(rebuilds);
     await page.clock.runFor(1);
@@ -144,7 +144,7 @@ test.describe('on real time', () => {
     await expect(page.locator('#diagnostics button')).toHaveText(['9:8 the radius must be greater than 0']);
     expect(await imageStats(page)).toEqual(before);
 
-    await editAndSettle(page, DEFAULT_SOURCE.replace('let r = 40;', 'let r = 20;'));
+    await editAndSettle(page, SPHERE_SOURCE.replace('let r = 40;', 'let r = 20;'));
     await expect(page.locator('#stale')).toBeHidden();
     await expect(page.locator('#diagnostics li')).toHaveCount(0);
     const fixed = await imageStats(page);

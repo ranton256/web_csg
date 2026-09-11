@@ -6,7 +6,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
+import { SPHERE_SOURCE } from '../test/support/sphere-source.js';
 import { SCENES } from '../test/support/scenes.js';
 import { VISION_EXAMPLE } from '../test/support/vision-example.js';
 import { REPO_ROOT, startServer } from './serve.mjs';
@@ -24,13 +24,21 @@ async function showSource(page, text) {
   await renderIdle(page);
 }
 
-// Later milestones add shots (e.g. one per built-in example).
+// Chooses a built-in example with the picker, then waits for its render (M6).
+async function chooseExample(page, id) {
+  const before = await page.evaluate(() => Number(document.body.dataset.rebuilds ?? 0));
+  await page.locator('#examples').selectOption(id);
+  await page.waitForFunction((count) => Number(document.body.dataset.rebuilds ?? 0) > count, before);
+  await renderIdle(page);
+}
+
+// Each shot starts from a first launch: the bored cube, since M6.
 const SHOTS = [
   { name: 'app', prepare: async () => {} },
   {
     name: 'stale',
     prepare: async (page) => {
-      await showSource(page, DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);'));
+      await showSource(page, SPHERE_SOURCE.replace('sphere(radius: r);', 'sphere(radius: r - 40);'));
       await page.locator('#stale').waitFor({ state: 'visible' });
     },
   },
@@ -61,6 +69,10 @@ const SHOTS = [
       await renderIdle(page);
     },
   },
+  // One shot per built-in example, loaded with the Examples… picker (M6).
+  { name: 'example-bored-cube', prepare: (page) => chooseExample(page, 'bored-cube') },
+  { name: 'example-primitives', prepare: (page) => chooseExample(page, 'primitives') },
+  { name: 'example-boolean-operations', prepare: (page) => chooseExample(page, 'boolean-operations') },
 ];
 const VIEWPORT = { width: 1280, height: 800 };
 
@@ -79,15 +91,18 @@ const server = await startServer({ port: 0 });
 const baseURL = `http://127.0.0.1:${server.address().port}`;
 const browser = await chromium.launch();
 try {
-  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   fs.mkdirSync(outputDir, { recursive: true });
   for (const shot of SHOTS) {
+    // A new page has a new browser context, so no autosaved source carries
+    // over from the previous shot.
+    const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
     await page.goto(`${baseURL}/`, { waitUntil: 'load' });
     await renderIdle(page);
     await shot.prepare(page);
     const file = path.join(outputDir, `${shot.name}.png`);
     await page.screenshot({ path: file });
     console.log(`Wrote ${path.relative(REPO_ROOT, file)}`);
+    await page.close();
   }
 } finally {
   await browser.close();

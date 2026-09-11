@@ -3,11 +3,11 @@
 
 import { test } from 'node:test';
 import { renderSource } from '../../src/core/render.js';
-import { DEFAULT_SOURCE } from '../../src/ui/default-source.js';
+import { SPHERE_SOURCE } from '../support/sphere-source.js';
 import { expectMatchesGolden } from '../support/golden.js';
 
-test('the default example matches golden "sphere"', () => {
-  const { rgba } = renderSource(DEFAULT_SOURCE, 64, 48);
+test('the sphere example matches golden "sphere"', () => {
+  const { rgba } = renderSource(SPHERE_SOURCE, 64, 48);
   expectMatchesGolden('sphere', 64, 48, rgba);
 });
 

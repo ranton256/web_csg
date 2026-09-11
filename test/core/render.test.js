@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compile, renderRows, renderSource } from '../../src/core/render.js';
-import { DEFAULT_SOURCE } from '../../src/ui/default-source.js';
+import { SPHERE_SOURCE } from '../support/sphere-source.js';
 
 const BACKGROUND = [31, 31, 36];
 const isBackground = (rgba, i) => rgba[i] === BACKGROUND[0] && rgba[i + 1] === BACKGROUND[1] && rgba[i + 2] === BACKGROUND[2];
@@ -21,8 +21,8 @@ function coverage(rgba, width, height) {
   return { rows: rows.size, columns: columns.size };
 }
 
-test('the default example renders to a width × height RGBA buffer', () => {
-  const { diagnostics, rgba } = renderSource(DEFAULT_SOURCE, 64, 48);
+test('the sphere example renders to a width × height RGBA buffer', () => {
+  const { diagnostics, rgba } = renderSource(SPHERE_SOURCE, 64, 48);
   assert.deepEqual(diagnostics, []);
   assert.ok(rgba instanceof Uint8ClampedArray);
   assert.equal(rgba.length, 64 * 48 * 4);
@@ -44,21 +44,21 @@ test('a camera-only source renders only the background', () => {
 });
 
 test('rendering is deterministic', () => {
-  assert.deepEqual(renderSource(DEFAULT_SOURCE, 64, 48).rgba, renderSource(DEFAULT_SOURCE, 64, 48).rgba);
+  assert.deepEqual(renderSource(SPHERE_SOURCE, 64, 48).rgba, renderSource(SPHERE_SOURCE, 64, 48).rgba);
 });
 
 test('rendering in bands equals one full render', () => {
-  const { scene } = compile(DEFAULT_SOURCE);
+  const { scene } = compile(SPHERE_SOURCE);
   const banded = new Uint8ClampedArray(64 * 48 * 4);
   renderRows(scene, 64, 48, 0, 17, banded);
   renderRows(scene, 64, 48, 17, 31, banded);
   renderRows(scene, 64, 48, 31, 48, banded);
-  assert.deepEqual(banded, renderSource(DEFAULT_SOURCE, 64, 48).rgba);
+  assert.deepEqual(banded, renderSource(SPHERE_SOURCE, 64, 48).rgba);
 });
 
 test('width does not change the vertical field of view', () => {
-  const narrow = coverage(renderSource(DEFAULT_SOURCE, 64, 48).rgba, 64, 48);
-  const wide = coverage(renderSource(DEFAULT_SOURCE, 96, 48).rgba, 96, 48);
+  const narrow = coverage(renderSource(SPHERE_SOURCE, 64, 48).rgba, 64, 48);
+  const wide = coverage(renderSource(SPHERE_SOURCE, 96, 48).rgba, 96, 48);
   assert.ok(narrow.rows > 0);
   assert.deepEqual(wide, narrow);
 });
@@ -71,8 +71,8 @@ test('from inside sphere(50) every pixel shows the sphere', () => {
 test('from outside, overlapping spheres render as their union regardless of order', () => {
   // sphere(5) is listed first but lies behind sphere(10)'s surface on every ray.
   assert.deepEqual(
-    renderSource(DEFAULT_SOURCE.replace('sphere(radius: r);', 'sphere(5);\nsphere(radius: r);'), 64, 48).rgba,
-    renderSource(DEFAULT_SOURCE, 64, 48).rgba,
+    renderSource(SPHERE_SOURCE.replace('sphere(radius: r);', 'sphere(5);\nsphere(radius: r);'), 64, 48).rgba,
+    renderSource(SPHERE_SOURCE, 64, 48).rgba,
   );
 });
 
@@ -85,9 +85,9 @@ test('inside nested spheres, the image equals the outer sphere alone', () => {
 });
 
 test('bad sizes and row ranges are programming errors', () => {
-  const { scene } = compile(DEFAULT_SOURCE);
-  assert.throws(() => renderSource(DEFAULT_SOURCE, 0, 48), RangeError);
-  assert.throws(() => renderSource(DEFAULT_SOURCE, 64.5, 48), RangeError);
+  const { scene } = compile(SPHERE_SOURCE);
+  assert.throws(() => renderSource(SPHERE_SOURCE, 0, 48), RangeError);
+  assert.throws(() => renderSource(SPHERE_SOURCE, 64.5, 48), RangeError);
   assert.throws(() => renderRows(scene, 4, 4, 2, 5, new Uint8ClampedArray(64)), RangeError);
   assert.throws(() => renderRows(scene, 4, 4, 0, 4, new Uint8ClampedArray(60)), RangeError);
 });

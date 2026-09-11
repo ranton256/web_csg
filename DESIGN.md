@@ -75,8 +75,9 @@ spec-driven development that students read, rebuild, and extend.
   solid dark neutral background; no shadows (D8, D25). Constants in §5.
 - A visible indicator when the preview shows the last valid model rather than
   the current source.
-- A "Help" button in the page header opens a dialog with a reference for the
-  modeling language (D23).
+- The page header holds a toolbar: "Open…" and "Save" buttons, an
+  "Examples…" picker (D6, D26), and a "Help" button that opens a dialog with
+  a reference for the modeling language (D23).
 
 ### Asset inventory
 
@@ -193,7 +194,17 @@ Scenario: Invalid source returns diagnostics and no image
 
 Agreed in D9 (2026-09-10). Rules:
 
-- **Comments:** `// to end of line` and `/* block */` (block comments do not nest).
+- **Comments:** `// to end of line` and `/* block */` (block comments do not
+  nest). A comment may contain any character.
+- **Characters (D17):** identifiers are ASCII letters, digits, and `_`, and
+  whitespace is the ASCII space, tab, line breaks (`\n`, `\r\n`), form feed,
+  and vertical tab. One byte-order mark (U+FEFF) at the very start of the
+  source is skipped and takes no column. Any other character outside a
+  comment is an error, and its diagnostic names it: `'$'` for visible ASCII,
+  `'é' (U+00E9)` for visible non-ASCII, and `U+XXXX` for an invisible
+  character (Unicode categories Zs, Zl, Zp, Cc, Cf), with a name for the
+  common ones listed in the `modeling-language` spec, for example
+  `U+00A0 (no-break space)`.
 - **Statements** end with `;`, except block statements, which end with `}`.
 - **Reserved words:** `let`, `camera`, `light`, `material`, `sphere`, `cube`,
   `box`, `cylinder`, `translate`, `rotate`, `scale`, `union`, `intersection`,
@@ -614,7 +625,9 @@ Scenario: Difference boundaries shade with reversed cutter normals
 
 ### Feature: Save, load, and examples
 
-Agreed in D6 and D10 (2026-09-10). No server or accounts.
+Agreed in D6 and D10 (2026-09-10). No server or accounts. The toolbar, the
+browser's native confirmation prompt, the save file name, and the other
+details are recorded in D26 and the `save-load-and-examples` spec.
 
 ```gherkin
 Scenario: Current source is autosaved and restored on reload
@@ -655,6 +668,30 @@ Scenario: Replacing unedited text does not ask
   Given the editor text equals the text of the last Open, Save, or example load
   When the user chooses an example
   Then the example replaces the text without a confirmation prompt
+
+Scenario: Save names the file after the last Open or example
+  Given nothing has been opened, then the Primitives example is chosen, then a file named part.csg is opened
+  When the user chooses Save after each step
+  Then the files are named model.csg, primitives.csg, and part.csg
+
+Scenario: A file with a byte-order mark opens cleanly
+  Given a valid .csg file that begins with a byte-order mark
+  When the user opens it
+  Then it evaluates with no diagnostics
+
+Scenario: Cancelling Open changes nothing
+  Given the editor text has been edited
+  When the user chooses Open but selects no file
+  Then the editor text is unchanged, and no confirmation is asked
+
+Scenario: The examples picker resets after a choice
+  When the user chooses an example
+  Then the picker shows "Examples…" again, so the same example can be chosen again
+
+Scenario: The app works without storage
+  Given the browser's localStorage cannot be used
+  When the app is opened and edited
+  Then it shows the bored cube, rebuilds edits as usual, and reports no error
 ```
 
 ### Feature: Live rebuild and progressive rendering
@@ -740,6 +777,11 @@ Scenario: Fixing the error clears the stale indicator
   When the source is edited to be valid again
   Then the preview shows the new model
   And the stale indicator is removed
+
+Scenario: No valid model yet (D27)
+  Given the page opens with an invalid saved source
+  When it is rebuilt
+  Then the errors are listed, the preview shows no model, and no stale indicator is shown
 ```
 
 ## 9. Build, test, and verify
@@ -797,7 +839,9 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D23~~ | **Resolved 2026-09-11 (the owner's decisions, `backlog-closeout`):** (a) the backlog close-out covers the dev server's dot-paths and symlinked entry-point check, Tab indentation, and on-request help; CI waits for a git remote, and point lights stay parked. (b) Tab inserts two spaces, or indents each touched line by two spaces; Shift+Tab removes up to two; Esc then Tab, or Shift+Tab, moves focus out of the editor (WCAG 2.1.2), and a modifier key pressed on its own does not cancel the escape. (c) A "Help" button in the page header opens a modal dialog with the language reference and an example; Esc or Close returns focus. (d) Undo treats an indentation edit exactly like typing the same characters. WebKit groups consecutive typing, including indentation, into one undo step (the owner's decision, after the implementation showed it). See §4 and §8 Editor indentation and help. | — | — |
 | ~~D24~~ | **Resolved 2026-09-11 (owner):** the project does not need CI, so the backlog's CI item is dropped. This supersedes D23 (a)'s "CI waits for a git remote". The gate stays a process step: the pre-commit hook runs `npm test`, and the full `npm run check` runs before every merge, archive, and milestone (CONSTRAINTS §4). | — | — |
 | ~~D25~~ | **Resolved 2026-09-11 (`point-lights`; point lights un-parked from D8 at the owner's request).** The owner's decisions: (a) a `light` block has exactly one of `direction` (a directional light) or `position` (a point light); both kinds share the limit of 4, and there is no new reserved word. (b) No falloff: a point light contributes its `intensity` at any distance, so a scene scaled together with its lights renders the same (measured byte-identical at ×1e-3 and ×1e5, 64×48). **The writer's rules, accepted by the owner (2026-09-11, after the Safari check):** (c) no occlusion, because shadows stay parked: a light contributes wherever `N·L > 0`, so a light inside a closed solid leaves its outside with ambient light only; (d) a point light contributes nothing at a hit point within `ε` of its position, or at a distance too large to compute (best effort, D16); (e) a block with both is reported at the second of the two, as "light block cannot have both `direction` and `position`", and a block with neither as "light block is missing `direction` or `position`", which replaces "missing `direction`". Recorded in §8 Lighting and shading and the `lighting-and-shading` spec. | — | — |
-| D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
+| ~~D26~~ | **Resolved 2026-09-11 (M6; the owner chose the header toolbar and the browser's native `confirm()` prompt; the rest are the writer's defaults, pending the owner's acceptance):** (a) Save names the file after the last opened file, else the last loaded example (`bored-cube.csg`, `primitives.csg`, or `boolean-operations.csg`), else `model.csg`; the name is kept for the page session only. (b) The baseline, the text of the last Open, Save, or example load, is saved with the source, so a reload does not change whether a replacement asks; on first launch it is the bored cube. (c) Open asks only after a file is chosen, so cancelling the chooser never prompts. (d) An Open or an example rebuilds at once, with no 300 ms debounce. (e) When `localStorage` cannot be used, the app runs without autosave and reports no error. Recorded in §8 Save, load, and examples and the `save-load-and-examples` spec. | — | — |
+| ~~D27~~ | **Resolved 2026-09-11 (owner, during M6):** the stale indicator says the preview shows the last valid model, so it stays hidden while no valid model exists yet: for example, when the saved source restored on reload is invalid. The preview then shows no model, and the diagnostics list the errors; the first valid rebuild renders as usual. Recorded in §8 Invalid edits keep the last valid preview and the `stale-preview` spec. | — | — |
+| ~~D17~~ | **Resolved 2026-09-11 (owner, in the D17 interview before M6):** identifiers stay ASCII letters, digits, and `_`, and whitespace stays the ASCII space, tab, and line-break characters, so `é` and a non-breaking space remain errors. One U+FEFF at the very start of the source is skipped and takes no column; anywhere else it is an error. Comments may contain any character. An unexpected character's diagnostic names it: `'$'` for visible ASCII, `'é' (U+00E9)` for visible non-ASCII, and `U+XXXX` for an invisible character (categories Zs, Zl, Zp, Cc, Cf), plus a name for 14 common ones, for example `U+00A0 (no-break space)` and `U+FEFF (byte-order mark)`. Recorded in the `modeling-language` spec and §8 Modeling language by M6. | — | — |
 ## Optional features (parked)
 
 Out of scope until specifically requested (source: `vision.md` "Later,

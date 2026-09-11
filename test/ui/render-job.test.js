@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compile, renderRows, renderSource } from '../../src/core/render.js';
-import { DEFAULT_SOURCE } from '../../src/ui/default-source.js';
+import { SPHERE_SOURCE } from '../support/sphere-source.js';
 import { startRenderJob } from '../../src/ui/render-job.js';
 
 const WIDTH = 32;
@@ -15,7 +15,7 @@ function makeJob(overrides = {}) {
   let done = 0;
   const rgba = new Uint8ClampedArray(WIDTH * HEIGHT * 4);
   const job = startRenderJob({
-    scene: compile(DEFAULT_SOURCE).scene,
+    scene: compile(SPHERE_SOURCE).scene,
     width: WIDTH,
     height: HEIGHT,
     rgba,
@@ -61,7 +61,7 @@ function runWithRowCosts(rowCost) {
   const slices = [[]];
   const queue = [];
   startRenderJob({
-    scene: compile(DEFAULT_SOURCE).scene,
+    scene: compile(SPHERE_SOURCE).scene,
     width: WIDTH,
     height: HEIGHT,
     rgba: new Uint8ClampedArray(WIDTH * HEIGHT * 4),
@@ -107,7 +107,7 @@ test('with varying row costs, every row starts before 12 ms and each slice ends 
 test('the finished buffer equals a single full render', () => {
   const { rgba, runAll } = makeJob();
   runAll();
-  assert.deepEqual(rgba, renderSource(DEFAULT_SOURCE, WIDTH, HEIGHT).rgba);
+  assert.deepEqual(rgba, renderSource(SPHERE_SOURCE, WIDTH, HEIGHT).rgba);
 });
 
 test('with a frozen clock, one slice renders everything', () => {

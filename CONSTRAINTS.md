@@ -78,7 +78,8 @@ src/core/
   shade.js       # keyLight, shade, encode
   render.js      # compile, renderRows, renderSource (the public entry points)
 src/ui/
-  default-source.js  # The page's example (no browser APIs)
+  examples.js        # EXAMPLES, FIRST_LAUNCH_SOURCE: the built-in examples (no browser APIs)
+  persistence.js     # createStore, needsConfirm, saveFileName: autosave and replacement rules (storage passed in)
   indent.js          # indentEdit: the Tab and Shift+Tab rules (no browser APIs)
   help-content.js    # HELP_SECTIONS, HELP_EXAMPLE: the Help dialog's reference (no browser APIs)
   settings.js        # Editor numbers mirroring DESIGN §5 (debounces, time slice, divider)
@@ -117,8 +118,9 @@ src/ui/
 - `test/core-purity.test.js` enforces the boundary: no browser identifiers,
   and only relative imports within `src/core/`.
 - The pure `src/ui/` helpers (`text-position`, `debounce`, `render-job`,
-  `clampEditorWidth`, `settings`) take their timers and clock as parameters,
-  and are unit-tested in Node under `test/ui/`. `main.js` is covered by the
+  `clampEditorWidth`, `settings`, `examples`, `persistence`) take their
+  timers, clock, and storage as parameters, and are unit-tested in Node under
+  `test/ui/`. `main.js` is covered by the
   e2e tests.
 
 ## 3. Runtime and operational requirements

@@ -3,10 +3,11 @@
 
 import { compile } from '../core/render.js';
 import { createDebouncer } from './debounce.js';
-import { DEFAULT_SOURCE } from './default-source.js';
 import { attachDivider, clampEditorWidth } from './divider.js';
+import { EXAMPLES, FIRST_LAUNCH_SOURCE } from './examples.js';
 import { HELP_SECTIONS } from './help-content.js';
 import { indentEdit } from './indent.js';
+import { createStore, needsConfirm, saveFileName } from './persistence.js';
 import { startRenderJob } from './render-job.js';
 import { SETTINGS } from './settings.js';
 import { lineColumnToOffset, lineCount } from './text-position.js';
@@ -29,6 +30,12 @@ function count(name) {
   counters[name]++;
   document.body.dataset[name] = String(counters[name]);
 }
+
+// --- Saved source (D6, D26) --------------------------------------------------
+
+const store = createStore(() => window.localStorage);
+let baseline = null; // the text of the last Open, Save, or example load
+let lastName = null; // the file or example name that Save downloads under
 
 // --- Gutter ---------------------------------------------------------------
 
@@ -111,8 +118,10 @@ function rebuild() {
   const { diagnostics, scene } = compile(source.value);
   showDiagnostics(diagnostics);
   if (scene === null) {
-    // Keep showing (and finishing) the last valid model, marked stale.
-    staleIndicator.hidden = false;
+    // Keep showing (and finishing) the last valid model, marked stale. With no
+    // valid model yet (an invalid saved source on reload), nothing is shown,
+    // so the indicator stays hidden (D27).
+    staleIndicator.hidden = lastScene === null;
     return;
   }
   staleIndicator.hidden = true;
@@ -122,6 +131,7 @@ function rebuild() {
 
 const rebuildDebouncer = createDebouncer(SETTINGS.rebuildDebounceMs);
 source.addEventListener('input', () => {
+  store.saveSource(source.value);
   updateGutter();
   rebuildDebouncer.trigger(rebuild);
 });
@@ -217,6 +227,64 @@ for (const section of HELP_SECTIONS) {
 byId('help-button').addEventListener('click', () => helpDialog.showModal());
 byId('help-close').addEventListener('click', () => helpDialog.close());
 
+// --- Open, Save, and examples (D6, D26) --------------------------------------
+
+const CONFIRM_REPLACE = 'Replace the editor text? Changes since the last Open, Save, or example will be lost.';
+
+// Asks before replacing text that differs from the last loaded text.
+const mayReplace = () => !needsConfirm(source.value, baseline) || window.confirm(CONFIRM_REPLACE);
+
+// Shows text as a new document, rebuilt at once, and makes it the last loaded
+// text. Setting the value starts a new undo history.
+function load(text, name) {
+  source.value = text;
+  source.setSelectionRange(0, 0);
+  source.scrollTop = 0;
+  rebuildDebouncer.cancel();
+  updateGutter();
+  rebuild();
+  baseline = text;
+  lastName = name;
+  store.saveSource(text);
+  store.saveBaseline(text);
+}
+
+// Open asks only once a file is chosen, so cancelling the chooser changes
+// nothing. The file is read as UTF-8, which drops a leading byte-order mark.
+const openFile = byId('open-file');
+byId('open-button').addEventListener('click', () => openFile.click());
+openFile.addEventListener('change', async () => {
+  const [file] = openFile.files;
+  openFile.value = ''; // so the same file can be chosen again
+  if (file === undefined) return;
+  const text = await file.text();
+  if (mayReplace()) load(text, file.name);
+});
+
+// Save downloads exactly the editor text, which then counts as loaded.
+byId('save-button').addEventListener('click', () => {
+  const text = source.value;
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = saveFileName(lastName);
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url));
+  baseline = text;
+  store.saveBaseline(text);
+});
+
+// The picker shows its "Examples…" prompt again after every choice.
+const examplesPicker = byId('examples');
+for (const example of EXAMPLES) examplesPicker.append(new Option(example.title, example.id));
+examplesPicker.addEventListener('change', () => {
+  const example = EXAMPLES.find((candidate) => candidate.id === examplesPicker.value);
+  examplesPicker.selectedIndex = 0;
+  if (example !== undefined && mayReplace()) load(example.source, example.fileName);
+});
+
 // --- Resizing ---------------------------------------------------------------
 
 // Sizes the canvas to the panel (one ray per CSS pixel). The old image is
@@ -261,7 +329,16 @@ window.addEventListener('resize', () => setEditorWidth(editorWidth));
 // --- Start ------------------------------------------------------------------
 
 setEditorWidth(editorWidth);
-source.value = DEFAULT_SOURCE;
+// The saved source and its baseline, or on first launch the bored cube (D10).
+const saved = store.load();
+if (saved === null) {
+  source.value = FIRST_LAUNCH_SOURCE;
+  baseline = FIRST_LAUNCH_SOURCE;
+  store.saveBaseline(baseline);
+} else {
+  source.value = saved.source;
+  baseline = saved.baseline;
+}
 updateGutter();
 fitCanvas();
 rebuild();
