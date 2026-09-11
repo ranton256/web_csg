@@ -102,3 +102,11 @@
 - [x] 8.5 I3 (owner: fix in M4): an `up` whose length overflows reports "up is too large" (`camera.js`, spec scenario, test, D16 note)
 - [x] 8.6 I1, I4, I5: the design.md risk wording; the stale let-scope clause (MODIFIED in the `modeling-language` delta); the D16 row in order in DESIGN §12
 - [ ] 8.7 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
+
+## 9. Critic round 2 fixes
+
+- [x] 9.1 Finding 1 (owner: the measured scenario): the `ray-intervals` "Scaled scenes render identically" requirement is the 64×48 bored-cube check at ×1e-3 and ×1e5, with an explicit limit for near-`ε` crossings; DESIGN §5, D7, and design D-6 match
+- [x] 9.2 Finding 2 (owner: `[1e-3, 3e7]`, zero exempt): DESIGN §5 and D7, design D-6, the proposal, ROADMAP, and the README state the range for nonzero magnitudes, covering the 2.75e7 camera-to-model distance
+- [x] 9.3 Finding 3: D21, DESIGN §8, the `ray-intervals` spec, and design D-2 say that a cutter that only touches the base leaves its boundary; a scene test and a scenario for the touching cutter
+- [x] 9.4 Informational: the README's R1 mutant description; a ROADMAP backlog line for an underflowing `up`
+- [ ] 9.5 Seen to fail for the new test; the full gate and a fresh clone; the README Critic round 2 section

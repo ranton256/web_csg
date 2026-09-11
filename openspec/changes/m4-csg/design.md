@@ -76,9 +76,9 @@ two normalized lists:
   base boundary leaves a remainder of length ≤ `ε`, which is dropped,
   removing that base boundary.
 - The union gap-merge rule is unchanged.
-- A cutter that stops short of the base (a gap ≤ `ε`) does not touch it, so
-  the base boundary stays (DESIGN D21, the owner's decision after Critic
-  round 1).
+- A cutter that only touches the base, or stops short of it by a gap ≤ `ε`,
+  removes none of it, so the base boundary stays (DESIGN D21: the owner's
+  decision after Critic round 1, wording corrected after round 2).
 
 **The difference node** evaluates as
 `subtract(first, children.slice(1).reduce(union, []))`, per the "A minus the
@@ -133,18 +133,20 @@ renders each copy at 64×48, and compares it with the unscaled render within
 1 per channel. The factors are 1e-3 and 1e5.
 
 **If both pass,** DESIGN §5 marks `ε = 1e-6` final and revises the scale
-range to `[1e-3, 2e7]` (owner decision, recorded in §12 D7). The reason:
-×1e-3 reaches a smallest magnitude of 0.001 (the overhang), and ×1e5 a
-largest of 1.6e7 (the camera).
+range to `[1e-3, 3e7]` for nonzero magnitudes (owner decision, recorded in
+§12 D7; corrected from 2e7 after Critic round 2). The reason: ×1e-3 reaches
+a smallest magnitude of 0.001 (the overhang), and ×1e5 a largest of 2.75e7
+(the distance from the camera to the farthest model point). Zero components
+are exact.
 
 **If either fails,** the implementation stops and the owner decides the
 revision, recording the measured failure. `ε` is not tuned silently.
 
-**Scope (the owner's decision after Critic round 1):** the guarantee covers
-scenes whose dimensions, coordinates, and derived feature sizes stay in the
-supported scale, before and after scaling. `ε` is absolute, so a thinner
-feature can change with scaling. A test records one such case: a floor plate
-that is a sliver at ×1 and real at ×1e5.
+**Scope (the owner's decisions after Critic rounds 1 and 2):** the guarantee
+is the measured 64×48 scenario, not a general invariance claim. `ε` is
+absolute, so a pixel whose ray crosses a solid over a length near `ε` can
+change with scale, at a silhouette edge or through a thin feature. A test
+records one such case: a floor plate that is a sliver at ×1 and real at ×1e5.
 
 ### D-7: Goldens, capture, and tests
 - **Goldens (64×48):**

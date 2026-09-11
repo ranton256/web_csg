@@ -8,7 +8,8 @@ Owner decisions in this change:
   non-finite values stay errors, and an overflowing camera distance gets a
   clear diagnostic.
 - **Scale range:** keep DESIGN's ×1e-3 and ×1e5 scaled-render scenario. If
-  it passes, widen the range to what it exercises, `[1e-3, 2e7]`.
+  it passes, widen the range to what it exercises, `[1e-3, 3e7]` (corrected
+  from 2e7 after Critic round 2).
 - **D20:** keep the narrowed rule, and close its backlog line.
 - **Backlog:** fold in the mixed-type top-level union test.
 
@@ -28,7 +29,7 @@ Owner decisions in this change:
 | Criterion | Evidence | Result |
 | --- | --- | --- |
 | All Boolean operations and Ray–solid intervals and tolerance scenarios pass, including `difference { A; A; }` being empty | [Scenario coverage](#scenario-coverage) | Pass |
-| The scaled-render scenario passes at ×1e-3 and ×1e5; `ε` and the scale range marked final in DESIGN §5, or revised with the measured reason | [Scaled render](#scaled-render-measurement): byte-identical renders. DESIGN §5 marks `ε = 1e-6` final and revises the range to `[1e-3, 2e7]`, with the reason in §12 D7 | Pass |
+| The scaled-render scenario passes at ×1e-3 and ×1e5; `ε` and the scale range marked final in DESIGN §5, or revised with the measured reason | [Scaled render](#scaled-render-measurement): byte-identical renders. DESIGN §5 marks `ε = 1e-6` final and revises the range to `[1e-3, 3e7]`, with the reason in §12 D7 | Pass |
 | The bored-cube golden image is committed and passing | `test/golden/bored-cube.ppm` (64×48), in `test/core/csg-golden.test.js`. This is the core-render "callable without a browser" scenario | Pass |
 | Evidence: a capture of the bored cube | `bored-cube.png` above | Pass |
 | Full gate in the working tree | `npm run check < /dev/null` on the final tree (after the `booleans` camera change) | Pass: exit 0; `node --test` 244/244; Playwright 69/69 |
@@ -61,9 +62,17 @@ the vision example.
 | ×100000 | 0 | 0 of 12,288 |
 
 Both scaled renders are byte-identical to the unscaled one. The ×1e-3 render's
-smallest magnitude is the 0.001 overhang; the ×1e5 render's largest is the
-camera coordinate at 1.6e7. DESIGN §5 now states `ε = 1e-6` (final) and the
-supported scale `[1e-3, 2e7]` (final), and §12 D7 records the measurement.
+smallest magnitude is the 0.001 overhang. The ×1e5 render's largest is the
+distance from the camera to the farthest model point, 2.75e7; the camera
+coordinate itself is 1.6e7. DESIGN §5 now states `ε = 1e-6` (final) and the
+supported scale `[1e-3, 3e7]` for nonzero magnitudes (final), and §12 D7
+records the measurement.
+
+This is the guarantee: the measured 64×48 scenario, not a general
+invariance claim (the owner's decision after Critic round 2). At 640×480,
+two silhouette pixels of the bored cube change at ×1e-3, because their rays
+cross the cube over less than 1e-3 at ×1, and so over less than `ε` once
+scaled.
 
 ## Goldens
 
@@ -134,13 +143,40 @@ Each run listed seven files explicitly: `boolean`, `scaled-render`, `camera`,
 
 | Break | Tests that failed |
 | --- | --- |
-| R1: a transform body pushes its leaves into the parent's children (the pre-M4 flattening) | 2/97: `a multi-child transform body inside a Boolean is one child…` and `an intersection of three children…` |
+| R1: a transform body sends its leaves to the parent's children (the pre-M4 flattening), while an empty union node is still pushed for the block | 2/97: `a multi-child transform body inside a Boolean is one child…`, and `an intersection of three children…`, whose empty extra child empties the intersection. Critic round 2 ran the flattening without the empty node and saw only the first test fail; the first test is the one that guards B2 |
 | R2: an intersection uses only its first two children | 1/97: `an intersection of three children keeps what all of them share` |
 | R3: a near-miss cutter within `ε` opens the base face | 2/97: `a cutter that stops just short of the base leaves its face (DESIGN D21)` and `a cutter that only touches the base changes nothing` |
 | R4: no finiteness check on `up` | 1/97: `an up vector too large to measure is reported as such…` |
 | R5: `ε = 0` | 10/97, including `a floor plate thinner than the supported scale…` |
 
 Gate after the fixes: `npm test` passed 249/249, and
+`openspec validate m4-csg --strict` is valid.
+
+## Critic round 2: `[REJECTED]`, and fixes
+
+The Critic reviewed `8a614e4` and ran the gates itself (249/249, 69/69). It
+confirmed B2, B3, I1, I3, and I5. Its own fuzz of `intersect` and `subtract`
+(400,000 cases, with ties and near-`ε` offsets) found no errors, and it
+killed its own extra mutants. All three blocking findings were spec wording.
+
+| Finding | Fix |
+| --- | --- |
+| 1: the scoped scale guarantee still failed for the bored cube itself. At 640×480, ×1e-3 flips two silhouette pixels, whose rays cross the cube over 6.5e-4 and 7.2e-4 at ×1, and so under `ε` once scaled. A grazing chord is not a feature an author can keep in range | Owner decision: the requirement is the measured 64×48 bored-cube scenario, which is what finalized `ε`, with an explicit limit: near-`ε` crossings (silhouette edges, thin features) can change with scale. The `ray-intervals` requirement, DESIGN §5, D7, and design D-6 all say so. The thin-plate test stays as an example of the limit |
+| 2: the ×1e5 check exercised visible hits at 2.5e7, beyond the 2e7 range it finalized. Zero coordinates have magnitude 0 | Owner decision: `[1e-3, 3e7]` for nonzero coordinates, dimensions, and camera-to-model distances. The farthest model point at ×1e5 is 2.75e7 away. Zero components are exact and always supported. DESIGN §5 and D7, design D-6, the proposal, ROADMAP, and this README are updated |
+| 3: D21 said "overlaps or meets", but the code, and the tested behavior, leave the face when the cutter only touches the base | D21, DESIGN §8, the `ray-intervals` spec, and design D-2 now say "overlaps"; a cutter that only touches, or stops short by ≤ `ε`, leaves the base boundary. A new scenario and a scene test (`a cutter that only touches the base leaves its face`) |
+| Informational: the README's R1 count did not reproduce as described | The R1 row now states the exact mutant, which still pushes an empty union node, and why the second test fails |
+| Informational: an `up` whose components underflow reports "up must be nonzero" | A ROADMAP backlog line, as best effort under D16 |
+| Informational: §5 and the spec phrased the scope differently | Both now state the measured scenario and the same limit |
+
+Seen to fail, in a scratch copy of the working tree with the round 2
+changes. The run listed `boolean`, `intervals`, and `scaled-render`
+explicitly, with a baseline of 37/37.
+
+| Break | Tests that failed |
+| --- | --- |
+| T1: a cutter that only touches the base replaces its face. `subtract` no longer skips cutters ending exactly at the base's start, and `>=` in place of `>` lets their exit replace the base boundary | 2/37: `a cutter that only touches the base leaves its face (DESIGN D21)` and `a cutter that only touches the base changes nothing` |
+
+Gate after the fixes: `npm test` passed 250/250, and
 `openspec validate m4-csg --strict` is valid.
 
 ## Implementation notes

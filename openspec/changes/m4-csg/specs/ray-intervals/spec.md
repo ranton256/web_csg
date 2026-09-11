@@ -10,8 +10,9 @@ After every Boolean operation:
   leave no seam;
 - in a difference, a cutter boundary within `ε` of a base boundary SHALL
   remove that base boundary, so a flush cut opens the face. This applies
-  where the cutter overlaps or meets the base. A cutter that stops short of
-  the base, even by a gap ≤ `ε`, SHALL leave the base boundary (DESIGN D21).
+  where the cutter overlaps the base. A cutter that only touches the base,
+  or stops short of it by a gap ≤ `ε`, SHALL leave the base boundary
+  (DESIGN D21).
 
 #### Scenario: Flush union faces leave no seam
 - **WHEN** the scene is `union { box([10, 10, 10]); translate([10, 0, 0]) { box([10, 10, 10]); } }` and a ray travels along +X from x = -100
@@ -29,25 +30,31 @@ After every Boolean operation:
 - **WHEN** the scene is `difference { cube(10); translate([0, 0, 10.0000005]) { cube(10); } }` and a ray travels along −Z from `[0, 0, 100]`
 - **THEN** the ray has exactly one interval, `[95, 105]`, entering through the base cube's own top face
 
+#### Scenario: A cutter that only touches the base leaves the face
+- **WHEN** the scene is `difference { cube(10); translate([0, 0, 10]) { cube(10); } }` and a ray travels along −Z from `[0, 0, 100]`
+- **THEN** the ray has exactly one interval, `[95, 105]`, entering through the base cube's own top face
+
 ### Requirement: Scaled scenes render identically
 Source: DESIGN §8 Ray–solid intervals and tolerance ("Scaled scenes render identically"), §5 (`ε`, supported scene scale), §12 D7 and D16.
 
-Scaling every coordinate and dimension of a scene by the same factor,
-including the camera position and `lookAt`, SHALL NOT change the rendered
-image by more than 1 per channel, when both the original and the scaled
-scene keep every dimension, coordinate, and derived feature size (wall
-thicknesses, gaps, overlaps, distances from the camera to visible surfaces)
-within the supported scene scale (DESIGN §5). Because `ε` is absolute, a
-feature smaller than that scale can change with scaling. Outside the scale,
+The bored-cube example rendered at 64 × 48 SHALL match, within 1 per
+channel, its renders with every coordinate and dimension (including the
+camera position) scaled by 1e-3 and by 1e5. This is the measurement that
+finalizes `ε` and the supported scene scale (DESIGN §5, D7).
+
+There is no broader scale-invariance guarantee. `ε` is absolute, so a pixel
+whose ray crosses a solid over a length near `ε` at either scale can change
+when a scene is scaled. That happens at a silhouette edge, or through a
+feature thinner than the supported scale. Outside the supported scale,
 rendering is best effort (D16). Values that are not finite are errors.
 
 #### Scenario: Scaled scenes render identically
 - **WHEN** the bored-cube example is rendered at 64 × 48, and again with every coordinate and dimension (including the camera position) scaled by 1e-3, and separately by 1e5
 - **THEN** each scaled render matches the unscaled render within 1 per channel
 
-#### Scenario: A feature below the supported scale is outside the guarantee
+#### Scenario: A thin feature can change with scale
 - **WHEN** the scene is `difference { cube(2 * k); translate([0, 0, 1.0000005 * k]) { box([4, 4, 4] * k); } }`, which leaves a floor plate 5·10⁻⁷·k thick, and a ray travels down the Z axis through it
-- **THEN** at k = 1 the plate is dropped as a sliver (no interval), and at k = 100000 it is kept (one interval), because at k = 1 the plate is thinner than the supported scale
+- **THEN** at k = 1 the plate is dropped as a sliver (no interval), and at k = 100000 it is kept (one interval), because at k = 1 the plate is thinner than `ε`
 
 ## MODIFIED Requirements
 

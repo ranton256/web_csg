@@ -134,3 +134,12 @@ test('a cutter that stops just short of the base leaves its face (DESIGN D21)', 
   assert.equal(hit.in.primitive.size, 10);
   assert.equal(hit.in.primitive.placement.t[2], 0, 'the entry is the base cube\'s own top face');
 });
+
+test('a cutter that only touches the base leaves its face (DESIGN D21)', () => {
+  // The cutter's bottom face coincides with the cube's top face: a gap of 0, no overlap.
+  const [hit, ...rest] = sceneIntervals(sceneOf('difference { cube(10); translate([0, 0, 10]) { cube(10); } }'), ray([0, 0, 100], DOWN));
+  assert.deepEqual(rest, []);
+  assert.deepEqual([hit.in.t, hit.out.t], [95, 105]);
+  assert.deepEqual(clean(hit.in.normal), [0, 0, 1]);
+  assert.equal(hit.in.primitive.placement.t[2], 0, 'the entry is the base cube\'s own top face');
+});

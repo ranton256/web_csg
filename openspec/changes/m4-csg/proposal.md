@@ -30,8 +30,9 @@ provisional since D7.
   - The bored cube is rendered scaled by ×1e-3 and ×1e5, and each render
     must match the unscaled one within 1 per channel.
   - If both pass, `ε = 1e-6` is marked final in DESIGN §5. The supported
-    scale is revised to `[1e-3, 2e7]`, the magnitudes the ×1e5 render
-    actually exercises.
+    scale is revised to `[1e-3, 3e7]` for nonzero magnitudes, the magnitudes
+    the ×1e5 render actually exercises (corrected from 2e7 after Critic
+    round 2).
   - If either fails, `ε` or the range is revised with the measured reason.
 - **D16 (owner decision): best effort outside the supported scale.**
   - There is no range check on inputs. The range states where accuracy is
