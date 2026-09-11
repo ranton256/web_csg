@@ -127,6 +127,35 @@ Gate after the round 2 fixes: `npm run check < /dev/null` in the working tree
 exits 0, with `node --test` at 210/210 and Playwright at 69/69.
 `openspec validate m3-primitives-and-transforms --strict` is valid.
 
+## Critic round 3: `[REJECTED]`, and fixes
+
+The Critic reviewed `ad4bdaa` and confirmed the round 2 fixes for translated
+and scaled solids: the tolerance is correctly derived, and its own mutants
+were caught. The gates passed in its fresh clone (210/210 and 69/69).
+
+| Finding | Fix |
+| --- | --- |
+| Medium: in-face rays of solids rotated by angles that are not multiples of 90° still miss. The tolerance applies only when a local direction component is exactly 0, and such a rotation leaves a residue of about `1e-16`. The Critic's pins: a ray in a face of `rotate([0, 0, 45]) { box([2, 2, 2]); }`, along the side line of `rotate([10, 0, 0]) { cylinder(5, 10); }`, and in the cap of `rotate([0, 10, 0]) { cylinder(5, 10); }`. Its sweep found 1 in 21 box rays and 2 in 28 cylinder rays missing. It could not reproduce the miss in a render | The owner narrowed D20 (DESIGN §12, §8). The guarantee covers `translate`, `scale`, and right-angle rotations, which are exact per D4 and D7. Under other rotations, a ray exactly in a face is a boundary case decided by rounding. The `ray-intervals` delta spec and design D-3 say the same. A ROADMAP backlog line revisits this when `ε` is finalized in M4. The Critic's three pins document that limitation; they are not added as tests |
+| Informational: the fresh-checkout row, open tasks, the M2 backlog lines, and stale Purpose lines | Closed in the approval commit and the archive |
+
+New tests in `test/core/scene.test.js`:
+- **Right angles:** an in-face ray of `translate([0.3, 0, 0]) { rotate([0, 0, 90]) { box([2, 0.2, 2]); } }` is a hit (`[99, 101]`).
+- **Other rotations:** a box turned 45° about Z, and a cylinder's side line and top cap turned 10° about X. For each, a ray `1e-5` inside the face is a hit and a ray `1e-5` outside it misses.
+
+Seen to fail, in a scratch worktree of `ad4bdaa` with the new
+`scene.test.js` copied in. Each run used `scene` and `primitives`, with a
+baseline of 28/28.
+
+| Mutant | Failed |
+| --- | --- |
+| S: no tolerance in `box.js` | 3/28, including the new `D20 holds under right-angle rotations…` |
+| T: the box tolerance is 1e5 times too large | 3/28, including the new `under other rotations, rays clearly inside or outside a face behave normally…` |
+| U: no tolerance on the cylinder caps | 2/28: the two round 2 D20 scene tests |
+
+Gate after the round 3 fixes: `npm run check < /dev/null` in the working tree
+exits 0, with `node --test` at 212/212 and Playwright at 69/69.
+`openspec validate m3-primitives-and-transforms --strict` is valid.
+
 ## Implementation notes
 
 - **Scene tests:** they live in a new `test/core/scene.test.js`, and the new

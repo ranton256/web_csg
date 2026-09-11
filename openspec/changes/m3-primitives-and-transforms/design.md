@@ -89,7 +89,11 @@ Each routine returns `[]` or `[{ in, out }]`. Each endpoint is
   units, which is `ε·|d|` in local units since `|d| = 1/s`. A ray lying in a
   box face plane, along the cylinder side line, or in a cap plane is
   therefore a hit, even when a placement's rounding moves the face by a
-  last-place error. Only an interval of length ≤ `ε` is dropped.
+  last-place error. Only an interval of length ≤ `ε` is dropped. The
+  guarantee covers `translate`, `scale`, and right-angle rotations. Under
+  other rotations, a component that should be 0 carries a rounding residue,
+  so the exactly-in-face case is decided by rounding (D20, narrowed by the
+  owner after Critic round 3; revisit with `ε` in M4).
 
 ### D-4: Rendering
 For each placed primitive, `render.js` transforms the ray into local space

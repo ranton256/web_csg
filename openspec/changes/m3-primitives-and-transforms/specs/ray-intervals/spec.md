@@ -31,7 +31,9 @@ originating primitive. An interval of length ≤ `ε` SHALL be dropped, so a
 tangent graze counts as a miss. Solids SHALL be closed: a ray lying in a box
 face plane, along a cylinder side line, or in a cylinder cap plane, to within
 `ε` in world units, SHALL be a hit over the length it shares with the solid,
-wherever the solid is placed.
+for any placement built from `translate`, `scale`, and rotations by multiples
+of 90°. Under other rotations, a ray lying exactly in a face is a boundary
+case decided by rounding, like a ray through an exact edge (DESIGN D20).
 
 #### Scenario: Tangent ray misses
 - **WHEN** a ray travels along the line y = 5, z = 0 in the +X direction past `sphere(5)`
@@ -48,6 +50,14 @@ wherever the solid is placed.
 #### Scenario: In-face rays of a translated solid are hits
 - **WHEN** a ray travels along +X from `[-100, 0.4, 0]`, in the top face plane of `translate([0, 0.3, 0]) { box([2, 0.2, 2]); }`
 - **THEN** its interval is `[99, 101]`, although the face's local coordinate is not exactly representable
+
+#### Scenario: In-face rays of a right-angle rotated solid are hits
+- **WHEN** a ray travels along +Y from `[0.4, -100, 0]`, in a face plane of `translate([0.3, 0, 0]) { rotate([0, 0, 90]) { box([2, 0.2, 2]); } }`
+- **THEN** its interval is `[99, 101]`
+
+#### Scenario: Under other rotations, rays clearly inside or outside a face behave normally
+- **WHEN** a ray runs parallel to the local x = 1 face of `rotate([0, 0, 45]) { box([2, 2, 2]); }`, 10⁻⁵ inside it, or 10⁻⁵ outside it
+- **THEN** the ray inside is a hit, and the ray outside has no interval
 
 #### Scenario: A ray beyond ε of a face misses, at any scale
 - **WHEN** a ray travels along +X at y = 1000 + 2·10⁻⁶ past `scale(1000) { box([2, 2, 2]); }`, or at y = 0.4 + 10⁻⁵ past the translated box above

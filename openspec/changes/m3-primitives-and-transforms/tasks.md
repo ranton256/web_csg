@@ -76,4 +76,11 @@
 - [x] 10.2 `test/core/scene.test.js`: in-face rays of translated solids hit (box face, cylinder cap, cylinder side line); rays beyond `ε` miss, at scale 1, 1000, and 0.001
 - [x] 10.3 The `ray-intervals` delta spec carries D20: a MODIFIED "Closed intervals with normals and the ε length rule" with in-face, translated, and beyond-`ε` scenarios
 - [x] 10.4 `test/core/primitives.test.js`: the exit-rim tie gives the side normal
-- [ ] 10.5 Seen to fail for the round 2 tests; the full gate and a fresh clone at the new head; recorded in the README
+- [x] 10.5 Seen to fail for the round 2 tests; the full gate and a fresh clone at the new head (`ad4bdaa`: 210/210, 69/69); recorded in the README
+
+## 11. Critic round 3 fixes
+
+- [x] 11.1 D20 narrowed (owner decision): the in-face guarantee covers `translate`, `scale`, and right-angle rotations; DESIGN D20 and §8, the `ray-intervals` delta spec, and design D-3 amended
+- [x] 11.2 `test/core/scene.test.js`: an in-face ray of a translated, right-angle rotated box is a hit; under 45° and 10° rotations, rays `1e-5` inside a box face, cylinder side line, or cap are hits and rays `1e-5` outside miss
+- [x] 11.3 ROADMAP backlog: revisit in-face rays under other rotations when `ε` is finalized in M4
+- [ ] 11.4 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README

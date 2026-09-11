@@ -4,6 +4,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { compile, renderSource, sceneIntervals } from '../../src/core/render.js';
+import { rotation, toWorld } from '../../src/core/transform.js';
 import { length } from '../../src/core/vec3.js';
 
 const CAMERA = 'camera { position: [0, -100, 30]; lookAt: [0, 0, 0]; }\n';
@@ -77,6 +78,31 @@ test('the D20 tolerance is ε in world units: rays just beyond it miss, at any s
   assert.equal(count('scale(0.001) { box([2, 2, 2]); }', [-5, 0.001 + 2e-6, 0]), 0);
   assert.equal(count('scale(0.001) { cylinder(1, 2); }', [-5, 0, 0.001 + 5e-7]), 1);
   assert.equal(count('scale(0.001) { cylinder(1, 2); }', [-5, 0, 0.001 + 2e-6]), 0);
+});
+
+test('D20 holds under right-angle rotations: an in-face ray of a translated, rotated box is a hit', () => {
+  // Turned 90° about Z, the box's local y = -0.1 face lies at world x = 0.4; locally it comes out as -0.10000000000000003.
+  const scene = sceneOf('translate([0.3, 0, 0]) { rotate([0, 0, 90]) { box([2, 0.2, 2]); } }');
+  assert.deepEqual(spans(scene, ray([0.4, -100, 0], [0, 1, 0])), [[99, 101]]);
+});
+
+test('under other rotations, rays clearly inside or outside a face behave normally (D20 narrowed)', () => {
+  const count = (scene, origin, direction) => sceneIntervals(scene, ray(origin, direction)).length;
+  // Parallel to the local x = 1 face of a box turned 45° about Z, 1e-5 inside or outside it.
+  const B = rotation([0, 0, 45]);
+  const box = sceneOf('rotate([0, 0, 45]) { box([2, 2, 2]); }');
+  const along = toWorld(B, [0, 1, 0]);
+  assert.equal(count(box, toWorld(B, [1 - 1e-5, -100, 0]), along), 1, 'box, inside');
+  assert.equal(count(box, toWorld(B, [1 + 1e-5, -100, 0]), along), 0, 'box, outside');
+  // The side line and the top cap of a cylinder turned 10° about X.
+  const C = rotation([10, 0, 0]);
+  const cylinder = sceneOf('rotate([10, 0, 0]) { cylinder(5, 10); }');
+  const down = toWorld(C, [0, 0, -1]);
+  assert.equal(count(cylinder, toWorld(C, [5 - 1e-5, 0, 100]), down), 1, 'side, inside');
+  assert.equal(count(cylinder, toWorld(C, [5 + 1e-5, 0, 100]), down), 0, 'side, outside');
+  const across = toWorld(C, [1, 0, 0]);
+  assert.equal(count(cylinder, toWorld(C, [-100, 0, 5 - 1e-5]), across), 1, 'cap, inside');
+  assert.equal(count(cylinder, toWorld(C, [-100, 0, 5 + 1e-5]), across), 0, 'cap, outside');
 });
 
 test('several children of a transform block are unioned', () => {

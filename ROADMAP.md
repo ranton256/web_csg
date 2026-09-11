@@ -236,6 +236,7 @@ strike it through with a reason.
 | ☐ | Add an e2e test for a resize that arrives while a render is in progress (same cancel path as the tested newer-model case) | `m2-language-and-feedback` Critic round 2 (informational); scheduled in `m3-primitives-and-transforms` |
 | ☑ | ~~Core-purity check: `src/core/` must not reference browser APIs — add with the first core code (M1)~~ Delivered in `m1-first-pixels` as `test/core-purity.test.js` | `m0-foundations` design, CONSTRAINTS §2 |
 | ☐ | Finalize `ε` and supported scene scale | DESIGN §5, D7 — scheduled in M4 |
+| ☐ | D20 in-face rays under rotations that are not multiples of 90°: the local direction carries a rounding residue of about `1e-16`, so a ray lying exactly in a face is decided by rounding. Revisit with `ε`, for example with a "within `ε` over the shared length" check for near-parallel slabs and the cylinder side | `m3-primitives-and-transforms` Critic round 3 (medium; D20 narrowed by the owner); with the M4 `ε` finalization |
 | ☐ | Parked optional features (non-uniform scale, GPU, cone/torus, 3D viewport, picking, orthographic camera, richer materials, point/colored lights, shadows, anti-aliasing/HiDPI, Web Worker rendering, syntax highlighting, mobile) | [DESIGN — Optional features](DESIGN.md#optional-features-parked) — not planned until requested |
 
 ---
