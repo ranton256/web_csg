@@ -180,3 +180,7 @@ primitives, GPU acceleration, a live 3D viewport, mouse picking, an
 orthographic camera, richer materials, colored lights, shadows, anti-aliasing
 and HiDPI rendering, Web Worker rendering, syntax highlighting, and mobile and
 touch support.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Copyright (c) 2026 Richard Anton.
