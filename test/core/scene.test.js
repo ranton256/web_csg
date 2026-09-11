@@ -50,6 +50,12 @@ test('nested transforms compose from the inside outward', () => {
   assert.deepEqual(spans(scene, ray([10, 0, -100], [0, 0, 1])), [[99, 101]], 'z in [-1, 1]');
 });
 
+test('a rotation nested inside a rotation is applied first', () => {
+  // The inner X90 turns the axis +Z to -Y; the outer Z90 then turns -Y to +X (the other order leaves it along Y).
+  const scene = sceneOf('rotate([0, 0, 90]) { rotate([90, 0, 0]) { cylinder(1, 10); } }');
+  assert.deepEqual(spans(scene, ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
+});
+
 test('a translate nested inside a rotate or scale is applied first', () => {
   // Inner translate first, then the outer rotate: the sphere ends up at [0, 10, 0].
   assert.deepEqual(spans(sceneOf('rotate([0, 0, 90]) { translate([10, 0, 0]) { sphere(1); } }'), ray([0, -100, 0], [0, 1, 0])), [[109, 111]]);
@@ -61,7 +67,9 @@ test('D20 holds for placed solids: in-face rays of translated solids are hits', 
   // Each face sits at exactly 0.4 in world space, but in local space it comes out as 0.10000000000000003.
   const X = [1, 0, 0];
   assert.deepEqual(spans(sceneOf('translate([0, 0.3, 0]) { box([2, 0.2, 2]); }'), ray([-100, 0.4, 0], X)), [[99, 101]], 'box face');
-  assert.deepEqual(spans(sceneOf('translate([0, 0, 0.3]) { cylinder(5, 0.2); }'), ray([-100, 0, 0.4], X)), [[95, 105]], 'cylinder cap');
+  assert.deepEqual(spans(sceneOf('translate([0, 0, 0.3]) { cylinder(5, 0.2); }'), ray([-100, 0, 0.4], X)), [[95, 105]], 'cylinder top cap');
+  // The bottom cap sits at world z = -0.4; locally it comes out as -0.10000000000000003.
+  assert.deepEqual(spans(sceneOf('translate([0, 0, -0.3]) { cylinder(5, 0.2); }'), ray([-100, 0, -0.4], X)), [[95, 105]], 'cylinder bottom cap');
   assert.deepEqual(spans(sceneOf('translate([0.3, 0, 0]) { cylinder(0.1, 10); }'), ray([0.4, 0, 100], [0, 0, -1])), [[95, 105]], 'cylinder side line');
 });
 

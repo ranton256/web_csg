@@ -33,7 +33,7 @@ change:
 | Capability (delta spec) | Tests |
 | --- | --- |
 | `primitives` | `test/core/primitives.test.js`: box at the origin with endpoint normals, top-down box, parallel rays, touching an edge misses, a ray in a face plane is a hit (D20), the corner tie takes the lowest axis, non-unit direction; cylinder cap hit and normals, side hit, above the cap, side tangent, parallel to the axis outside the radius, along the side line and in either cap plane is a hit (D20), a slanted ray from side to cap, the side wins an exact rim tie, non-unit direction; the sphere's general quadratic. `test/core/language.test.js`: dimension kinds and positivity for cube, box, and cylinder, missing and extra arguments. `test/core/scene.test.js`: a cube renders exactly as the equal-sided box |
-| `transforms` | `test/core/transform.test.js`: exact sine and cosine; the three D4 direction scenarios plus order checks (X before Y, X before Z, Y before Z); exact 90°, 180°, and −90°; composition order; the `toLocal` round trip with an unnormalized direction; normals at unit length. `test/core/scene.test.js`: translated sphere (x = 9), `scale(2) { sphere(3); }` entering at x = −6, nested translate/rotate occupying `[9, 11] × [−2, 2] × [−1, 1]`, and a translate nested inside a rotate (`[109, 111]`) or a scale (`[118, 122]`) applied first. `test/core/language.test.js`: exactly one positional argument (D19), argument kinds, scale > 0, and an invalid transform whose body is still checked |
+| `transforms` | `test/core/transform.test.js`: exact sine and cosine; the three D4 direction scenarios plus order checks (X before Y, X before Z, Y before Z); exact 90°, 180°, and −90°; composition order; the `toLocal` round trip with an unnormalized direction; normals at unit length. `test/core/scene.test.js`: translated sphere (x = 9), `scale(2) { sphere(3); }` entering at x = −6, nested translate/rotate occupying `[9, 11] × [−2, 2] × [−1, 1]`, a translate nested inside a rotate (`[109, 111]`) or a scale (`[118, 122]`) applied first, and a rotation nested inside a rotation applied first (`[95, 105]`). `test/core/language.test.js`: exactly one positional argument (D19), argument kinds, scale > 0, and an invalid transform whose body is still checked |
 | `ray-intervals` | `test/core/scene.test.js`: a scaled solid reports world distances `[90, 110]`; a rotated box's world normal `[0, −1, 0]` at y = −1, unit length; a rotated cylinder capped along its new axis; D20 in-face rays of translated solids are hits (box face `[99, 101]`, cylinder cap and side line `[95, 105]`); rays beyond `ε` miss at scale 1, 1000, and 0.001. `test/core/primitives.test.js`: in-face rays at the origin (box face, cylinder side line and both caps); the tangent ray misses (M1's `sphere` tests) |
 | `implicit-union` | `test/core/scene.test.js`: several children of a transform are unioned (`[95, 105]`); the transform applies to the whole union (`[115, 130]`) |
 | `modeling-language` | `test/core/language.test.js`: the vision example reports only `difference` and `union`; Booleans, `light`, and `material` rejected at the keyword with their contents checked; primitives inside an unsupported Boolean checked; cylinder positional and named equivalence; the DESIGN §8 cylinder argument errors (positional after named, duplicate `radius`, missing `height`). `test/core/parser.test.js`: argument parentheses count as a nesting level (99 pass; 100 fail at column 107) |
@@ -155,6 +155,34 @@ baseline of 28/28.
 Gate after the round 3 fixes: `npm run check < /dev/null` in the working tree
 exits 0, with `node --test` at 212/212 and Playwright at 69/69.
 `openspec validate m3-primitives-and-transforms --strict` is valid.
+
+## Critic round 4: `[REJECTED]`, and fixes
+
+The Critic reviewed `da20cf8`. It found the narrowed D20 consistent across
+DESIGN, the delta spec, design D-3, this README, and ROADMAP. An
+independent sweep found no failures: 19,824 in-face and near-face cases
+over random chains of translate, scale, and right-angle rotations. All nine
+MODIFIED blocks keep their main-spec scenarios. The gates passed in its
+fresh clone (212/212 and 69/69). It rejected the milestone for two test gaps
+only.
+
+| Finding | Fix |
+| --- | --- |
+| Medium: no test nests a rotation inside a rotation. `compose` with `child.R · parent.R` passed 212/212, although its sweep failed 6,179 cases | `a rotation nested inside a rotation is applied first`: `rotate([0, 0, 90]) { rotate([90, 0, 0]) { cylinder(1, 10); } }` lies along X (`[95, 105]`); the other order leaves it along Y (`[99, 101]`) |
+| Low: the bottom-cap tolerance was untested. Mutant U removed both caps' tolerance at once, which hid this | The D20 scene test now includes the bottom cap of `translate([0, 0, -0.3]) { cylinder(5, 0.2); }` at world z = −0.4 (`[95, 105]`) |
+| Informational: the evaluator's `context.rendered` flag cannot be observed today, because any Boolean in the source already produces a diagnostic, so there is no scene | No change. It matters when M4 renders Booleans, and M4's tests will cover it |
+
+Seen to fail, in a scratch worktree of `da20cf8` with the new
+`scene.test.js` copied in. Each run used `scene`, `primitives`, and
+`transform`, with a baseline of 37/37.
+
+| Mutant | Failed |
+| --- | --- |
+| V: `compose` multiplies `child.R · parent.R` | 1/37: `a rotation nested inside a rotation is applied first` |
+| W: no tolerance on the bottom cap only (`oz < -half`) | 1/37: `D20 holds for placed solids: in-face rays of translated solids are hits` |
+
+Gate after the round 4 fixes: `npm run check < /dev/null` in the working tree
+exits 0, with `node --test` at 213/213 and Playwright at 69/69.
 
 ## Implementation notes
 

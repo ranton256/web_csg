@@ -83,4 +83,10 @@
 - [x] 11.1 D20 narrowed (owner decision): the in-face guarantee covers `translate`, `scale`, and right-angle rotations; DESIGN D20 and §8, the `ray-intervals` delta spec, and design D-3 amended
 - [x] 11.2 `test/core/scene.test.js`: an in-face ray of a translated, right-angle rotated box is a hit; under 45° and 10° rotations, rays `1e-5` inside a box face, cylinder side line, or cap are hits and rays `1e-5` outside miss
 - [x] 11.3 ROADMAP backlog: revisit in-face rays under other rotations when `ε` is finalized in M4
-- [ ] 11.4 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README
+- [x] 11.4 Seen to fail, the full gate, and a fresh clone at the new head (`da20cf8`: 212/212, 69/69); recorded in the README
+
+## 12. Critic round 4 fixes
+
+- [x] 12.1 `test/core/scene.test.js`: a rotation nested inside a rotation is applied first (`rotate([0, 0, 90]) { rotate([90, 0, 0]) { cylinder(1, 10); } }` lies along X)
+- [x] 12.2 `test/core/scene.test.js`: an in-face ray of a translated cylinder's bottom cap is a hit
+- [ ] 12.3 Seen to fail, the full gate, and a fresh clone at the new head; recorded in the README
