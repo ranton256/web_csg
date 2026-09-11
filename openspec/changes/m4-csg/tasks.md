@@ -83,8 +83,8 @@
   - no finite-distance camera check
 
   Watch the relevant tests and goldens fail, and record the output
-- [ ] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
-- [ ] 7.3 `npm run capture -- M4` (`app`, `stale`, `primitives`, `bored-cube`), then write `docs/progress/M4/README.md`:
+- [x] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
+- [x] 7.3 `npm run capture -- M4` (`app`, `stale`, `primitives`, `bored-cube`), then write `docs/progress/M4/README.md`:
   - each M4 "done when" criterion with its evidence
   - scenario coverage
   - the scaled-render measurement

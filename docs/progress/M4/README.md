@@ -32,8 +32,8 @@ Owner decisions in this change:
 | The bored-cube golden image is committed and passing | `test/golden/bored-cube.ppm` (64×48), in `test/core/csg-golden.test.js`. This is the core-render "callable without a browser" scenario | Pass |
 | Evidence: a capture of the bored cube | `bored-cube.png` above | Pass |
 | Full gate in the working tree | `npm run check < /dev/null` on the final tree (after the `booleans` camera change) | Pass: exit 0; `node --test` 244/244; Playwright 69/69 |
-| Full gate from a fresh checkout | Pending at time of writing | Pending |
-| Manual Safari smoke check | Pending (owner) | Pending |
+| Full gate from a fresh checkout | `git clone --branch m4-csg` at `5465dfd`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null` | Pass: exit 0; `node --test` 244/244; Playwright 69/69 |
+| Manual Safari smoke check | See below | Pass |
 | Separate Critic review returns `[APPROVED]` | Pending | Pending |
 
 ## Scenario coverage
@@ -115,4 +115,11 @@ Notes:
 
 ## Manual Safari smoke check
 
-Pending: performed by the project owner.
+Done on 2026-09-10 by the project owner, in desktop Safari at
+`http://127.0.0.1:8080/` (served by `npm start`). **Pass:**
+- after pasting the bored-cube example from `vision.md`, the preview renders
+  a cube with three orthogonal round bores;
+- the holes show on the top, front, and right faces, and the bore walls are
+  lit;
+- there are no diagnostics and no stale badge;
+- the console shows no errors.
