@@ -38,16 +38,16 @@ D22, which the owner accepted after Critic round 1:
 | All Lighting and shading scenarios pass | [Scenario coverage](#scenario-coverage) | Pass |
 | Goldens cover the default light, a declared light, two lights, and a non-default material color | Default light: `sphere` and `bored-cube` (M1, M4). Declared: `lit-one`. Two lights: `lit-two`. Material: `lit-material`. All three new goldens are 64×48, on the bored cube, in `test/core/lighting-golden.test.js` | Pass |
 | Evidence: captures of the same model under two lighting setups | `bored-cube.png` and `lit-custom.png` above | Pass |
-| Full gate in the working tree | `npm run check < /dev/null` on the final tree, after the strengthened material test | Pass: exit 0; `node --test` 269/269; Playwright 69/69 |
-| Full gate from a fresh checkout | `git clone --branch m5-lighting-and-material` at `54a73a1`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null` | Pass: exit 0; `node --test` 269/269; Playwright 69/69 |
+| Full gate in the working tree | `npm run check < /dev/null` on the reviewed head `69653b1` | Pass: exit 0; `node --test` 273/273; Playwright 69/69 |
+| Full gate from a fresh checkout | `git clone --branch m5-lighting-and-material` at `69653b1`, the reviewed head, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`. An earlier clone passed at `54a73a1` (269/269) | Pass: exit 0; `node --test` 273/273; Playwright 69/69 |
 | Manual Safari smoke check | See below | Pass |
-| Separate Critic review returns `[APPROVED]` | Pending | Pending |
+| Separate Critic review returns `[APPROVED]` | [Critic round 2](#critic-round-2-approved) at `69653b1`, after one rejected round | Pass |
 
 ## Scenario coverage
 
 | Capability (delta spec) | Tests |
 | --- | --- |
-| `lighting-and-shading`: Declared lights | `test/core/lighting.test.js`: <ul><li>declared lights replace the default: the 1×1 center pixel is `[31, 31, 31, 255]`, and the key light would have lit it;</li><li>the direction is the direction light travels: `toLight` is `[0, 0, 1]`, the topmost sphere pixel is lit, and the bottommost is only ambient;</li><li>intensity 0 leaves every solid pixel at `[31, 31, 31, 255]`;</li><li>two lights at 0.5 equal one at 1, within 1 per channel.</li></ul> |
+| `lighting-and-shading`: Declared lights | `test/core/lighting.test.js`: <ul><li>declared lights replace the default: the 1×1 center pixel is `[31, 31, 31, 255]`, and the key light would have lit it;</li><li>the direction is the direction light travels: `toLight` is `[0, 0, 1]`, the topmost sphere pixel is lit, and the bottommost is only ambient;</li><li>intensity 0 leaves every solid pixel at `[31, 31, 31, 255]`;</li><li>two lights at 0.5 exactly equal one at 1.</li></ul> |
 | `lighting-and-shading`: Light validation | `test/core/lighting.test.js` covers every table row: missing, zero, too large, and too small directions; a negative intensity; unknown, duplicate, and mistyped properties; four lights allowed, and a fifth reported at its keyword with its contents still checked; a light inside a body, checked and not counted toward the limit (the misplaced light comes first) |
 | `lighting-and-shading`: Material color | `test/core/lighting.test.js`: with `[1, 0, 0]`, green equals blue in every solid pixel, the white highlight shows, and lit pixels are red. Where `N`, `V`, and `L` coincide, the color is `[1, 0.3, 0.3]`. A valid material sets `scene.color` |
 | `lighting-and-shading`: Material validation | `test/core/lighting.test.js` covers every table row: a second block, components above 1 and below 0, a missing color, unknown and mistyped properties, and a material inside a body (still checked) |
@@ -128,6 +128,35 @@ explicitly, with a baseline of 66/66.
 
 Gate after the fixes: `npm run check < /dev/null` in the working tree exits
 0, with `node --test` at 273/273 and Playwright at 69/69.
+
+## Critic round 2: `[APPROVED]`
+
+The Critic reviewed `69653b1` and ran the gates itself: `npm test` passed
+273/273; `npm run check < /dev/null` exited 0 with Playwright at 69/69; and
+`openspec validate --strict` was valid.
+- **Round 1 mutants:** it re-ran M1 to M4 against a 76/76 baseline, and
+  each failed its test (1/76).
+- **Its own mutants:** of nine more, eight were caught. The survivor drops
+  only the third light, which is not a plausible bug.
+- **Independent shading:** its own Blinn-Phong implementation matched
+  `renderSource` with 0 differing channels on `lit-two`, `lit-custom`, and
+  a four-light scene with a material.
+- **Edge inputs:** these all behaved as specified:
+  - an overflowing intensity or color;
+  - `intensity: 1e300`;
+  - duplicate `direction` and `color`;
+  - a misplaced material followed by two top-level materials;
+  - directions bound with `let`.
+- **Evidence:** the goldens and the capture match this README.
+
+Its informational notes:
+- Two stale README rows, the exact-equality wording and the working-tree
+  count. Both are fixed here.
+- Three test-strength notes, recorded without changing the reviewed tests:
+  - the four-lights test would not catch dropping only the third light;
+  - no direct assertion covers a duplicate `color`, though the shared reader
+    gives "material property `color` is given more than once";
+  - the exact-equality test relies on its fixture rounding identically.
 
 ## Implementation notes
 
