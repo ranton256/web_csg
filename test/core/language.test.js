@@ -151,6 +151,15 @@ test('primitive dimensions must be positive, of the right kind', () => {
   assert.deepEqual(diagnosticsOf('cube(1, 2);\n' + CAMERA), [[1, 9, 'cube takes 1 argument']]);
 });
 
+test('cylinder argument errors (DESIGN §8 examples)', () => {
+  assert.deepEqual(diagnosticsOf('cylinder(radius: 12, 62);\n' + CAMERA), [[1, 22, 'positional arguments must come before named arguments']]);
+  assert.deepEqual(diagnosticsOf('cylinder(12, radius: 5);\n' + CAMERA), [
+    [1, 1, 'missing parameter `height` for cylinder'],
+    [1, 14, 'parameter `radius` is given more than once'],
+  ]);
+  assert.deepEqual(diagnosticsOf('cylinder(12);\n' + CAMERA), [[1, 1, 'missing parameter `height` for cylinder']]);
+});
+
 test('cylinder arguments in any order when named', () => {
   const solids = (source) => compile(source + '\n' + CAMERA).scene.solids.map(({ type, radius, height }) => ({ type, radius, height }));
   assert.deepEqual(solids('cylinder(12, 62);'), solids('cylinder(height: 62, radius: 12);'));

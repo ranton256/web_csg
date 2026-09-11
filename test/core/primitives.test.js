@@ -27,6 +27,18 @@ test('box: touching an edge from outside misses (length ≤ ε)', () => {
   assert.deepEqual(intersectBox([2, 2, 2], [0, 2, 0], normalize([1, -1, 0]), null), []);
 });
 
+test('box: a ray lying in a face plane is a hit (closed solids, D20)', () => {
+  assert.deepEqual(span(intersectBox([4, 6, 8], [-100, 3, 0], X, null)), [[98, 102]]);
+  assert.deepEqual(span(intersectBox([4, 6, 8], [-100, 0, -4], X, null)), [[98, 102]]);
+});
+
+test('box: a slab tie (a corner hit) takes its normals from the lowest axis', () => {
+  // The x and y slabs are entered together and left together.
+  const [hit] = intersectBox([2, 2, 2], [-10, -10, 0], normalize([1, 1, 0]), null);
+  assert.deepEqual(hit.in.normal, [-1, 0, 0]);
+  assert.deepEqual(hit.out.normal, [1, 0, 0]);
+});
+
 test('box: a non-unit local direction still yields world t', () => {
   assert.deepEqual(span(intersectBox([4, 4, 4], [-50, 0, 0], [0.5, 0, 0], null)), [[96, 104]]);
 });
@@ -58,6 +70,19 @@ test('cylinder: a slanted ray enters through the side and leaves through a cap',
   assert.deepEqual(hit.out.normal, [0, 0, 1]);
   assert.ok(Math.abs((-10 + hit.in.t * direction[0]) + 5) < 1e-12, 'enters at x = -5');
   assert.ok(Math.abs((-5 + hit.out.t * direction[2]) - 5) < 1e-12, 'leaves at z = 5');
+});
+
+test('cylinder: a ray along the side line or in a cap plane is a hit (closed solids, D20)', () => {
+  assert.deepEqual(span(intersectCylinder(5, 10, [5, 0, 100], [0, 0, -1], null)), [[95, 105]], 'along the side line');
+  assert.deepEqual(span(intersectCylinder(5, 10, [-100, 0, 5], X, null)), [[95, 105]], 'in the top cap plane');
+  assert.deepEqual(span(intersectCylinder(5, 10, [-100, 0, -5], X, null)), [[95, 105]], 'in the bottom cap plane');
+});
+
+test('cylinder: the side wins an exact tie with a cap (a rim hit)', () => {
+  // Direction [1, 0, 1] (non-unit is fine in local space) meets x = -5 and z = -5 both at t = 5.
+  const [hit] = intersectCylinder(5, 10, [-10, 0, -10], [1, 0, 1], null);
+  assert.equal(hit.in.t, 5);
+  assert.deepEqual(clean(hit.in.normal), [-1, 0, 0]);
 });
 
 test('cylinder: a non-unit local direction still yields world t', () => {

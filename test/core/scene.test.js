@@ -49,6 +49,13 @@ test('nested transforms compose from the inside outward', () => {
   assert.deepEqual(spans(scene, ray([10, 0, -100], [0, 0, 1])), [[99, 101]], 'z in [-1, 1]');
 });
 
+test('a translate nested inside a rotate or scale is applied first', () => {
+  // Inner translate first, then the outer rotate: the sphere ends up at [0, 10, 0].
+  assert.deepEqual(spans(sceneOf('rotate([0, 0, 90]) { translate([10, 0, 0]) { sphere(1); } }'), ray([0, -100, 0], [0, 1, 0])), [[109, 111]]);
+  // Inner translate first, then the outer scale: the sphere's center moves to x = 20, radius 2.
+  assert.deepEqual(spans(sceneOf('scale(2) { translate([10, 0, 0]) { sphere(1); } }'), ray([-100, 0, 0], [1, 0, 0])), [[118, 122]]);
+});
+
 test('several children of a transform block are unioned', () => {
   assert.deepEqual(spans(sceneOf('translate([0, 0, 0]) { sphere(5); cube(8); }'), ray([-100, 0, 0], [1, 0, 0])), [[95, 105]]);
 });

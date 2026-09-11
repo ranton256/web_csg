@@ -84,7 +84,10 @@ Each routine returns `[]` or `[{ in, out }]`. Each endpoint is
   - **Caps:** a z slab, `[(−h/2 − oz)/dz, (h/2 − oz)/dz]`.
   - **Interval:** the intersection of the two intervals. The normal at each
     end comes from whichever bound determined it: the side `(x, y, 0)/r`, or
-    a cap `(0, 0, ±1)`.
+    a cap `(0, 0, ±1)`. On an exact tie at the rim, the side wins.
+- **Closed solids (DESIGN D20):** the parallel-ray checks use `≤`, so a ray
+  lying in a box face plane, along the cylinder side line, or in a cap plane
+  is a hit. Only an interval of length ≤ `ε` is dropped.
 
 ### D-4: Rendering
 For each placed primitive, `render.js` transforms the ray into local space
@@ -126,8 +129,8 @@ Transforms (D19):
 
 ### D-7: Tests and evidence
 - **Unit, analytic:** a `test/core/primitives.test.js` covers the
-  box, cube, and cylinder endpoint and normal scenarios, and the tangent and
-  edge cases. `test/core/transform.test.js` covers:
+  box, cube, and cylinder endpoint and normal scenarios, the side tangent and
+  edge graze (misses), in-face rays (hits, D20), and the tie-breaks. `test/core/transform.test.js` covers:
   - the D4 direction scenarios;
   - exactness for 90° and 180°;
   - composition order;

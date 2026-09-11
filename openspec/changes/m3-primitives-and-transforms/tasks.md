@@ -19,7 +19,8 @@
 - [x] 3.3 Add `test/core/primitives.test.js` covering:
   - the box centered at the origin, with endpoint normals
   - the cylinder: cap hit and normal, side hit and normal, a ray above the cap misses
-  - tangents to box faces and the cylinder side, and edge grazes (length ≤ ε → miss)
+  - a tangent to the cylinder side and a box edge graze (length ≤ ε → miss); a ray lying in a box face, along the cylinder side line, or in a cap plane is a hit (D20, added in 9.3)
+  - the tie-breaks: the box's lowest axis at a corner, and the cylinder's side at the rim (added in 9.4)
   - rays parallel to a box face and along the cylinder axis
   - a non-unit local direction gives world `t`
 
@@ -59,3 +60,12 @@
 - [x] 8.3 `npm run capture -- M3` (`app`, `stale`, `primitives`), then write `docs/progress/M3/README.md`: each M3 "done when" criterion with its evidence, scenario coverage, the seen-to-fail records, and the manual Safari smoke check (performed by the owner)
 - [ ] 8.4 A separate Critic review (`project-critic`) of `main..m3-primitives-and-transforms`. Fix findings and re-review until `[APPROVED]`
 - [ ] 8.5 Merge into `main`, mark M3 complete in ROADMAP, and archive with `/opsx:archive` (syncing the specs)
+
+## 9. Critic round 1 fixes
+
+- [x] 9.1 `test/core/scene.test.js`: a translate nested inside a rotate (`[[109, 111]]` along +Y) and inside a scale (`[[118, 122]]`) is applied first
+- [x] 9.2 `test/core/transform.test.js`: Y before Z (`rotation([0, 90, 90])` takes +Z to +Y)
+- [x] 9.3 In-face rays: the owner chose closed solids (DESIGN D20). `test/core/primitives.test.js` checks that a ray in a box face plane, along the cylinder side line, and in either cap plane is a hit
+- [x] 9.4 `test/core/primitives.test.js`: the box corner tie takes the lowest axis (`[-1, 0, 0]` in, `[1, 0, 0]` out), and an exact rim tie gives the cylinder's side normal
+- [x] 9.5 `test/core/language.test.js`: the DESIGN §8 cylinder argument examples (positional after named, duplicate, missing)
+- [x] 9.6 Seen to fail: each new test fails against its mutant in a worktree, with the test files listed explicitly; recorded in the README

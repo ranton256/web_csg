@@ -29,6 +29,8 @@ test('rotation components apply X first, then Y, then Z', () => {
   assert.deepEqual(clean(toWorld(rotation([90, 90, 0]), [0, 1, 0])), [1, 0, 0]);
   // Z-then-X order would give a different answer here.
   assert.deepEqual(clean(toWorld(rotation([90, 0, 90]), [1, 0, 0])), [0, 1, 0]);
+  // Y before Z: +Z turns to +X about Y, then to +Y about Z (Z-then-Y would give +X).
+  assert.deepEqual(clean(toWorld(rotation([0, 90, 90]), [0, 0, 1])), [0, 1, 0]);
 });
 
 test('right-angle rotations are exact', () => {
