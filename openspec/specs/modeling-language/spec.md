@@ -3,9 +3,8 @@
 ## Purpose
 
 Turns Web CSG source text into a validated scene or a list of positioned
-diagnostics. The grammar is complete; constructs whose semantics arrive in
-later milestones parse, have their contents checked, and are reported as not
-supported yet.
+diagnostics. The grammar is complete, and since M5 every construct in it is
+supported.
 
 ## Requirements
 
@@ -277,20 +276,3 @@ with no solids.
 #### Scenario: Camera-only source is valid
 - **WHEN** a source contains only a valid camera block
 - **THEN** there are no diagnostics, and the scene has no solids
-
-### Requirement: Lights and materials are not supported yet
-Source: ROADMAP milestone order (DESIGN §8 Lighting and shading, delivered in M5).
-
-The property blocks `light` and `material` SHALL parse fully. The evaluator
-SHALL report a diagnostic at each one's keyword saying it is not supported
-yet. Their property expressions SHALL still be checked, so every other error
-in them is also reported (names, arithmetic). They SHALL NOT crash or be
-ignored.
-
-#### Scenario: A light or material block is rejected clearly
-- **WHEN** the source contains `light { direction: [0, 0, 1]; }` at line 5, column 1
-- **THEN** a diagnostic at line 5, column 1 says `light` is not supported yet
-
-#### Scenario: Contents of an unsupported construct are still checked
-- **WHEN** the source contains `light { direction: [0, 0, q]; }` and `material { color: 1 + [1, 2, 3]; }`
-- **THEN** diagnostics say `light` and `material` are not supported yet, `q` is undeclared, and `+` has invalid operand kinds

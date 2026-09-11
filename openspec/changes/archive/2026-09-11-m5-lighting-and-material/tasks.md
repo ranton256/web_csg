@@ -72,7 +72,7 @@
   - golden inspection
   - the manual Safari smoke check (performed by the owner)
 - [x] 7.4 A separate Critic review (`project-critic`) of `main..m5-lighting-and-material`. Fix findings and re-review until `[APPROVED]`
-- [ ] 7.5 Merge into `main`, mark M5 complete in ROADMAP, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose lines of the main `lighting-and-shading` and `modeling-language` specs
+- [x] 7.5 Merge into `main`, mark M5 complete in ROADMAP, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose lines of the main `lighting-and-shading` and `modeling-language` specs
 
 ## 8. Critic round 1 fixes
 
