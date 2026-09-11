@@ -55,8 +55,8 @@
   - M6: the both-properties rule is removed;
   - M7: the both-properties rule reports at the first property;
   - M8: the neither-property rule keeps the old message
-- [ ] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check < /dev/null`) green
+- [x] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check < /dev/null`) green
 - [x] 7.3 `npm run capture -- point-lights`, then write `docs/progress/point-lights/README.md`: the criteria checked, the gates, test coverage per scenario, the seen-to-fail records, and the `lit-point` capture
-- [ ] 7.4 The owner's manual Safari smoke check of a point-lit scene, recorded in the README
+- [x] 7.4 The owner's manual Safari smoke check of a point-lit scene, recorded in the README
 - [ ] 7.5 A separate Critic review (`project-critic`) of `main..point-lights`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.6 Merge into `main`, and archive with `/opsx:archive`: sync the specs, and refresh the stale Purpose line of the main `lighting-and-shading` spec

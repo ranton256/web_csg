@@ -10,7 +10,8 @@ Decisions (DESIGN §12 D25):
   kinds share the limit of 4, and there is no new reserved word.
 - **(b) No falloff, the owner's decision:** a point light contributes its
   `intensity` at any distance.
-- **(c)–(e) The writer's rules, pending the owner's acceptance:**
+- **(c)–(e) The writer's rules, accepted by the owner after the Safari
+  check:**
   - (c) no occlusion, because shadows stay parked;
   - (d) a point light contributes nothing within `ε` of its position, or at
     a distance too large to compute;
@@ -39,8 +40,8 @@ Decisions (DESIGN §12 D25):
 | `npm run check < /dev/null` in the working tree | Before the first commit: exit 0, `node --test` 302/302, Playwright 108/108 |
 | `openspec validate point-lights --strict` | Valid |
 | Every existing golden unchanged | `npm test` before any golden update: every golden matched. The only failures were the two tests of changed behavior (the light shape now has `kind`, and the new missing-property message) |
-| Full gate from a fresh checkout | Pending |
-| Manual Safari smoke check | Pending (see below) |
+| Full gate from a fresh checkout | `git clone --branch point-lights` at `ae07a13`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 302/302, Playwright 108/108 |
+| Manual Safari smoke check | Pass (see below) |
 | Separate Critic review returns `[APPROVED]` | Pending |
 
 ## Test coverage
@@ -103,7 +104,8 @@ catch M2.
 
 ## Manual Safari smoke check
 
-Pending. The owner pastes this scene into the app in Safari:
+Pass, by the owner on 2026-09-11, at `ae07a13` served by `npm start`. The
+owner pasted this scene into the app in Safari:
 
 ```text
 camera { position: [120, -160, 100]; lookAt: [0, 0, 0]; }
@@ -115,8 +117,10 @@ light { position: [40, -50, 50]; }
 material { color: [0.95, 0.55, 0.15]; }
 ```
 
-Expected: an orange cube. Each face is shaded unevenly, brightest toward the
-corner nearest the camera. Changing `position` to `direction` shows a
-directional light instead. Adding `direction: [0, 0, -1];` next to
-`position` shows the diagnostic "light block cannot have both `direction`
-and `position`" at `direction`.
+Checked, and seen as described:
+- An orange cube. Each face is shaded unevenly, brightest toward the corner
+  nearest the camera.
+- Changing `position` to `direction` shows a directional light instead,
+  with flat shading on each face.
+- Adding `direction: [0, 0, -1];` after `position` shows the diagnostic
+  "light block cannot have both `direction` and `position`" at `direction`.
