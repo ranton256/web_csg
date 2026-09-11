@@ -245,6 +245,19 @@ test.describe('Open', () => {
     expect(prompts.messages).toEqual([]);
   });
 
+  test('a file with \\r\\n line breaks, reloaded, still replaces without a prompt (D28)', async ({ page }) => {
+    // The stored baseline must be the normalized text too, not only the one in memory.
+    const prompts = await start(page);
+    await waitForIdle(page);
+    await openFile(page, 'windows.csg', SPHERE_SOURCE.replace(/\n/g, '\r\n'));
+    await reload(page);
+    await waitForIdle(page);
+    await expect(page.locator('#source')).toHaveValue(SPHERE_SOURCE);
+    await chooseExample(page, PRIMITIVES.id);
+    await expect(page.locator('#source')).toHaveValue(PRIMITIVES.source);
+    expect(prompts.messages).toEqual([]);
+  });
+
   test('a file that begins with a byte-order mark opens and evaluates with no diagnostics', async ({ page }) => {
     await start(page);
     await waitForIdle(page);

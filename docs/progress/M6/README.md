@@ -192,6 +192,9 @@ Its notes:
   text, survives today's tests. A `\r\n` Open, a reload, and then an
   example would give a false prompt. The code is correct. This is added as
   a ROADMAP backlog line, and no test was changed after approval.
+  **Closed after the archive** (branch `d28-reload-test`): a new e2e test
+  opens a `\r\n` file, reloads, and chooses an example with no prompt. It
+  passes on all three engines, and fails on all three against that mutant.
 - **N2 (non-blocking, low):** the delta scenario "Open loads a .csg file"
   said "exactly the file's text" without the D28 line-break wording. It now
   matches the requirement and DESIGN §8.
