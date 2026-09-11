@@ -1,0 +1,11 @@
+# Only the app (index.html + src/) and the project documents are published.
+node_modules
+test-results
+playwright-report
+.vercel
+e2e
+test
+tools
+templates
+openspec
+.claude

@@ -76,6 +76,7 @@ Verified in M0. Exact rules live in [CONSTRAINTS §1 and §4](CONSTRAINTS.md).
 | Languages / frameworks | Plain JavaScript ES modules, **no build step**. No TypeScript, bundler, UI framework, ThreeJS, or WebGL. No runtime dependencies. |
 | Environment / dependencies | Node.js ≥ 22. `npm install && npx playwright install && npm run hooks:install`. Dev dependency: `@playwright/test` only, pinned exactly at `1.63.0`. |
 | Run the app | `npm start` (serves the repo over HTTP; ES modules do not load from `file://`) |
+| Deploy the app | `npx vercel deploy --prod` — static hosting at <https://csg.ranton.org>; deploy only gate-green work (CONSTRAINTS §1, §4) |
 | Gate | `npm run check` — unit + golden-image tests (`npm test`) then Playwright e2e on Chromium, Firefox, WebKit (`npm run test:e2e`). Must be green before work is done. |
 | Gate enforcement | Pre-commit hook runs `npm test`. The full gate is run by process before every merge, archive, and milestone (the project has no CI, by the owner's decision D24). |
 | Focused tests | `node --test path/to/file.test.js` — does not replace the full gate |

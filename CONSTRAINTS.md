@@ -23,6 +23,7 @@ the product does; this document governs *how*. §5 is the definition of done;
 | Dev server | `tools/serve.mjs`: a small zero-dependency static file server on `node:http`, used by `npm start` and Playwright's `webServer` (D12). |
 | Node / npm | Node.js 22 or newer (agreed at readback, 2026-09-10; author's machine: v22.20.0, npm 10.9.3); recorded in `package.json` `engines` as `>=22`. |
 | Python | Not currently used. If any Python tooling is added, it runs in `.venv` (or `venv`), created before installing packages. |
+| Hosting | The published app is static: `index.html` plus `src/`, served by Vercel at <https://csg.ranton.org> (project `web_csg`, scope `richard-antons-projects`). No build step, no server code, no environment variables; `vercel.json` disables the install and build steps and serves the repository root. `.vercelignore` keeps the tests, tools, and planning sources out of the deployment. Hosting is a delivery detail only: nothing in `src/` may depend on it. |
 
 ## 2. Architecture and boundaries
 
@@ -171,6 +172,7 @@ src/ui/
   | **Full gate** | `npm run check` → `npm test` then `npm run test:e2e` |
   | Milestone captures | `npm run capture -- <milestone>` (e.g. `npm run capture -- M1`) → screenshots into `docs/progress/<milestone>/`; the shot list lives in `tools/capture.mjs` |
   | Update goldens | `npm run golden:update` (deliberate use only), optionally limited to files: `npm run golden:update -- test/x.test.js` |
+  | Deploy the app | `npx vercel deploy --prod` from the repository root (preview: `npx vercel deploy`). Deploy only what has passed the full gate. |
 
 ## 5. Definition of done
 

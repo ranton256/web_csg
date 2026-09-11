@@ -11,6 +11,9 @@ JavaScript you can read.
 
 ![The app showing the bored-cube example](docs/progress/M6/app.png)
 
+**Try it: <https://csg.ranton.org>** — it runs entirely in your browser, with
+nothing to install. Desktop only, by design (DESIGN D11).
+
 Web CSG is a **course exemplar** — a worked example of spec-driven
 development, meant to be read, rebuilt from its specification, and extended.
 [`DESIGN.md`](DESIGN.md) is the source of truth for behavior; the code
