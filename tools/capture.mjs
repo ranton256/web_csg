@@ -46,7 +46,7 @@ const SHOTS = [
     },
   },
   {
-    // Lines indented with Tab: the whole difference body selected, then Tab twice (backlog-closeout).
+    // Lines indented with Tab: the difference body selected, then Tab once (backlog-closeout).
     name: 'indented',
     prepare: async (page) => {
       await showSource(page, VISION_EXAMPLE.replace(/^ {2}/gm, ''));

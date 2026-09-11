@@ -19,7 +19,8 @@ Focus SHALL stay in the text area after an indentation edit.
 Pressing Esc in the text area SHALL make the next Tab or Shift+Tab move
 focus as the browser normally does, without editing, so keyboard users are
 never trapped (WCAG 2.1.2). Any other key, or leaving the text area, cancels
-this.
+this; a modifier key (Shift, Control, Alt, or Meta) pressed on its own does
+not, so Esc then Shift+Tab also moves focus.
 
 Indentation edits SHALL be ordinary edits:
 - they trigger the rebuild rule in `live-rebuild`;
@@ -38,6 +39,10 @@ Indentation edits SHALL be ordinary edits:
 #### Scenario: Shift+Tab removes up to two leading spaces
 - **WHEN** the caret is on a line that starts with three spaces, and Shift+Tab is pressed
 - **THEN** the line starts with one space
+
+#### Scenario: Esc, then Shift+Tab, also leaves the editor
+- **WHEN** the text area has focus, Esc is pressed, and then Shift+Tab is pressed
+- **THEN** focus moves to the previous focusable element on the page, and the source text is unchanged
 
 #### Scenario: Esc, then Tab, leaves the editor
 - **WHEN** the text area has focus, Esc is pressed, and then Tab is pressed

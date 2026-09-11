@@ -183,6 +183,15 @@ test.describe('Tab indentation', () => {
     if (browserName !== 'webkit') expect(undoShiftTab).toBe(DEFAULT_SOURCE + 'x\n  ');
   });
 
+  test('Esc, then Shift+Tab, leaves the editor with the text unchanged', async ({ page }) => {
+    // Shift pressed on its way to Shift+Tab must not cancel the escape (WCAG 2.1.2).
+    await setSource(page, '  ab', 4);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Shift+Tab');
+    expect(await focusedId(page)).not.toBe('source');
+    await expect(page.locator('#source')).toHaveValue('  ab');
+  });
+
   test('another key after Esc cancels the escape, so Tab indents again', async ({ page }) => {
     await setSource(page, 'ab', 2);
     await page.keyboard.press('Escape');

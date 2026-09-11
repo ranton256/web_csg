@@ -83,7 +83,9 @@ Shift+Tab only when no other modifier is held.
   recorded below.
 - **The Esc escape:** Esc sets an `escapeArmed` flag. The next Tab or
   Shift+Tab is not intercepted, so the browser moves focus, and the flag
-  clears. Any other key, or `blur`, clears it.
+  clears. Any other key, or `blur`, clears it. A modifier key (Shift,
+  Control, Alt, or Meta) pressed on its own does not, so the Shift of
+  Shift+Tab keeps the escape armed (Critic round 2).
 
 *Alternative:* insert a literal tab. The owner chose two spaces, so
 diagnostic columns and the visual layout agree.

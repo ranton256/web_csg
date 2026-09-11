@@ -89,3 +89,10 @@
 - [x] 8.3 e2e: the Esc escape is cancelled by another key (Esc, ArrowLeft, Tab indents) and by leaving the editor (Esc, blur, refocus, Tab indents)
 - [x] 8.4 Document drift: tasks 4.4, the design risks, the proposal's help-content and CONSTRAINTS lines, and the README's fresh-checkout row. The help text now states the full arithmetic rule
 - [ ] 8.5 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
+
+## 9. Critic round 2 fixes
+
+- [x] 9.1 e2e: Esc, then Shift+Tab, leaves the editor with the text unchanged, on all three engines
+- [x] 9.2 The delta spec and design D-3: a modifier key pressed on its own does not cancel the escape; an Esc then Shift+Tab scenario
+- [x] 9.3 The `capture.mjs` comment ("Tab once"), and the README coverage row
+- [ ] 9.4 Seen to fail (M4: Shift cancels the escape; M5: the escape applies only without Shift); re-capture `help.png`; the full gate and a fresh clone; the README round 2 section

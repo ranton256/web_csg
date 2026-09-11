@@ -53,7 +53,7 @@ factor 1):
 | Capability (delta spec) | Tests |
 | --- | --- |
 | `dev-server` | `test/serve.test.js`: dot-paths get 404, including percent-encoded forms; the CLI works through a symlinked path under `--preserve-symlinks-main`. The existing symlink and port tests still pass |
-| `editor-preview`: Tab indentation | `test/ui/indent.test.js` covers: Tab with no selection and with a one-line selection; a multi-line selection, where the selection moves with its text; the column-1 boundary; Shift+Tab with 0–3 leading spaces and across lines; the caret inside the removed spaces. `e2e/editor-preview.spec.js`, on all three engines, covers: Tab inserts two spaces with focus kept; every selected line is indented; Shift+Tab; Esc then Tab leaves the editor with the text unchanged; a rebuild follows; undo matches undo after typed spaces, and is exactly one step in Chromium and Firefox |
+| `editor-preview`: Tab indentation | `test/ui/indent.test.js` covers: Tab with no selection and with a one-line selection; a multi-line selection, where the selection moves with its text; the column-1 boundary; Shift+Tab with 0–3 leading spaces and across lines; the caret inside the removed spaces. `e2e/editor-preview.spec.js`, on all three engines, covers: Tab inserts two spaces with focus kept; every selected line is indented; Shift+Tab; Esc then Tab, and Esc then Shift+Tab, leave the editor with the text unchanged; another key after Esc, and leaving the editor after Esc, cancel the escape; a rebuild follows; undo after Tab matches undo after typed spaces, and undo after Shift+Tab on a line of only spaces matches undo after two Backspaces, each exactly one step in Chromium and Firefox |
 | `editor-preview`: Page layout (Help button) | `e2e/editor-preview.spec.js`: the header has a visible, keyboard-focusable Help button |
 | `language-help` | `test/ui/help-content.test.js` covers: every reserved word (from `RESERVED_WORDS`) appears; the example compiles and renders; every topic has a section, with the rotation convention, the multi-child difference, and the defaults; backticks are balanced. `e2e/help.spec.js`, on all three engines, covers: opening with the keyboard, where focus moves into the dialog and the title and every topic heading show; Esc, which returns focus to the Help button; Close; and that the source, caret, and rebuild count are unchanged |
 
@@ -135,6 +135,32 @@ Chromium, Firefox, and WebKit, with a baseline of 54/54.
 
 Gate after the fixes: `npm run check < /dev/null` in the working tree exits
 0, with `node --test` at 286/286 and Playwright at 105/105.
+
+## Critic round 2: `[REJECTED]`, and fixes
+
+The Critic reviewed `20cf222` and ran the gates itself (286/286, 105/105).
+It re-ran R1–R3 and its round 1 pins: P1, F1, and F2 pass on all three
+engines, and P1b fails on WebKit only, as D23 (d) allows. The round 1 fixes
+hold. It rejected the change for one test gap.
+
+| Finding | Fix |
+| --- | --- |
+| Test gap: no test pressed Esc then Shift+Tab. Dropping the modifier exemption (so Shift cancels the escape), or letting the escape apply only without Shift, passed the whole suite, and either traps keyboard users (WCAG 2.1.2) | `Esc, then Shift+Tab, leaves the editor with the text unchanged`, on all three engines |
+| Low: the spec said "any other key" cancels the escape, which literally includes Shift | The delta spec and design D-3 now say that a modifier key pressed on its own does not. The spec gains an Esc then Shift+Tab scenario |
+| Low: `help.png` still showed the old arithmetic wording | Re-captured |
+| Informational: a `capture.mjs` comment said "Tab twice"; the coverage row lacked the new tests | Both corrected |
+
+Seen to fail, in a scratch copy of the working tree with `node_modules`
+linked in. Each run covered `e2e/editor-preview.spec.js` on Chromium,
+Firefox, and WebKit, with a baseline of 57/57.
+
+| Break | Tests that failed |
+| --- | --- |
+| M4: Shift cancels the escape (the modifier exemption dropped) | 3/57: `Esc, then Shift+Tab, leaves the editor with the text unchanged`, on each engine |
+| M5: the escape applies only without Shift | 3/57: the same test, on each engine |
+
+Gate after the fixes: `npm run check < /dev/null` in the working tree exits
+0, with `node --test` at 286/286 and Playwright at 108/108.
 
 ## Manual Safari smoke check
 
