@@ -18,7 +18,7 @@
   - multi-line Tab, including the boundary where a selection ending at column 1 leaves that line untouched
   - Shift+Tab with 0, 1, 2, and 3 leading spaces, and over several lines
   - the selection kept over the same text
-- [x] 3.3 `src/ui/main.js`: a `keydown` handler for Tab and Shift+Tab, applied with `execCommand('insertText')`, falling back to `setRangeText` plus an `input` event. Add the Esc escape flag, which any other key or `blur` clears.
+- [x] 3.3 `src/ui/main.js`: a `keydown` handler for Tab and Shift+Tab, applied with `execCommand('insertText')`, falling back to `setRangeText` plus an `input` event. Add the Esc escape flag, which any other key or `blur` clears. A modifier key (Shift, Control, Alt, or Meta) pressed on its own does not clear it
 
 ## 4. Help dialog
 
@@ -73,13 +73,13 @@
   - a reserved word dropped from the help
 
   Watch the relevant unit and e2e tests fail, and record the output.
-- [ ] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
+- [x] 7.2 `npm run check < /dev/null` green, then a fresh clone at the branch head (`npm ci`, `npx playwright install`, `npm run hooks:install`, `npm run check`) green
 - [x] 7.3 Add the `help` and `indented` shots to `tools/capture.mjs`, then run `npm run capture -- backlog-closeout`. Write `docs/progress/backlog-closeout/README.md`, covering:
   - each backlog item closed, with its evidence
   - test coverage
   - the seen-to-fail records
   - the manual Safari smoke check (performed by the owner)
-- [ ] 7.4 A separate Critic review (`project-critic`) of `main..backlog-closeout`. Fix findings and re-review until `[APPROVED]`
+- [x] 7.4 A separate Critic review (`project-critic`) of `main..backlog-closeout`. Fix findings and re-review until `[APPROVED]`
 - [ ] 7.5 Merge into `main`, and archive with `/opsx:archive` (syncing the specs, including the new `language-help` capability)
 
 ## 8. Critic round 1 fixes
@@ -88,11 +88,11 @@
 - [x] 8.2 e2e: Shift+Tab followed by undo matches two Backspaces followed by undo, on all three engines, and is exactly one step in Chromium and Firefox
 - [x] 8.3 e2e: the Esc escape is cancelled by another key (Esc, ArrowLeft, Tab indents) and by leaving the editor (Esc, blur, refocus, Tab indents)
 - [x] 8.4 Document drift: tasks 4.4, the design risks, the proposal's help-content and CONSTRAINTS lines, and the README's fresh-checkout row. The help text now states the full arithmetic rule
-- [ ] 8.5 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
+- [x] 8.5 Seen to fail for the new tests; the full gate and a fresh clone; the README Critic round 1 section
 
 ## 9. Critic round 2 fixes
 
 - [x] 9.1 e2e: Esc, then Shift+Tab, leaves the editor with the text unchanged, on all three engines
 - [x] 9.2 The delta spec and design D-3: a modifier key pressed on its own does not cancel the escape; an Esc then Shift+Tab scenario
 - [x] 9.3 The `capture.mjs` comment ("Tab once"), and the README coverage row
-- [ ] 9.4 Seen to fail (M4: Shift cancels the escape; M5: the escape applies only without Shift); re-capture `help.png`; the full gate and a fresh clone; the README round 2 section
+- [x] 9.4 Seen to fail (M4: Shift cancels the escape; M5: the escape applies only without Shift); re-capture `help.png`; the full gate and a fresh clone; the README round 2 section

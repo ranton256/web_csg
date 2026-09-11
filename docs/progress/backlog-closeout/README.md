@@ -42,11 +42,11 @@ factor 1):
 
 | Gate | Result |
 | --- | --- |
-| `npm run check < /dev/null` in the working tree | On the final tree, after removing the redundant refocus: exit 0, `node --test` 286/286, Playwright 96/96 |
+| `npm run check < /dev/null` in the working tree | On the reviewed head `3c3ea0d`: exit 0, `node --test` 286/286, Playwright 108/108 |
 | `openspec validate backlog-closeout --strict` | Valid |
-| Full gate from a fresh checkout | `git clone --branch backlog-closeout` at `9570010`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 286/286, Playwright 96/96 |
+| Full gate from a fresh checkout | `git clone --branch backlog-closeout` at `3c3ea0d`, the reviewed head, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 286/286, Playwright 108/108. Earlier clones passed at `9570010` (96/96) and `20cf222` (105/105) |
 | Manual Safari smoke check | Pass (see below) |
-| Separate Critic review returns `[APPROVED]` | Pending |
+| Separate Critic review returns `[APPROVED]` | [Critic round 3](#critic-round-3-approved) at `3c3ea0d`, after two rejected rounds: Pass |
 
 ## Test coverage
 
@@ -161,6 +161,29 @@ Firefox, and WebKit, with a baseline of 57/57.
 
 Gate after the fixes: `npm run check < /dev/null` in the working tree exits
 0, with `node --test` at 286/286 and Playwright at 108/108.
+
+## Critic round 3: `[APPROVED]`
+
+The Critic reviewed `3c3ea0d` and ran the gates itself in a fresh clone
+after `npm ci`: `npm test` 286/286, `npm run check < /dev/null` exit 0 with
+Playwright at 108/108, and `openspec validate --strict` valid.
+- **Round 2 fixes:** it re-ran M4 and M5 with its round 2 pin against a
+  60/60 baseline. Each mutant failed 6/60: the new test and the pin, on
+  every engine.
+- **Whole change:** every delta-spec scenario has a test that exercises it
+  as written, and the code matches DESIGN §4, §8, and D23 (a) to (d).
+
+Its informational notes:
+- **An uncovered design detail:** design D-3's "only when no other
+  modifier is held" (Ctrl, Alt, or Meta with Tab) has no test. Deleting that
+  check (M6) passed the suite. The delta spec does not require it, and the
+  browser or OS usually consumes those combinations first. It is recorded
+  here as accepted, and no test was added after approval.
+- **A weaker check:** the Esc-then-Shift+Tab test checks that focus left the
+  editor, not that it moved to a specific element. WebKit's default tab
+  order skips buttons, so the target differs by engine.
+- **Wording:** task 3.3's wording, and DESIGN's §8 scenario and D23 (b),
+  said only "Tab". All three now name the modifier exception or Shift+Tab.
 
 ## Manual Safari smoke check
 
