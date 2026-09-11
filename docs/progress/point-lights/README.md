@@ -25,7 +25,7 @@ Decisions (DESIGN §12 D25):
 | Shot | Shows |
 | --- | --- |
 | ![Point-lit bored cube](lit-point.png) | `lit-point.png`: the bored cube lit only by `light { position: [40, -50, 50]; }`, just outside the corner nearest the camera. Unlike a directional light, which shades each flat face evenly (compare `lit-custom.png`), the point light shades each face unevenly, brightest toward that corner. The top bore's far wall and the walls of the side bores that face the light are lit |
-| `app.png`, `stale.png`, `primitives.png`, `bored-cube.png`, `lit-custom.png`, `help.png`, `indented.png` | The earlier shots, unchanged. Directional-only renders are byte-identical: every existing golden still matches |
+| `app.png`, `stale.png`, `primitives.png`, `bored-cube.png`, `lit-custom.png`, `help.png`, `indented.png` | The earlier shots. Their renders are unchanged, because directional-only renders are byte-identical and every existing golden still matches. Compared with the M5 captures, the images differ only by the header's Help button, added in `backlog-closeout` |
 
 ## Backlog item closed
 
@@ -42,7 +42,7 @@ Decisions (DESIGN §12 D25):
 | Every existing golden unchanged | `npm test` before any golden update: every golden matched. The only failures were the two tests of changed behavior (the light shape now has `kind`, and the new missing-property message) |
 | Full gate from a fresh checkout | `git clone --branch point-lights` at `ae07a13`, then `npm ci`, `npx playwright install`, `npm run hooks:install`, and `npm run check < /dev/null`: exit 0, `node --test` 302/302, Playwright 108/108 |
 | Manual Safari smoke check | Pass (see below) |
-| Separate Critic review returns `[APPROVED]` | Pending |
+| Separate Critic review returns `[APPROVED]` | [Critic round 1](#critic-round-1-approved) at `8fed59d`: Pass |
 
 ## Test coverage
 
@@ -101,6 +101,39 @@ catch M2.
 - **A MODIFIED requirement keeps its scenario names.** `openspec validate`
   rejected renaming "A missing direction is reported", so the scenario keeps
   its name with the new message.
+
+## Critic round 1: `[APPROVED]`
+
+The Critic reviewed `main..point-lights` at `8fed59d`, working in its own
+fresh clone.
+- **Gates:** after `npm ci`, `npx playwright install`, and
+  `npm run hooks:install`, `npm test` passed 302/302, and
+  `npm run check < /dev/null` exited 0 with Playwright at 108/108.
+  `openspec validate point-lights --strict` was valid.
+- **Coverage:** every delta-spec scenario has a test that checks it as
+  written.
+- **Its own mutants A–G all killed:** shading at the camera position;
+  `L = normalize(position)`; keeping a light at exactly `ε`; ignoring a
+  point light's intensity; always reporting "both" at `direction`;
+  resolving point lights only when every light is a point light; and a
+  neither-property rule that checks only `direction`.
+- **Golden recomputed:** the Critic recomputed the `lit-point` golden from
+  the spec formula, with analytic plane hits on the three visible faces.
+  All 334 face pixels matched exactly.
+- **Scaled render reproduced:** 0 channels differ at either factor.
+
+Its non-blocking notes:
+- **A huge but finite position is silently dark (low).**
+  `light { position: [1e200, 1e200, 0]; }` gives no diagnostic, and then
+  contributes nothing, because its distance overflows. The same vector as
+  a `direction` is reported as "too large". This is D25 (d)'s best-effort
+  rule outside the supported scale, and it is recorded here as accepted.
+- **The ×1e5 scaled test is weak against falloff (low).** It is disclosed
+  above, and six other tests kill that mutant.
+- **Capture wording:** the captures row said "unchanged". It now says that
+  the renders are unchanged, and that the images differ from the M5
+  captures only by the Help button.
+- **The main spec's Purpose line** is refreshed at archive (task 7.6).
 
 ## Manual Safari smoke check
 
