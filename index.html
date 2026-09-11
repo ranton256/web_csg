@@ -9,7 +9,18 @@
     <style>
       html, body { height: 100%; margin: 0; }
       body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; }
+      #header { display: flex; align-items: center; justify-content: space-between; }
       h1 { margin: 8px 16px; font-size: 20px; }
+      #help-button { margin-right: 16px; font: 14px system-ui, sans-serif; padding: 3px 12px; }
+      #help { width: min(720px, 90vw); max-height: 85vh; padding: 0; border: 1px solid #bbb; border-radius: 6px; }
+      #help::backdrop { background: rgba(0, 0, 0, 0.35); }
+      #help-head { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: #f4f4f6; border-bottom: 1px solid #ddd; }
+      #help-head h2 { margin: 0; font-size: 17px; }
+      #help-body { padding: 4px 16px 16px; font-size: 14px; line-height: 1.45; }
+      #help-body h3 { margin: 14px 0 4px; font-size: 15px; }
+      #help-body p { margin: 4px 0; }
+      #help-body pre { margin: 6px 0; padding: 6px 8px; background: #f4f4f6; border-radius: 3px; overflow-x: auto; }
+      #help-body code { font: 13px/18px ui-monospace, Menlo, Consolas, monospace; }
       #workspace { flex: 1; display: flex; min-height: 0; }
       #editor-pane { width: var(--editor-width, 420px); flex: none; display: flex; flex-direction: column; min-height: 0; }
       #editor { flex: 1; display: flex; min-height: 0; border-top: 1px solid #ddd; }
@@ -33,7 +44,10 @@
     </style>
   </head>
   <body>
-    <h1>Web CSG</h1>
+    <header id="header">
+      <h1>Web CSG</h1>
+      <button id="help-button" type="button" aria-haspopup="dialog">Help</button>
+    </header>
     <main id="workspace">
       <section id="editor-pane" aria-label="Editor">
         <div id="editor">
@@ -49,6 +63,13 @@
         <p id="status" hidden>Rendering…</p>
       </section>
     </main>
+    <dialog id="help" aria-labelledby="help-title">
+      <div id="help-head">
+        <h2 id="help-title">Modeling language help</h2>
+        <button id="help-close" type="button">Close</button>
+      </div>
+      <div id="help-body"></div>
+    </dialog>
     <script type="module" src="src/ui/main.js"></script>
   </body>
 </html>

@@ -5,6 +5,8 @@ import { compile } from '../core/render.js';
 import { createDebouncer } from './debounce.js';
 import { DEFAULT_SOURCE } from './default-source.js';
 import { attachDivider, clampEditorWidth } from './divider.js';
+import { HELP_SECTIONS } from './help-content.js';
+import { indentEdit } from './indent.js';
 import { startRenderJob } from './render-job.js';
 import { SETTINGS } from './settings.js';
 import { lineColumnToOffset, lineCount } from './text-position.js';
@@ -126,6 +128,90 @@ source.addEventListener('input', () => {
 source.addEventListener('scroll', () => {
   gutter.scrollTop = source.scrollTop;
 });
+
+// --- Tab indentation (D23) ---------------------------------------------------
+
+// Tab and Shift+Tab indent in the editor. Esc first lets the next Tab move
+// focus as usual, so keyboard users are never trapped (WCAG 2.1.2).
+let escapeArmed = false;
+const MODIFIER_KEYS = new Set(['Shift', 'Control', 'Alt', 'Meta']);
+
+// Applies an indentation edit as one native undo step. insertText also fires
+// the input event, so the gutter and the rebuild follow as for typing.
+function applyIndent(edit) {
+  if (source.value.slice(edit.from, edit.to) !== edit.insert) {
+    source.setSelectionRange(edit.from, edit.to);
+    const inserted = edit.insert !== '' && document.execCommand('insertText', false, edit.insert);
+    if (!inserted) {
+      source.setRangeText(edit.insert, edit.from, edit.to);
+      source.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+  }
+  source.setSelectionRange(edit.selectionStart, edit.selectionEnd);
+}
+
+source.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') {
+    escapeArmed = true;
+    return;
+  }
+  if (event.key !== 'Tab') {
+    if (!MODIFIER_KEYS.has(event.key)) escapeArmed = false;
+    return;
+  }
+  if (event.ctrlKey || event.altKey || event.metaKey) return;
+  if (escapeArmed) {
+    escapeArmed = false;
+    return; // the browser moves focus
+  }
+  event.preventDefault();
+  applyIndent(indentEdit(source.value, source.selectionStart, source.selectionEnd, { outdent: event.shiftKey }));
+});
+source.addEventListener('blur', () => {
+  escapeArmed = false;
+});
+
+// --- Help (D23) ---------------------------------------------------------------
+
+const helpDialog = byId('help');
+
+// Text with `backticks` becomes text nodes and <code> elements (no markup parsing).
+function appendWithCode(element, text) {
+  text.split('`').forEach((part, i) => {
+    if (i % 2 === 0) {
+      element.append(part);
+    } else {
+      const code = document.createElement('code');
+      code.textContent = part;
+      element.append(code);
+    }
+  });
+}
+
+for (const section of HELP_SECTIONS) {
+  const heading = document.createElement('h3');
+  heading.textContent = section.title;
+  byId('help-body').append(heading);
+  for (const block of section.body) {
+    if (typeof block === 'string') {
+      const paragraph = document.createElement('p');
+      appendWithCode(paragraph, block);
+      byId('help-body').append(paragraph);
+    } else {
+      const pre = document.createElement('pre');
+      const code = document.createElement('code');
+      code.textContent = block.code;
+      pre.append(code);
+      byId('help-body').append(pre);
+    }
+  }
+}
+
+// A modal <dialog> contains focus, closes on Esc, and returns focus to the
+// element that had it when it opened; e2e/help.spec.js checks this on all
+// three engines.
+byId('help-button').addEventListener('click', () => helpDialog.showModal());
+byId('help-close').addEventListener('click', () => helpDialog.close());
 
 // --- Resizing ---------------------------------------------------------------
 

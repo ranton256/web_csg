@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { DEFAULT_SOURCE } from '../src/ui/default-source.js';
-import { BACKGROUND, dragDivider, dragDividerTo, editAndSettle, imageStats, openApp, pixelAt, waitForIdle, widthOf } from './support.js';
+import { BACKGROUND, counter, dragDivider, dragDividerTo, editAndSettle, imageStats, openApp, pixelAt, waitForCounter, waitForIdle, widthOf } from './support.js';
 
 const CAMERA = 'camera { position: [0, -100, 0]; lookAt: [0, 0, 0]; }';
 
@@ -89,4 +89,75 @@ test('a window too narrow for both minimums keeps the editor at 240 px', async (
   await expect.poll(async () => Math.round(await widthOf(page, '#editor-pane'))).toBe(240);
   const divider = await widthOf(page, '#divider');
   expect(Math.round(await widthOf(page, '#preview-panel'))).toBe(Math.round(400 - 240 - divider));
+});
+
+// Tab indentation (DESIGN §8 Editor indentation and help; D23).
+test.describe('Tab indentation', () => {
+  const LINES = 'sphere(1);\ncube(2);\nbox([1, 2, 3]);';
+  const LINE2 = LINES.indexOf('cube');
+
+  async function setSource(page, text, start, end = start) {
+    await page.locator('#source').fill(text);
+    await page.locator('#source').evaluate((el, [s, e]) => el.setSelectionRange(s, e), [start, end]);
+  }
+  const selection = (page) => page.locator('#source').evaluate((el) => [el.selectionStart, el.selectionEnd]);
+  const focusedId = (page) => page.evaluate(() => document.activeElement?.id ?? '');
+
+  test('Tab inserts two spaces at the caret and keeps focus in the editor', async ({ page }) => {
+    await setSource(page, LINES, LINE2);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#source')).toHaveValue('sphere(1);\n  cube(2);\nbox([1, 2, 3]);');
+    expect(await selection(page)).toEqual([LINE2 + 2, LINE2 + 2]);
+    expect(await focusedId(page)).toBe('source');
+  });
+
+  test('Tab indents every selected line', async ({ page }) => {
+    await setSource(page, LINES, 3, LINE2 + 2);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('#source')).toHaveValue('  sphere(1);\n  cube(2);\nbox([1, 2, 3]);');
+  });
+
+  test('Shift+Tab removes up to two leading spaces', async ({ page }) => {
+    await setSource(page, '   cube(2);', 11);
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.locator('#source')).toHaveValue(' cube(2);');
+  });
+
+  test('Esc, then Tab, leaves the editor with the text unchanged', async ({ page }) => {
+    await setSource(page, LINES, LINE2);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Tab');
+    expect(await focusedId(page)).not.toBe('source');
+    await expect(page.locator('#source')).toHaveValue(LINES);
+  });
+
+  test('a Tab edit triggers a rebuild, and undo treats it exactly like typed spaces', async ({ page, browserName }) => {
+    // The same state is built by real typing each time: "x" at the end, caret before it.
+    async function undoAfter(action) {
+      await page.reload();
+      await waitForIdle(page);
+      await page.locator('#source').click();
+      await page.keyboard.press('ControlOrMeta+End');
+      await page.keyboard.type('x');
+      await page.keyboard.press('ArrowLeft');
+      const before = await counter(page, 'rebuilds');
+      await action();
+      await waitForCounter(page, 'rebuilds', before + 1);
+      await page.keyboard.press('ControlOrMeta+z');
+      return page.locator('#source').inputValue();
+    }
+    const afterTab = await undoAfter(() => page.keyboard.press('Tab'));
+    const afterSpaces = await undoAfter(() => page.keyboard.type('  '));
+    expect(afterTab).toBe(afterSpaces);
+    // Chromium and Firefox keep typing and the indentation as separate steps; WebKit groups them.
+    if (browserName !== 'webkit') expect(afterTab).toBe(DEFAULT_SOURCE + 'x');
+  });
+
+  test('the header has a keyboard-focusable Help button', async ({ page }) => {
+    const button = page.locator('header #help-button');
+    await expect(button).toBeVisible();
+    await expect(button).toHaveText('Help');
+    await button.focus();
+    expect(await focusedId(page)).toBe('help-button');
+  });
 });

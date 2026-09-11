@@ -65,8 +65,20 @@ describe('dev server on a fixture root', () => {
       fs.writeFileSync(path.join(root, name), content);
     }
     fs.symlinkSync(path.join(tmp, 'secret.txt'), path.join(root, 'link.txt'));
+    // Dot-paths inside the root, which must never be served.
+    fs.mkdirSync(path.join(root, '.git'));
+    fs.writeFileSync(path.join(root, '.git', 'config'), 'DOT SECRET');
+    fs.writeFileSync(path.join(root, '.gitignore'), 'DOT SECRET');
     server = await startServer({ port: 0, root });
     port = server.address().port;
+  });
+
+  test('dot-paths get 404 and no file contents, including percent-encoded ones', async () => {
+    for (const target of ['/.git/config', '/.gitignore', '/%2egit/config', '/%2Egitignore', '/sub/.hidden']) {
+      const res = await request(port, target);
+      assert.equal(res.status, 404, target);
+      assert.ok(!res.body.includes('DOT SECRET'), target);
+    }
   });
 
   after(() => {
@@ -221,6 +233,36 @@ describe('port selection', () => {
 
       const port = await freePort();
       const child = spawn(process.execPath, [script, '--port', String(port)]);
+      try {
+        await new Promise((resolve, reject) => {
+          child.stdout.on('data', (chunk) => {
+            if (chunk.toString().includes('Serving')) resolve();
+          });
+          child.once('exit', (code) => reject(new Error(`serve.mjs exited with ${code}`)));
+        });
+        assert.equal((await request(port, '/')).status, 200);
+      } finally {
+        child.kill();
+      }
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  test('the CLI works through a symlinked path under --preserve-symlinks-main', async () => {
+    // Node then keeps import.meta.url on the symlinked path; the server must still start.
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'web-csg-preserve-'));
+    const link = path.join(tmp, 'repo');
+    fs.symlinkSync(REPO_ROOT, link);
+    const script = path.join(link, 'tools', 'serve.mjs');
+    const node = (args) => [process.execPath, ['--preserve-symlinks-main', script, ...args]];
+    try {
+      const invalid = spawnSync(...node(['--port', 'abc']), { encoding: 'utf8', timeout: 5000 });
+      assert.equal(invalid.status, 1, `exit ${invalid.status}, stderr ${JSON.stringify(invalid.stderr)}`);
+      assert.match(invalid.stderr, /Invalid port/);
+
+      const port = await freePort();
+      const child = spawn(...node(['--port', String(port)]));
       try {
         await new Promise((resolve, reject) => {
           child.stdout.on('data', (chunk) => {

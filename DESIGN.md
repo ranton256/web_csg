@@ -75,6 +75,8 @@ spec-driven development that students read, rebuild, and extend.
   neutral background; no shadows (D8). Constants in §5.
 - A visible indicator when the preview shows the last valid model rather than
   the current source.
+- A "Help" button in the page header opens a dialog with a reference for the
+  modeling language (D23).
 
 ### Asset inventory
 
@@ -661,6 +663,36 @@ Scenario: Clicking a diagnostic moves the caret
   Then the editor caret is placed at line 4, column 7
 ```
 
+### Feature: Editor indentation and help
+
+Agreed in D23 (the owner, 2026-09-11).
+
+```gherkin
+Scenario: Tab indents
+  Given the caret is in the source editor
+  When Tab is pressed
+  Then two spaces replace the selection at the caret, or, when the selection spans several lines, every touched line is indented by two spaces
+  And focus stays in the editor
+
+Scenario: Shift+Tab outdents
+  When Shift+Tab is pressed in the source editor
+  Then up to two leading spaces are removed from each line the caret or selection touches
+
+Scenario: Keyboard users are not trapped
+  Given the source editor has focus
+  When Esc is pressed and then Tab
+  Then focus moves to the next element on the page, and the text is unchanged
+
+Scenario: Indentation is an ordinary edit
+  When Tab or Shift+Tab changes the text
+  Then the model rebuilds as after typing, and the browser's undo treats the change exactly like typing the same characters
+
+Scenario: Help on request
+  When the Help button in the page header is activated
+  Then a dialog shows a reference for the modeling language, with a short example that compiles
+  And Esc or Close closes it and returns focus to where it was, leaving the editor and preview unchanged
+```
+
 ### Feature: Invalid edits keep the last valid preview
 
 ```gherkin
@@ -730,6 +762,7 @@ See [ROADMAP.md](ROADMAP.md).
 | ~~D20~~ | **Resolved 2026-09-10 (chosen by the owner, after the M3 Critic review):** solids are closed, so their surfaces belong to them. A ray lying in a box face plane, along a cylinder side line, or in a cylinder cap plane is a hit over the length it shares with the solid. Only a zero-length touch (an interval of length ≤ `ε`, such as a sphere tangent or an edge graze) is a miss. **Amended the same day (owner, after M3 Critic round 2):** the in-face check allows `ε` in world units (`ε·|d|` in a primitive's local space), because the rounding of a placement can move a face by a last-place error and would otherwise turn an in-face ray into a miss. **Narrowed the same day (owner, after M3 Critic round 3):** the guarantee covers placements built from `translate`, `scale`, and rotations by multiples of 90°, which are exact (D4, D7), so an in-face ray stays exactly parallel to the face in local space. Under other rotations, a local direction component that should be 0 carries a rounding residue of about `1e-16`. A ray lying exactly in such a face is then a boundary case decided by rounding, like a ray through an exact edge, and the effect is below what a render shows. Rays clearly inside or outside a face behave normally at any rotation. Revisit when `ε` is finalized in M4 (ROADMAP backlog). Flush cuts in M4 are governed by the separate difference rule in §8 Ray–solid intervals, not by this one. | — | — |
 | ~~D21~~ | **Resolved 2026-09-10 (owner, after M4 Critic round 1):** the difference boundary rule applies where a cutter overlaps the base. A cutter that only touches the base (a gap of 0), or stops short of it by a gap ≤ `ε`, removes none of it, so the base boundary stays. Wording corrected after M4 Critic round 2: "overlaps or meets" contradicted the tested behavior for a touching cutter. Recorded in §8 Ray–solid intervals and the `ray-intervals` spec. | — | — |
 | ~~D22~~ | **Resolved 2026-09-11 (accepted by the owner after M5 Critic round 1; the writer's defaults in M5, consistent with D8 and D16):** DESIGN gives a default only for `intensity`, so a `light` requires `direction` and a `material` requires `color`. The fifth or later `light` block, and the second or later `material` block, are reported at their keyword. A `light` or `material` inside a body is reported at its keyword, as `camera` is, and a misplaced block does not count toward the limits. Every block's contents are still checked. Recorded in the `lighting-and-shading` spec. | — | — |
+| ~~D23~~ | **Resolved 2026-09-11 (the owner's decisions, `backlog-closeout`):** (a) the backlog close-out covers the dev server's dot-paths and symlinked entry-point check, Tab indentation, and on-request help; CI waits for a git remote, and point lights stay parked. (b) Tab inserts two spaces, or indents each touched line by two spaces; Shift+Tab removes up to two; Esc then Tab moves focus out of the editor (WCAG 2.1.2). (c) A "Help" button in the page header opens a modal dialog with the language reference and an example; Esc or Close returns focus. (d) Undo treats an indentation edit exactly like typing the same characters. WebKit groups consecutive typing, including indentation, into one undo step (the owner's decision, after the implementation showed it). See §4 and §8 Editor indentation and help. | — | — |
 | D17 | Which characters count as identifier letters. M1 accepts ASCII letters, digits, and `_` only, so `é`, a non-breaking space, or a byte-order mark is an "unexpected character". This is consistent with §8, but files opened from disk (M6) may carry a BOM or non-ASCII names. | Open files (M6) | Decide before M6: keep ASCII-only, skip a leading BOM, and/or allow Unicode letters |
 ## Optional features (parked)
 

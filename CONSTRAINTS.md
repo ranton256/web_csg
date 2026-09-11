@@ -79,6 +79,8 @@ src/core/
   render.js      # compile, renderRows, renderSource (the public entry points)
 src/ui/
   default-source.js  # The page's example (no browser APIs)
+  indent.js          # indentEdit: the Tab and Shift+Tab rules (no browser APIs)
+  help-content.js    # HELP_SECTIONS, HELP_EXAMPLE: the Help dialog's reference (no browser APIs)
   settings.js        # Editor numbers mirroring DESIGN §5 (debounces, time slice, divider)
   text-position.js   # lineCount, lineColumnToOffset (code-point columns → UTF-16 offsets)
   debounce.js        # createDebouncer(delay, timers): injectable timers

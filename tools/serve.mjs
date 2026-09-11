@@ -69,6 +69,10 @@ function resolveTarget(root, rawTarget) {
     return { status: 403 };
   }
   if (decoded.split('/').includes('..')) return { status: 403 };
+  // Dot-paths (for example /.git/config) are never served. They get 404
+  // before any file-system access, so the response does not reveal whether
+  // such a file exists.
+  if (decoded.split('/').some((segment) => segment.startsWith('.'))) return { status: 404 };
 
   const filePath = path.resolve(root, `.${decoded}`);
   if (!isInside(root, filePath)) return { status: 403 };
@@ -152,12 +156,13 @@ export async function startServer({ port = DEFAULT_PORT, root = REPO_ROOT } = {}
   return server;
 }
 
-// Compare real paths: import.meta.url is already resolved through symlinks
-// (e.g. /tmp → /private/tmp on macOS), but process.argv[1] is not.
+// Compare real paths on both sides. process.argv[1] may go through a symlink
+// (e.g. /tmp → /private/tmp on macOS), and so may import.meta.url when Node
+// runs with --preserve-symlinks-main.
 function isMainModule() {
   if (!process.argv[1]) return false;
   try {
-    return fs.realpathSync(process.argv[1]) === fileURLToPath(import.meta.url);
+    return fs.realpathSync(process.argv[1]) === fs.realpathSync(fileURLToPath(import.meta.url));
   } catch {
     return false;
   }

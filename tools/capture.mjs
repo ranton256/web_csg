@@ -37,6 +37,29 @@ const SHOTS = [
   { name: 'primitives', prepare: (page) => showSource(page, SCENES.arrangement) },
   { name: 'bored-cube', prepare: (page) => showSource(page, VISION_EXAMPLE) },
   { name: 'lit-custom', prepare: (page) => showSource(page, SCENES['lit-custom']) },
+  {
+    // The Help dialog open over the app (backlog-closeout).
+    name: 'help',
+    prepare: async (page) => {
+      await page.locator('#help-button').click();
+      await page.locator('#help').waitFor({ state: 'visible' });
+    },
+  },
+  {
+    // Lines indented with Tab: the whole difference body selected, then Tab twice (backlog-closeout).
+    name: 'indented',
+    prepare: async (page) => {
+      await showSource(page, VISION_EXAMPLE.replace(/^ {2}/gm, ''));
+      const before = await page.evaluate(() => Number(document.body.dataset.rebuilds ?? 0));
+      await page.locator('#source').evaluate((el) => {
+        const start = el.value.indexOf('cube(size);');
+        el.setSelectionRange(start, el.value.lastIndexOf('}'));
+      });
+      await page.keyboard.press('Tab');
+      await page.waitForFunction((count) => Number(document.body.dataset.rebuilds ?? 0) > count, before);
+      await renderIdle(page);
+    },
+  },
 ];
 const VIEWPORT = { width: 1280, height: 800 };
 
