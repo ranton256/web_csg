@@ -28,10 +28,12 @@ silent divergence. Spec gaps go to the open-decisions register in
 
 ```text
 CLAUDE.md
+README.md
 DESIGN.md
 ROADMAP.md
 CONSTRAINTS.md
 vision.md
+LICENSE
 index.html                  # App entry page
 package.json                # Scripts; @playwright/test is the only dev dependency
 playwright.config.js        # e2e: Chromium, Firefox, WebKit on port 4173

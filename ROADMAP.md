@@ -225,6 +225,7 @@ strike it through with a reason.
 
 | | Item | From |
 |---|---|---|
+| ☐ | Deploy the corrected `.vercelignore` to production: until `npx vercel deploy --prod` runs, <https://csg.ranton.org> serves the earlier upload, which still publishes `playwright.config.js`, so CONSTRAINTS §1 and `.vercelignore` describe a published set the live site does not yet have | `deploy-csg-subdomain` Critic rounds 2 (N5) and 3 (F2) |
 | ☑ | ~~Add CI (full gate on push) once a git remote exists~~ Dropped by the owner, 2026-09-11: the project does not need CI (D24) | CONSTRAINTS §4, D13 |
 | ☑ | ~~Dev server serves dotfiles (e.g. `/.git/config`) from the repo root. Loopback-only and within spec, but consider a 404 for dot-paths~~ Delivered in `backlog-closeout` (404 for dot-paths; `test/serve.test.js`) | `m0-foundations` Critic round 2 (informational) |
 | ☑ | ~~`serve.mjs` entry-point check: under the opt-in Node flag `--preserve-symlinks-main`, starting through a symlinked path exits 0 silently. Compare `realpath(fileURLToPath(import.meta.url))` as well~~ Delivered in `backlog-closeout` (`test/serve.test.js`) | `m0-foundations` Critic round 6 (informational) |
