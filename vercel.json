@@ -3,12 +3,5 @@
   "framework": null,
   "installCommand": "echo 'No install: the app has no runtime dependencies (CONSTRAINTS §1).'",
   "buildCommand": "echo 'No build step: the browser loads the ES modules as written (CONSTRAINTS §1).'",
-  "outputDirectory": ".",
-  "cleanUrls": false,
-  "headers": [
-    {
-      "source": "/src/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }]
-    }
-  ]
+  "outputDirectory": "."
 }

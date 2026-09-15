@@ -23,7 +23,7 @@ the product does; this document governs *how*. §5 is the definition of done;
 | Dev server | `tools/serve.mjs`: a small zero-dependency static file server on `node:http`, used by `npm start` and Playwright's `webServer` (D12). |
 | Node / npm | Node.js 22 or newer (agreed at readback, 2026-09-10; author's machine: v22.20.0, npm 10.9.3); recorded in `package.json` `engines` as `>=22`. |
 | Python | Not currently used. If any Python tooling is added, it runs in `.venv` (or `venv`), created before installing packages. |
-| Hosting | The published app is static: `index.html` plus `src/`, served by Vercel at <https://csg.ranton.org> (project `web_csg`, scope `richard-antons-projects`). No build step, no server code, no environment variables; `vercel.json` disables the install and build steps and serves the repository root. `.vercelignore` keeps the tests, tools, and planning sources out of the deployment. Hosting is a delivery detail only: nothing in `src/` may depend on it. |
+| Hosting | The published app is static: `index.html` plus `src/`, served by Vercel at <https://csg.ranton.org> (project `web_csg`, scope `richard-antons-projects`). No build step, no server code, no environment variables; `vercel.json` overrides the install and build steps with no-ops and serves the repository root. The deployment publishes the app, the project documents (the `.md` files, `LICENSE`, and `docs/`), and its own `vercel.json` and `.vercelignore`; `.vercelignore` withholds the tests, the e2e configuration, the tools, and the planning sources, and Vercel itself withholds `.git`, `.gitignore`, `package.json`, and `package-lock.json`. Hosting is a delivery detail only: nothing in `src/` may depend on it. |
 
 ## 2. Architecture and boundaries
 
@@ -148,8 +148,9 @@ src/ui/
   and links these documents and must be kept consistent with them. It does
   not override them.
 - **Git** (D13, agreed 2026-09-10):
-  - The default branch is `main`. No remote exists yet, so there are no pull
-    requests. The project has no CI, by the owner's decision (DESIGN §12 D24).
+  - The default branch is `main`, pushed to `git@github.com:ranton256/web_csg.git`
+    (added 2026-09-11). Pull requests are not used. The project has no CI, by
+    the owner's decision (DESIGN §12 D24), which is independent of the remote.
   - One branch per OpenSpec change, merged into `main` only after the full gate
     (§5) passes and the Critic returns `[APPROVED]` (§6).
   - A committed pre-commit hook (`tools/hooks/pre-commit`, installed by
@@ -172,7 +173,7 @@ src/ui/
   | **Full gate** | `npm run check` → `npm test` then `npm run test:e2e` |
   | Milestone captures | `npm run capture -- <milestone>` (e.g. `npm run capture -- M1`) → screenshots into `docs/progress/<milestone>/`; the shot list lives in `tools/capture.mjs` |
   | Update goldens | `npm run golden:update` (deliberate use only), optionally limited to files: `npm run golden:update -- test/x.test.js` |
-  | Deploy the app | `npx vercel deploy --prod` from the repository root (preview: `npx vercel deploy`). Deploy only what has passed the full gate. |
+  | Deploy the app | Once per checkout: `npx vercel login`, then `npx vercel link --yes --project web_csg` (scope `richard-antons-projects`); the resulting `.vercel/` is git-ignored. Then `npx vercel deploy --prod` from the repository root (preview: `npx vercel deploy`). Deploy only what has passed the full gate. Deployment is manual by the owner's decision; the Vercel project has no Git integration. |
 
 ## 5. Definition of done
 

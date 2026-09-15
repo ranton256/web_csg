@@ -138,6 +138,6 @@ An unresolved gate or Critic setup is not a waiver of verification or review.
 
 ### Git workflow
 
-- Default branch: `main`. No remote yet.
+- Default branch: `main`, pushed to `git@github.com:ranton256/web_csg.git`.
 - One branch per OpenSpec change. Merge into the default branch only after
   `npm run check` passes and the Critic returns `[APPROVED]`.

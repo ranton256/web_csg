@@ -1,4 +1,7 @@
-# Only the app (index.html + src/) and the project documents are published.
+# What the deployment publishes: index.html, src/, and the project documents
+# (the .md files, LICENSE, and docs/). Everything the app does not need to run
+# in a browser is excluded here; Vercel additionally withholds .git,
+# .gitignore, package.json, and package-lock.json.
 node_modules
 test-results
 playwright-report
@@ -9,3 +12,4 @@ tools
 templates
 openspec
 .claude
+playwright.config.js
