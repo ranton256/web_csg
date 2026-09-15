@@ -1,7 +1,9 @@
-# What the deployment publishes: index.html, src/, and the project documents
-# (the .md files, LICENSE, and docs/). Everything the app does not need to run
-# in a browser is excluded here; Vercel additionally withholds .git,
-# .gitignore, package.json, and package-lock.json.
+# The deployment publishes index.html, src/, the project documents (the .md
+# files, LICENSE, and docs/), and this file and vercel.json. The patterns
+# below withhold the tests, the e2e configuration, the tools, and the
+# planning sources; Vercel additionally withholds .git, .gitignore,
+# package.json, and package-lock.json. Keep this list and CONSTRAINTS §1 in
+# step.
 node_modules
 test-results
 playwright-report

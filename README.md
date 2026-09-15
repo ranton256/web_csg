@@ -148,6 +148,7 @@ src/ui/                     # Browser shell
 test/                       # Node unit + golden tests; support/ helpers; golden/ PPMs
 e2e/                        # Playwright specs
 tools/                      # serve.mjs, capture.mjs, golden-update.mjs, hooks/
+vercel.json                 # Static hosting for csg.ranton.org (no build step)
 docs/progress/<milestone>/  # Captures and evidence
 openspec/                   # Specifications and changes
 templates/                  # Source templates for the planning documents

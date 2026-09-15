@@ -35,6 +35,8 @@ vision.md
 index.html                  # App entry page
 package.json                # Scripts; @playwright/test is the only dev dependency
 playwright.config.js        # e2e: Chromium, Firefox, WebKit on port 4173
+vercel.json                 # Static hosting: no install, no build, root as output
+.vercelignore               # What the deployment withholds
 src/
   core/                     # DOM-free core (from M1)
   ui/                       # Browser shell (from M1)

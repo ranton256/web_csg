@@ -148,8 +148,8 @@ src/ui/
   and links these documents and must be kept consistent with them. It does
   not override them.
 - **Git** (D13, agreed 2026-09-10):
-  - The default branch is `main`, pushed to `git@github.com:ranton256/web_csg.git`
-    (added 2026-09-11). Pull requests are not used. The project has no CI, by
+  - The default branch is `main`, pushed to `git@github.com:ranton256/web_csg.git`.
+    Pull requests are not used. The project has no CI, by
     the owner's decision (DESIGN §12 D24), which is independent of the remote.
   - One branch per OpenSpec change, merged into `main` only after the full gate
     (§5) passes and the Critic returns `[APPROVED]` (§6).
@@ -173,7 +173,7 @@ src/ui/
   | **Full gate** | `npm run check` → `npm test` then `npm run test:e2e` |
   | Milestone captures | `npm run capture -- <milestone>` (e.g. `npm run capture -- M1`) → screenshots into `docs/progress/<milestone>/`; the shot list lives in `tools/capture.mjs` |
   | Update goldens | `npm run golden:update` (deliberate use only), optionally limited to files: `npm run golden:update -- test/x.test.js` |
-  | Deploy the app | Once per checkout: `npx vercel login`, then `npx vercel link --yes --project web_csg` (scope `richard-antons-projects`); the resulting `.vercel/` is git-ignored. Then `npx vercel deploy --prod` from the repository root (preview: `npx vercel deploy`). Deploy only what has passed the full gate. Deployment is manual by the owner's decision; the Vercel project has no Git integration. |
+  | Deploy the app | Once per checkout: `npx vercel login`, then `npx vercel link --yes --project web_csg --team richard-antons-projects` (`--yes` alone would use the account's default team, which need not be that one); the resulting `.vercel/` is git-ignored. Then `npx vercel deploy --prod` from the repository root (preview: `npx vercel deploy`). Deploy only what has passed the full gate. Deployment is manual by the owner's decision (DESIGN §12 D29); the Vercel project has no Git integration. |
 
 ## 5. Definition of done
 
